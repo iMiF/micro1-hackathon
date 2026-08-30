@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: minicrm
+      POSTGRES_PASSWORD: minicrm
+      POSTGRES_DB: minicrm
+    ports:
+      - "5432:5432"
+    volumes:
+      - minicrm_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U minicrm -d minicrm"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  minicrm_pgdata:

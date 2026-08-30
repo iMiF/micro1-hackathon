@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+*.log
+.DS_Store
+playwright-report/
+test-results/
+blob-report/
+apps/web/dist/
+apps/api/dist/
+*.tsbuildinfo

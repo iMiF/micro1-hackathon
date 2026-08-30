@@ -1,0 +1,355 @@
+{
+  "workflows": [
+    {
+      "id": "wf-login",
+      "user_goal": "Sign in as staff",
+      "steps": [
+        {
+          "id": "step-login",
+          "operation": "POST /api/auth/login",
+          "role": "required_business"
+        }
+      ]
+    },
+    {
+      "id": "wf-logout",
+      "user_goal": "Sign out",
+      "steps": [
+        {
+          "id": "step-logout",
+          "operation": "POST /api/auth/logout",
+          "role": "required_business"
+        }
+      ]
+    },
+    {
+      "id": "wf-list-customers",
+      "user_goal": "Browse, search, and filter customers",
+      "steps": [
+        {
+          "id": "step-list",
+          "operation": "GET /api/customers",
+          "role": "required_business"
+        }
+      ]
+    },
+    {
+      "id": "wf-create-customer",
+      "user_goal": "Create a customer",
+      "steps": [
+        {
+          "id": "step-create",
+          "operation": "POST /api/customers",
+          "role": "required_business"
+        },
+        {
+          "id": "step-open",
+          "operation": "GET /api/customers/{id}",
+          "role": "refresh",
+          "depends_on": [
+            "step-create"
+          ],
+          "description": "Navigation to the new detail page"
+        }
+      ]
+    },
+    {
+      "id": "wf-edit-customer",
+      "user_goal": "Edit an existing customer",
+      "steps": [
+        {
+          "id": "step-get",
+          "operation": "GET /api/customers/{id}",
+          "role": "auxiliary_lookup"
+        },
+        {
+          "id": "step-patch",
+          "operation": "PATCH /api/customers/{id}",
+          "role": "required_business",
+          "depends_on": [
+            "step-get"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wf-archive-customer",
+      "user_goal": "Archive or unarchive a customer",
+      "steps": [
+        {
+          "id": "step-get",
+          "operation": "GET /api/customers/{id}",
+          "role": "auxiliary_lookup"
+        },
+        {
+          "id": "step-patch",
+          "operation": "PATCH /api/customers/{id}",
+          "role": "required_business",
+          "depends_on": [
+            "step-get"
+          ],
+          "description": "Body includes archived boolean and version"
+        }
+      ]
+    },
+    {
+      "id": "wf-delete-customer",
+      "user_goal": "Permanently delete a customer who has no orders",
+      "steps": [
+        {
+          "id": "step-delete",
+          "operation": "DELETE /api/customers/{id}",
+          "role": "required_business"
+        }
+      ]
+    },
+    {
+      "id": "wf-add-address",
+      "user_goal": "Add a shipping address using country then region",
+      "steps": [
+        {
+          "id": "step-countries",
+          "operation": "GET /api/countries",
+          "role": "auxiliary_lookup"
+        },
+        {
+          "id": "step-regions",
+          "operation": "GET /api/regions",
+          "role": "auxiliary_lookup",
+          "depends_on": [
+            "step-countries"
+          ],
+          "condition": "A country code is selected"
+        },
+        {
+          "id": "step-create",
+          "operation": "POST /api/customers/{customerId}/addresses",
+          "role": "required_business",
+          "depends_on": [
+            "step-regions"
+          ]
+        },
+        {
+          "id": "step-reload",
+          "operation": "GET /api/customers/{customerId}/addresses",
+          "role": "refresh",
+          "depends_on": [
+            "step-create"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wf-create-order",
+      "user_goal": "Create an order for an existing customer",
+      "steps": [
+        {
+          "id": "step-customer-suggest",
+          "operation": "GET /api/customers/suggest",
+          "role": "auxiliary_lookup"
+        },
+        {
+          "id": "step-addresses",
+          "operation": "GET /api/customers/{customerId}/addresses",
+          "role": "auxiliary_lookup",
+          "depends_on": [
+            "step-customer-suggest"
+          ]
+        },
+        {
+          "id": "step-product-suggest",
+          "operation": "GET /api/products/suggest",
+          "role": "auxiliary_lookup"
+        },
+        {
+          "id": "step-shipping",
+          "operation": "POST /api/shipping/options",
+          "role": "auxiliary_lookup",
+          "depends_on": [
+            "step-addresses",
+            "step-product-suggest"
+          ],
+          "condition": "An address is selected and at least one line item exists"
+        },
+        {
+          "id": "step-quote",
+          "operation": "POST /api/order-quotes",
+          "role": "required_business",
+          "depends_on": [
+            "step-customer-suggest",
+            "step-addresses",
+            "step-product-suggest",
+            "step-shipping"
+          ],
+          "condition": "Customer, address, line items, and shipping method are selected"
+        },
+        {
+          "id": "step-create",
+          "operation": "POST /api/orders",
+          "role": "required_business",
+          "depends_on": [
+            "step-quote"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wf-view-order-detail",
+      "user_goal": "Open an order and view totals plus activity",
+      "steps": [
+        {
+          "id": "step-order",
+          "operation": "GET /api/orders/{id}",
+          "role": "required_business"
+        },
+        {
+          "id": "step-activity",
+          "operation": "GET /api/orders/{id}/activity",
+          "role": "auxiliary_lookup",
+          "depends_on": [
+            "step-order"
+          ],
+          "description": "Loaded in parallel by the page; not embedded in the order GET"
+        }
+      ]
+    },
+    {
+      "id": "wf-change-order-status",
+      "user_goal": "Advance or cancel an order along an allowed transition",
+      "steps": [
+        {
+          "id": "step-get",
+          "operation": "GET /api/orders/{id}",
+          "role": "auxiliary_lookup"
+        },
+        {
+          "id": "step-patch",
+          "operation": "PATCH /api/orders/{id}/status",
+          "role": "required_business",
+          "depends_on": [
+            "step-get"
+          ]
+        },
+        {
+          "id": "step-refresh-order",
+          "operation": "GET /api/orders/{id}",
+          "role": "refresh",
+          "depends_on": [
+            "step-patch"
+          ]
+        },
+        {
+          "id": "step-refresh-activity",
+          "operation": "GET /api/orders/{id}/activity",
+          "role": "refresh",
+          "depends_on": [
+            "step-patch"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wf-add-order-note",
+      "user_goal": "Add an internal note to an order",
+      "steps": [
+        {
+          "id": "step-note",
+          "operation": "POST /api/orders/{id}/notes",
+          "role": "required_business"
+        },
+        {
+          "id": "step-activity",
+          "operation": "GET /api/orders/{id}/activity",
+          "role": "refresh",
+          "depends_on": [
+            "step-note"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wf-delete-draft-order",
+      "user_goal": "Permanently delete a draft order",
+      "steps": [
+        {
+          "id": "step-delete",
+          "operation": "DELETE /api/orders/{id}",
+          "role": "required_business",
+          "condition": "statusId is 10"
+        }
+      ]
+    },
+    {
+      "id": "wf-list-orders",
+      "user_goal": "Browse, search, and filter orders by status",
+      "steps": [
+        {
+          "id": "step-list",
+          "operation": "GET /api/orders",
+          "role": "required_business"
+        }
+      ]
+    },
+    {
+      "id": "wf-list-products",
+      "user_goal": "Browse, search, and filter products",
+      "steps": [
+        {
+          "id": "step-list",
+          "operation": "GET /api/products",
+          "role": "required_business"
+        }
+      ]
+    },
+    {
+      "id": "wf-view-product",
+      "user_goal": "Open a product detail page",
+      "steps": [
+        {
+          "id": "step-get",
+          "operation": "GET /api/products/{id}",
+          "role": "required_business"
+        }
+      ]
+    },
+    {
+      "id": "wf-view-dashboard",
+      "user_goal": "View dashboard metrics and recent orders",
+      "steps": [
+        {
+          "id": "step-summary",
+          "operation": "GET /api/dashboard/summary",
+          "role": "required_business"
+        },
+        {
+          "id": "step-recent",
+          "operation": "GET /api/orders",
+          "role": "auxiliary_lookup",
+          "description": "page=1&pageSize=5; not the revenue definition"
+        }
+      ]
+    },
+    {
+      "id": "wf-view-customer-detail",
+      "user_goal": "Open a customer and see addresses",
+      "steps": [
+        {
+          "id": "step-customer",
+          "operation": "GET /api/customers/{id}",
+          "role": "required_business"
+        },
+        {
+          "id": "step-addresses",
+          "operation": "GET /api/customers/{customerId}/addresses",
+          "role": "auxiliary_lookup"
+        },
+        {
+          "id": "step-countries",
+          "operation": "GET /api/countries",
+          "role": "auxiliary_lookup",
+          "description": "Loaded so the add-address form can render"
+        }
+      ]
+    }
+  ]
+}

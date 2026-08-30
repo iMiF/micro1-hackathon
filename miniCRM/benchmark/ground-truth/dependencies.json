@@ -1,0 +1,202 @@
+{
+  "dependencies": [
+    {
+      "id": "dep-session-cookie",
+      "kind": "auth",
+      "source_operation": "POST /api/auth/login",
+      "source_field": "Set-Cookie:sid",
+      "target_operation": "*",
+      "target_field": "cookie:sid",
+      "description": "The sid cookie from login is sent on subsequent /api calls."
+    },
+    {
+      "id": "dep-csrf-from-login",
+      "kind": "auth",
+      "source_operation": "POST /api/auth/login",
+      "source_field": "$.csrfToken",
+      "target_operation": "*",
+      "target_field": "header:X-CSRF-Token",
+      "description": "csrfToken from login is sent as X-CSRF-Token on POST/PATCH/DELETE except login itself."
+    },
+    {
+      "id": "dep-csrf-from-session",
+      "kind": "auth",
+      "source_operation": "GET /api/auth/session",
+      "source_field": "$.csrfToken",
+      "target_operation": "*",
+      "target_field": "header:X-CSRF-Token",
+      "description": "Navigating a protected page refreshes csrfToken from the session endpoint."
+    },
+    {
+      "id": "dep-customer-suggest-to-addresses",
+      "kind": "lookup",
+      "source_operation": "GET /api/customers/suggest",
+      "source_field": "$[].id",
+      "target_operation": "GET /api/customers/{customerId}/addresses",
+      "target_field": "{customerId}",
+      "description": "Selecting a suggested customer loads that customer's addresses."
+    },
+    {
+      "id": "dep-customer-suggest-to-quote",
+      "kind": "payload",
+      "source_operation": "GET /api/customers/suggest",
+      "source_field": "$[].id",
+      "target_operation": "POST /api/order-quotes",
+      "target_field": "$.customerId",
+      "description": "Quote customerId is the selected suggest id."
+    },
+    {
+      "id": "dep-addresses-to-shipping",
+      "kind": "payload",
+      "source_operation": "GET /api/customers/{customerId}/addresses",
+      "source_field": "$[].id",
+      "target_operation": "POST /api/shipping/options",
+      "target_field": "$.addressId",
+      "description": "Shipping options require a selected address id."
+    },
+    {
+      "id": "dep-addresses-to-quote",
+      "kind": "payload",
+      "source_operation": "GET /api/customers/{customerId}/addresses",
+      "source_field": "$[].id",
+      "target_operation": "POST /api/order-quotes",
+      "target_field": "$.addressId",
+      "description": "Quote addressId is the selected address."
+    },
+    {
+      "id": "dep-product-suggest-to-shipping",
+      "kind": "payload",
+      "source_operation": "GET /api/products/suggest",
+      "source_field": "$[].id",
+      "target_operation": "POST /api/shipping/options",
+      "target_field": "$.items[].productId",
+      "description": "Shipping items use product ids from suggest."
+    },
+    {
+      "id": "dep-product-suggest-to-quote",
+      "kind": "payload",
+      "source_operation": "GET /api/products/suggest",
+      "source_field": "$[].id",
+      "target_operation": "POST /api/order-quotes",
+      "target_field": "$.items[].productId",
+      "description": "Quote items use product ids from suggest."
+    },
+    {
+      "id": "dep-shipping-method-to-quote",
+      "kind": "payload",
+      "source_operation": "POST /api/shipping/options",
+      "source_field": "$.options[].methodId",
+      "target_operation": "POST /api/order-quotes",
+      "target_field": "$.shippingMethodId",
+      "description": "Quote shippingMethodId must be one of the computed options for that destination and subtotal."
+    },
+    {
+      "id": "dep-quote-to-order",
+      "kind": "payload",
+      "source_operation": "POST /api/order-quotes",
+      "source_field": "$.quoteId",
+      "target_operation": "POST /api/orders",
+      "target_field": "$.quoteId",
+      "description": "Order create consumes the quote UUID; totals are not sent by the client."
+    },
+    {
+      "id": "dep-customer-version-to-patch",
+      "kind": "concurrency",
+      "source_operation": "GET /api/customers/{id}",
+      "source_field": "$.version",
+      "target_operation": "PATCH /api/customers/{id}",
+      "target_field": "$.version",
+      "description": "Customer writes send the version from the last GET."
+    },
+    {
+      "id": "dep-order-version-to-status",
+      "kind": "concurrency",
+      "source_operation": "GET /api/orders/{id}",
+      "source_field": "$.version",
+      "target_operation": "PATCH /api/orders/{id}/status",
+      "target_field": "$.version",
+      "description": "Status changes send the version from the last order GET."
+    },
+    {
+      "id": "dep-order-id-to-status",
+      "kind": "lookup",
+      "source_operation": "GET /api/orders/{id}",
+      "source_field": "$.id",
+      "target_operation": "PATCH /api/orders/{id}/status",
+      "target_field": "{id}",
+      "description": "Status PATCH uses the order id from the detail resource."
+    },
+    {
+      "id": "dep-order-id-to-notes",
+      "kind": "lookup",
+      "source_operation": "GET /api/orders/{id}",
+      "source_field": "$.id",
+      "target_operation": "POST /api/orders/{id}/notes",
+      "target_field": "{id}",
+      "description": "Notes are posted to the open order."
+    },
+    {
+      "id": "dep-order-id-to-activity",
+      "kind": "lookup",
+      "source_operation": "GET /api/orders/{id}",
+      "source_field": "$.id",
+      "target_operation": "GET /api/orders/{id}/activity",
+      "target_field": "{id}",
+      "description": "Activity is loaded with the same path id as the order."
+    },
+    {
+      "id": "dep-order-id-to-delete",
+      "kind": "lookup",
+      "source_operation": "GET /api/orders/{id}",
+      "source_field": "$.id",
+      "target_operation": "DELETE /api/orders/{id}",
+      "target_field": "{id}",
+      "description": "Draft delete uses the open order id."
+    },
+    {
+      "id": "dep-country-to-regions",
+      "kind": "filter",
+      "source_operation": "GET /api/countries",
+      "source_field": "$[].code",
+      "target_operation": "GET /api/regions",
+      "target_field": "query.country",
+      "description": "Region list is requested with the selected country code."
+    },
+    {
+      "id": "dep-region-to-address-create",
+      "kind": "payload",
+      "source_operation": "GET /api/regions",
+      "source_field": "$[].id",
+      "target_operation": "POST /api/customers/{customerId}/addresses",
+      "target_field": "$.regionId",
+      "description": "Address write uses numeric regionId from the country-filtered region list, not the region code string."
+    },
+    {
+      "id": "dep-create-customer-to-get",
+      "kind": "lookup",
+      "source_operation": "POST /api/customers",
+      "source_field": "$.id",
+      "target_operation": "GET /api/customers/{id}",
+      "target_field": "{id}",
+      "description": "After create, the UI navigates to /customers/{id} which GETs the new customer."
+    },
+    {
+      "id": "dep-create-order-to-get",
+      "kind": "lookup",
+      "source_operation": "POST /api/orders",
+      "source_field": "$.id",
+      "target_operation": "GET /api/orders/{id}",
+      "target_field": "{id}",
+      "description": "After create, the UI navigates to /orders/{id}."
+    },
+    {
+      "id": "dep-notes-to-activity-refresh",
+      "kind": "lookup",
+      "source_operation": "POST /api/orders/{id}/notes",
+      "source_field": "{id}",
+      "target_operation": "GET /api/orders/{id}/activity",
+      "target_field": "{id}",
+      "description": "After adding a note the UI reloads activity for the same order. This is a refresh, not a business input."
+    }
+  ]
+}

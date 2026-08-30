@@ -1,0 +1,3602 @@
+{
+  "benchmark_name": "MiniCRM",
+  "benchmark_version": "1.0.0",
+  "note": "Operations actually triggered by the running Vue UI. PATCH /api/orders/{id} (paymentStatus) and PATCH /api/customers/{customerId}/addresses/{addressId} exist on the server but are not browser-reachable; they are omitted.",
+  "components": {
+    "Error": {
+      "type": "object",
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "StaffUser": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "email"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        }
+      }
+    },
+    "AuthSession": {
+      "type": "object",
+      "required": [
+        "user",
+        "csrfToken"
+      ],
+      "properties": {
+        "user": {
+          "$ref": "#/components/StaffUser"
+        },
+        "csrfToken": {
+          "type": "string"
+        }
+      }
+    },
+    "Customer": {
+      "type": "object",
+      "required": [
+        "id",
+        "email",
+        "firstName",
+        "lastName",
+        "phone",
+        "archived",
+        "version",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "email": {
+          "type": "string"
+        },
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        },
+        "phone": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "archived": {
+          "type": "boolean"
+        },
+        "version": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        }
+      }
+    },
+    "CustomerList": {
+      "type": "object",
+      "required": [
+        "items",
+        "page",
+        "pageSize",
+        "total"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/Customer"
+          }
+        },
+        "page": {
+          "type": "integer"
+        },
+        "pageSize": {
+          "type": "integer"
+        },
+        "total": {
+          "type": "integer"
+        }
+      }
+    },
+    "CustomerSuggest": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "email"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        }
+      }
+    },
+    "Address": {
+      "type": "object",
+      "required": [
+        "id",
+        "customerId",
+        "label",
+        "line1",
+        "line2",
+        "city",
+        "regionId",
+        "regionCode",
+        "regionName",
+        "postalCode",
+        "countryCode",
+        "countryName",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "customerId": {
+          "type": "integer"
+        },
+        "label": {
+          "type": "string"
+        },
+        "line1": {
+          "type": "string"
+        },
+        "line2": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "city": {
+          "type": "string"
+        },
+        "regionId": {
+          "type": "integer"
+        },
+        "regionCode": {
+          "type": "string"
+        },
+        "regionName": {
+          "type": "string"
+        },
+        "postalCode": {
+          "type": "string"
+        },
+        "countryCode": {
+          "type": "string"
+        },
+        "countryName": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        }
+      }
+    },
+    "AddressWrite": {
+      "type": "object",
+      "required": [
+        "label",
+        "line1",
+        "city",
+        "regionId",
+        "postalCode",
+        "countryCode"
+      ],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "line1": {
+          "type": "string"
+        },
+        "line2": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "city": {
+          "type": "string"
+        },
+        "regionId": {
+          "type": "integer"
+        },
+        "postalCode": {
+          "type": "string"
+        },
+        "countryCode": {
+          "type": "string"
+        }
+      }
+    },
+    "Product": {
+      "type": "object",
+      "required": [
+        "id",
+        "sku",
+        "name",
+        "description",
+        "priceCents",
+        "stockQty",
+        "active",
+        "version",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "sku": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "priceCents": {
+          "type": "integer"
+        },
+        "stockQty": {
+          "type": "integer"
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "version": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        }
+      }
+    },
+    "ProductList": {
+      "type": "object",
+      "required": [
+        "items",
+        "page",
+        "pageSize",
+        "total"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/Product"
+          }
+        },
+        "page": {
+          "type": "integer"
+        },
+        "pageSize": {
+          "type": "integer"
+        },
+        "total": {
+          "type": "integer"
+        }
+      }
+    },
+    "ProductSuggest": {
+      "type": "object",
+      "required": [
+        "id",
+        "sku",
+        "name",
+        "priceCents",
+        "stockQty"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "sku": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "priceCents": {
+          "type": "integer"
+        },
+        "stockQty": {
+          "type": "integer"
+        }
+      }
+    },
+    "Country": {
+      "type": "object",
+      "required": [
+        "code",
+        "name"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "Region": {
+      "type": "object",
+      "required": [
+        "id",
+        "countryCode",
+        "code",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "countryCode": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "AddressSnapshot": {
+      "type": "object",
+      "required": [
+        "label",
+        "line1",
+        "line2",
+        "city",
+        "regionId",
+        "regionCode",
+        "regionName",
+        "postalCode",
+        "countryCode",
+        "countryName"
+      ],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "line1": {
+          "type": "string"
+        },
+        "line2": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "city": {
+          "type": "string"
+        },
+        "regionId": {
+          "type": "integer"
+        },
+        "regionCode": {
+          "type": "string"
+        },
+        "regionName": {
+          "type": "string"
+        },
+        "postalCode": {
+          "type": "string"
+        },
+        "countryCode": {
+          "type": "string"
+        },
+        "countryName": {
+          "type": "string"
+        }
+      }
+    },
+    "OrderItem": {
+      "type": "object",
+      "required": [
+        "id",
+        "productId",
+        "skuSnapshot",
+        "nameSnapshot",
+        "unitPriceCents",
+        "quantity"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "productId": {
+          "type": "integer"
+        },
+        "skuSnapshot": {
+          "type": "string"
+        },
+        "nameSnapshot": {
+          "type": "string"
+        },
+        "unitPriceCents": {
+          "type": "integer"
+        },
+        "quantity": {
+          "type": "integer"
+        }
+      }
+    },
+    "OrderListItem": {
+      "type": "object",
+      "required": [
+        "id",
+        "orderNumber",
+        "customerId",
+        "customerNameSnapshot",
+        "customerEmailSnapshot",
+        "statusId",
+        "paymentStatus",
+        "totalCents",
+        "version",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "orderNumber": {
+          "type": "string"
+        },
+        "customerId": {
+          "type": "integer"
+        },
+        "customerNameSnapshot": {
+          "type": "string"
+        },
+        "customerEmailSnapshot": {
+          "type": "string"
+        },
+        "statusId": {
+          "type": "integer"
+        },
+        "paymentStatus": {
+          "type": "string",
+          "enum": [
+            "unpaid",
+            "paid",
+            "refunded"
+          ]
+        },
+        "totalCents": {
+          "type": "integer"
+        },
+        "version": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        }
+      }
+    },
+    "OrderDetail": {
+      "type": "object",
+      "required": [
+        "id",
+        "orderNumber",
+        "customerId",
+        "customerNameSnapshot",
+        "customerEmailSnapshot",
+        "addressSnapshot",
+        "statusId",
+        "paymentStatus",
+        "subtotalCents",
+        "shippingCents",
+        "taxCents",
+        "totalCents",
+        "shippingMethodId",
+        "version",
+        "createdAt",
+        "updatedAt",
+        "items"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "orderNumber": {
+          "type": "string"
+        },
+        "customerId": {
+          "type": "integer"
+        },
+        "customerNameSnapshot": {
+          "type": "string"
+        },
+        "customerEmailSnapshot": {
+          "type": "string"
+        },
+        "addressSnapshot": {
+          "$ref": "#/components/AddressSnapshot"
+        },
+        "statusId": {
+          "type": "integer"
+        },
+        "paymentStatus": {
+          "type": "string",
+          "enum": [
+            "unpaid",
+            "paid",
+            "refunded"
+          ]
+        },
+        "subtotalCents": {
+          "type": "integer"
+        },
+        "shippingCents": {
+          "type": "integer"
+        },
+        "taxCents": {
+          "type": "integer"
+        },
+        "totalCents": {
+          "type": "integer"
+        },
+        "shippingMethodId": {
+          "type": "integer"
+        },
+        "version": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/OrderItem"
+          }
+        }
+      }
+    },
+    "OrderList": {
+      "type": "object",
+      "required": [
+        "items",
+        "page",
+        "pageSize",
+        "total"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/OrderListItem"
+          }
+        },
+        "page": {
+          "type": "integer"
+        },
+        "pageSize": {
+          "type": "integer"
+        },
+        "total": {
+          "type": "integer"
+        }
+      }
+    },
+    "OrderActivity": {
+      "type": "object",
+      "required": [
+        "id",
+        "orderId",
+        "eventType",
+        "data",
+        "createdBy",
+        "createdByName",
+        "createdAt"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "orderId": {
+          "type": "integer"
+        },
+        "eventType": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object"
+        },
+        "createdBy": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "createdByName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "createdAt": {
+          "type": "string"
+        }
+      }
+    },
+    "OrderNote": {
+      "type": "object",
+      "required": [
+        "id",
+        "orderId",
+        "body",
+        "createdBy",
+        "createdByName",
+        "createdAt"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "orderId": {
+          "type": "integer"
+        },
+        "body": {
+          "type": "string"
+        },
+        "createdBy": {
+          "type": "integer"
+        },
+        "createdByName": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        }
+      }
+    },
+    "QuoteLineInput": {
+      "type": "object",
+      "required": [
+        "productId",
+        "quantity"
+      ],
+      "properties": {
+        "productId": {
+          "type": "integer"
+        },
+        "quantity": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "ShippingOption": {
+      "type": "object",
+      "required": [
+        "methodId",
+        "name",
+        "priceCents",
+        "estimatedDays"
+      ],
+      "properties": {
+        "methodId": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "priceCents": {
+          "type": "integer"
+        },
+        "estimatedDays": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "Quote": {
+      "type": "object",
+      "required": [
+        "quoteId",
+        "subtotalCents",
+        "shippingCents",
+        "taxCents",
+        "totalCents",
+        "expiresAt"
+      ],
+      "properties": {
+        "quoteId": {
+          "type": "string"
+        },
+        "subtotalCents": {
+          "type": "integer"
+        },
+        "shippingCents": {
+          "type": "integer"
+        },
+        "taxCents": {
+          "type": "integer"
+        },
+        "totalCents": {
+          "type": "integer"
+        },
+        "expiresAt": {
+          "type": "string"
+        }
+      }
+    },
+    "DashboardSummary": {
+      "type": "object",
+      "required": [
+        "revenueCents",
+        "orderCount",
+        "customerCount",
+        "ordersByStatus"
+      ],
+      "properties": {
+        "revenueCents": {
+          "type": "integer"
+        },
+        "orderCount": {
+          "type": "integer"
+        },
+        "customerCount": {
+          "type": "integer"
+        },
+        "ordersByStatus": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "statusId",
+              "count"
+            ],
+            "properties": {
+              "statusId": {
+                "type": "integer"
+              },
+              "count": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "operations": [
+    {
+      "parameters": [],
+      "request_schema": {
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "error_responses": [
+        {
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "message": "Email and password are required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "VALIDATION_ERROR"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 401,
+          "code": "INVALID_CREDENTIALS",
+          "message": "Invalid email or password",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "INVALID_CREDENTIALS"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "none",
+      "id": "op-auth-login",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "summary": "Create a staff session and return a CSRF token",
+      "success_status": 200,
+      "response_schema": {
+        "$ref": "#/components/AuthSession"
+      }
+    },
+    {
+      "parameters": [],
+      "request_schema": null,
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-auth-session",
+      "method": "GET",
+      "path": "/api/auth/session",
+      "summary": "Return the current staff user and CSRF token",
+      "success_status": 200,
+      "response_schema": {
+        "$ref": "#/components/AuthSession"
+      }
+    },
+    {
+      "parameters": [],
+      "request_schema": null,
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 403,
+          "code": "CSRF_TOKEN_INVALID",
+          "message": "Invalid CSRF token",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "CSRF_TOKEN_INVALID"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-auth-logout",
+      "method": "POST",
+      "path": "/api/auth/logout",
+      "summary": "Destroy the session and clear the sid cookie",
+      "success_status": 204,
+      "response_schema": null
+    },
+    {
+      "parameters": [
+        {
+          "name": "q",
+          "location": "query",
+          "required": false,
+          "type": "string",
+          "description": "Search substring; blank yields an empty array without querying matches"
+        }
+      ],
+      "request_schema": null,
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-customers-suggest",
+      "method": "GET",
+      "path": "/api/customers/suggest",
+      "summary": "Autocomplete non-archived customers; empty q returns []",
+      "success_status": 200,
+      "response_schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/CustomerSuggest"
+        }
+      }
+    },
+    {
+      "parameters": [
+        {
+          "name": "page",
+          "location": "query",
+          "required": false,
+          "type": "integer",
+          "default": 1,
+          "description": "1-based page; invalid values fall back to 1"
+        },
+        {
+          "name": "pageSize",
+          "location": "query",
+          "required": false,
+          "type": "integer",
+          "default": 20,
+          "description": "UI sends 20; server caps at 100"
+        },
+        {
+          "name": "q",
+          "location": "query",
+          "required": false,
+          "type": "string",
+          "description": "ILIKE first, last, email, or full name"
+        },
+        {
+          "name": "archived",
+          "location": "query",
+          "required": false,
+          "type": "boolean",
+          "description": "true|false; omitted means all. UI Active sends false"
+        }
+      ],
+      "request_schema": null,
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-customers-list",
+      "method": "GET",
+      "path": "/api/customers",
+      "summary": "Paginated customer collection with optional search and archive filter",
+      "success_status": 200,
+      "response_schema": {
+        "$ref": "#/components/CustomerList"
+      }
+    },
+    {
+      "parameters": [
+        {
+          "name": "id",
+          "location": "path",
+          "required": true,
+          "type": "integer"
+        }
+      ],
+      "request_schema": null,
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 404,
+          "code": "NOT_FOUND",
+          "message": "Customer not found",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-customers-get",
+      "method": "GET",
+      "path": "/api/customers/{id}",
+      "summary": "Fetch one customer including optimistic-concurrency version",
+      "success_status": 200,
+      "response_schema": {
+        "$ref": "#/components/Customer"
+      }
+    },
+    {
+      "parameters": [],
+      "request_schema": {
+        "type": "object",
+        "required": [
+          "email",
+          "firstName",
+          "lastName"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 403,
+          "code": "CSRF_TOKEN_INVALID",
+          "message": "Invalid CSRF token",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "CSRF_TOKEN_INVALID"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "message": "Email, first name, and last name are required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "VALIDATION_ERROR"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 409,
+          "code": "EMAIL_EXISTS",
+          "message": "A customer with this email already exists",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "EMAIL_EXISTS"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-customers-create",
+      "method": "POST",
+      "path": "/api/customers",
+      "summary": "Create a customer; archived=false and version=1",
+      "success_status": 201,
+      "response_schema": {
+        "$ref": "#/components/Customer"
+      }
+    },
+    {
+      "parameters": [
+        {
+          "name": "id",
+          "location": "path",
+          "required": true,
+          "type": "integer"
+        }
+      ],
+      "request_schema": {
+        "type": "object",
+        "required": [
+          "version"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "archived": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 403,
+          "code": "CSRF_TOKEN_INVALID",
+          "message": "Invalid CSRF token",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "CSRF_TOKEN_INVALID"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "message": "version is required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "VALIDATION_ERROR"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 404,
+          "code": "NOT_FOUND",
+          "message": "Customer not found",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 409,
+          "code": "EMAIL_EXISTS",
+          "message": "A customer with this email already exists",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "EMAIL_EXISTS"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 409,
+          "code": "VERSION_CONFLICT",
+          "message": "Customer was changed by another user",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "VERSION_CONFLICT"
+              },
+              "message": {
+                "type": "string"
+              },
+              "currentVersion": {
+                "type": "integer"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-customers-patch",
+      "method": "PATCH",
+      "path": "/api/customers/{id}",
+      "summary": "Partial update; version is required. Used for profile edits and archive/unarchive",
+      "success_status": 200,
+      "response_schema": {
+        "$ref": "#/components/Customer"
+      }
+    },
+    {
+      "parameters": [
+        {
+          "name": "id",
+          "location": "path",
+          "required": true,
+          "type": "integer"
+        }
+      ],
+      "request_schema": null,
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 403,
+          "code": "CSRF_TOKEN_INVALID",
+          "message": "Invalid CSRF token",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "CSRF_TOKEN_INVALID"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 404,
+          "code": "NOT_FOUND",
+          "message": "Customer not found",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 409,
+          "code": "CUSTOMER_HAS_ORDERS",
+          "message": "Customers with order history cannot be deleted. Archive the customer instead.",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "CUSTOMER_HAS_ORDERS"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-customers-delete",
+      "method": "DELETE",
+      "path": "/api/customers/{id}",
+      "summary": "Hard-delete a customer who has no orders",
+      "success_status": 204,
+      "response_schema": null
+    },
+    {
+      "parameters": [
+        {
+          "name": "customerId",
+          "location": "path",
+          "required": true,
+          "type": "integer"
+        }
+      ],
+      "request_schema": null,
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 404,
+          "code": "NOT_FOUND",
+          "message": "Customer not found",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-addresses-list",
+      "method": "GET",
+      "path": "/api/customers/{customerId}/addresses",
+      "summary": "List addresses for one customer",
+      "success_status": 200,
+      "response_schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/Address"
+        }
+      }
+    },
+    {
+      "parameters": [
+        {
+          "name": "customerId",
+          "location": "path",
+          "required": true,
+          "type": "integer"
+        }
+      ],
+      "request_schema": {
+        "$ref": "#/components/AddressWrite"
+      },
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 403,
+          "code": "CSRF_TOKEN_INVALID",
+          "message": "Invalid CSRF token",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "CSRF_TOKEN_INVALID"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 404,
+          "code": "NOT_FOUND",
+          "message": "Customer not found",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "message": "label, line1, city, regionId, postalCode, and countryCode are required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "VALIDATION_ERROR"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "message": "Unknown region",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "VALIDATION_ERROR"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "message": "Region does not belong to the selected country",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "VALIDATION_ERROR"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-addresses-create",
+      "method": "POST",
+      "path": "/api/customers/{customerId}/addresses",
+      "summary": "Create an address; regionId must belong to countryCode",
+      "success_status": 201,
+      "response_schema": {
+        "$ref": "#/components/Address"
+      }
+    },
+    {
+      "parameters": [
+        {
+          "name": "q",
+          "location": "query",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "request_schema": null,
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-products-suggest",
+      "method": "GET",
+      "path": "/api/products/suggest",
+      "summary": "Autocomplete active products; empty q returns []",
+      "success_status": 200,
+      "response_schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/ProductSuggest"
+        }
+      }
+    },
+    {
+      "parameters": [
+        {
+          "name": "page",
+          "location": "query",
+          "required": false,
+          "type": "integer",
+          "default": 1
+        },
+        {
+          "name": "pageSize",
+          "location": "query",
+          "required": false,
+          "type": "integer",
+          "default": 20
+        },
+        {
+          "name": "q",
+          "location": "query",
+          "required": false,
+          "type": "string",
+          "description": "ILIKE name or sku"
+        },
+        {
+          "name": "active",
+          "location": "query",
+          "required": false,
+          "type": "boolean"
+        }
+      ],
+      "request_schema": null,
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-products-list",
+      "method": "GET",
+      "path": "/api/products",
+      "summary": "Paginated product catalog",
+      "success_status": 200,
+      "response_schema": {
+        "$ref": "#/components/ProductList"
+      }
+    },
+    {
+      "parameters": [
+        {
+          "name": "id",
+          "location": "path",
+          "required": true,
+          "type": "integer"
+        }
+      ],
+      "request_schema": null,
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 404,
+          "code": "NOT_FOUND",
+          "message": "Product not found",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-products-get",
+      "method": "GET",
+      "path": "/api/products/{id}",
+      "summary": "Fetch one product",
+      "success_status": 200,
+      "response_schema": {
+        "$ref": "#/components/Product"
+      }
+    },
+    {
+      "parameters": [],
+      "request_schema": null,
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-countries-list",
+      "method": "GET",
+      "path": "/api/countries",
+      "summary": "List countries ordered by name",
+      "success_status": 200,
+      "response_schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/Country"
+        }
+      }
+    },
+    {
+      "parameters": [
+        {
+          "name": "country",
+          "location": "query",
+          "required": false,
+          "type": "string",
+          "description": "Country code such as CA or US. Empty or omitted returns []"
+        }
+      ],
+      "request_schema": null,
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-regions-list",
+      "method": "GET",
+      "path": "/api/regions",
+      "summary": "List regions for one country; missing country returns []",
+      "success_status": 200,
+      "response_schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/Region"
+        }
+      }
+    },
+    {
+      "parameters": [
+        {
+          "name": "period",
+          "location": "query",
+          "required": false,
+          "type": "string",
+          "default": "30d",
+          "description": "Nd day window. UI always sends 30d"
+        }
+      ],
+      "request_schema": null,
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-dashboard-summary",
+      "method": "GET",
+      "path": "/api/dashboard/summary",
+      "summary": "Dashboard metrics for a day window",
+      "success_status": 200,
+      "response_schema": {
+        "$ref": "#/components/DashboardSummary"
+      }
+    },
+    {
+      "parameters": [],
+      "request_schema": {
+        "type": "object",
+        "required": [
+          "addressId",
+          "items"
+        ],
+        "properties": {
+          "addressId": {
+            "type": "integer"
+          },
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/QuoteLineInput"
+            }
+          }
+        }
+      },
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 403,
+          "code": "CSRF_TOKEN_INVALID",
+          "message": "Invalid CSRF token",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "CSRF_TOKEN_INVALID"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "message": "addressId and items are required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "VALIDATION_ERROR"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "message": "Each item needs productId and quantity >= 1",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "VALIDATION_ERROR"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 404,
+          "code": "NOT_FOUND",
+          "message": "Address not found",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 404,
+          "code": "NOT_FOUND",
+          "message": "Product not found",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 422,
+          "code": "PRODUCT_INACTIVE",
+          "message": "Inactive products cannot be ordered",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "PRODUCT_INACTIVE"
+              },
+              "message": {
+                "type": "string"
+              },
+              "productId": {
+                "type": "integer"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-shipping-options",
+      "method": "POST",
+      "path": "/api/shipping/options",
+      "summary": "Compute shipping options from address country and item subtotal",
+      "success_status": 200,
+      "response_schema": {
+        "type": "object",
+        "required": [
+          "options"
+        ],
+        "properties": {
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/ShippingOption"
+            }
+          }
+        }
+      }
+    },
+    {
+      "parameters": [],
+      "request_schema": {
+        "type": "object",
+        "required": [
+          "customerId",
+          "addressId",
+          "shippingMethodId",
+          "items"
+        ],
+        "properties": {
+          "customerId": {
+            "type": "integer"
+          },
+          "addressId": {
+            "type": "integer"
+          },
+          "shippingMethodId": {
+            "type": "integer"
+          },
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/QuoteLineInput"
+            }
+          }
+        }
+      },
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 403,
+          "code": "CSRF_TOKEN_INVALID",
+          "message": "Invalid CSRF token",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "CSRF_TOKEN_INVALID"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "message": "customerId, addressId, shippingMethodId, and items are required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "VALIDATION_ERROR"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "message": "Each item needs productId and quantity >= 1",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "VALIDATION_ERROR"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "message": "Shipping method is not available for this destination",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "VALIDATION_ERROR"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 404,
+          "code": "NOT_FOUND",
+          "message": "Customer not found",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 404,
+          "code": "NOT_FOUND",
+          "message": "Address not found",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 404,
+          "code": "NOT_FOUND",
+          "message": "Product not found",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 422,
+          "code": "CUSTOMER_ARCHIVED",
+          "message": "Archived customers cannot place new orders.",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "CUSTOMER_ARCHIVED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 422,
+          "code": "PRODUCT_INACTIVE",
+          "message": "Inactive products cannot be ordered",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "PRODUCT_INACTIVE"
+              },
+              "message": {
+                "type": "string"
+              },
+              "productId": {
+                "type": "integer"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 409,
+          "code": "OUT_OF_STOCK",
+          "message": "Requested quantity exceeds available stock",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "OUT_OF_STOCK"
+              },
+              "message": {
+                "type": "string"
+              },
+              "productId": {
+                "type": "integer"
+              },
+              "availableQty": {
+                "type": "integer"
+              },
+              "requestedQty": {
+                "type": "integer"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-order-quotes-create",
+      "method": "POST",
+      "path": "/api/order-quotes",
+      "summary": "Create a time-limited quote with server-computed totals",
+      "success_status": 201,
+      "response_schema": {
+        "$ref": "#/components/Quote"
+      }
+    },
+    {
+      "parameters": [
+        {
+          "name": "page",
+          "location": "query",
+          "required": false,
+          "type": "integer",
+          "default": 1
+        },
+        {
+          "name": "pageSize",
+          "location": "query",
+          "required": false,
+          "type": "integer",
+          "default": 20
+        },
+        {
+          "name": "q",
+          "location": "query",
+          "required": false,
+          "type": "string",
+          "description": "ILIKE orderNumber, customerNameSnapshot, customerEmailSnapshot"
+        },
+        {
+          "name": "status",
+          "location": "query",
+          "required": false,
+          "type": "integer",
+          "description": "Filter by statusId. UI sends 10/20/30/40/50"
+        },
+        {
+          "name": "customerId",
+          "location": "query",
+          "required": false,
+          "type": "integer",
+          "description": "Implemented by the server; the Vue list page does not send this"
+        },
+        {
+          "name": "from",
+          "location": "query",
+          "required": false,
+          "type": "string",
+          "description": "created_at >= timestamptz. Not sent by the Vue list page"
+        },
+        {
+          "name": "to",
+          "location": "query",
+          "required": false,
+          "type": "string",
+          "description": "created_at <= timestamptz. Not sent by the Vue list page"
+        }
+      ],
+      "request_schema": null,
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-orders-list",
+      "method": "GET",
+      "path": "/api/orders",
+      "summary": "Paginated orders. UI sends page, pageSize, q, status. Server also accepts customerId, from, to",
+      "success_status": 200,
+      "response_schema": {
+        "$ref": "#/components/OrderList"
+      }
+    },
+    {
+      "parameters": [
+        {
+          "name": "id",
+          "location": "path",
+          "required": true,
+          "type": "integer"
+        }
+      ],
+      "request_schema": null,
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 404,
+          "code": "NOT_FOUND",
+          "message": "Order not found",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-orders-get",
+      "method": "GET",
+      "path": "/api/orders/{id}",
+      "summary": "Order detail with snapshots and line items; activity is not included",
+      "success_status": 200,
+      "response_schema": {
+        "$ref": "#/components/OrderDetail"
+      }
+    },
+    {
+      "parameters": [
+        {
+          "name": "id",
+          "location": "path",
+          "required": true,
+          "type": "integer"
+        }
+      ],
+      "request_schema": null,
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 404,
+          "code": "NOT_FOUND",
+          "message": "Order not found",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-orders-activity",
+      "method": "GET",
+      "path": "/api/orders/{id}/activity",
+      "summary": "Chronological activity events for an order",
+      "success_status": 200,
+      "response_schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/OrderActivity"
+        }
+      }
+    },
+    {
+      "parameters": [
+        {
+          "name": "id",
+          "location": "path",
+          "required": true,
+          "type": "integer"
+        }
+      ],
+      "request_schema": {
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "properties": {
+          "body": {
+            "type": "string"
+          }
+        }
+      },
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 403,
+          "code": "CSRF_TOKEN_INVALID",
+          "message": "Invalid CSRF token",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "CSRF_TOKEN_INVALID"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "message": "body is required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "VALIDATION_ERROR"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 404,
+          "code": "NOT_FOUND",
+          "message": "Order not found",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-orders-notes-create",
+      "method": "POST",
+      "path": "/api/orders/{id}/notes",
+      "summary": "Add an internal note and emit NOTE_ADDED activity",
+      "success_status": 201,
+      "response_schema": {
+        "$ref": "#/components/OrderNote"
+      }
+    },
+    {
+      "parameters": [
+        {
+          "name": "id",
+          "location": "path",
+          "required": true,
+          "type": "integer"
+        }
+      ],
+      "request_schema": {
+        "type": "object",
+        "required": [
+          "statusId",
+          "version"
+        ],
+        "properties": {
+          "statusId": {
+            "type": "integer"
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 403,
+          "code": "CSRF_TOKEN_INVALID",
+          "message": "Invalid CSRF token",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "CSRF_TOKEN_INVALID"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "message": "statusId and version are required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "VALIDATION_ERROR"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "message": "Unknown statusId",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "VALIDATION_ERROR"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 404,
+          "code": "NOT_FOUND",
+          "message": "Order not found",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 409,
+          "code": "VERSION_CONFLICT",
+          "message": "Order was modified by another user",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "VERSION_CONFLICT"
+              },
+              "message": {
+                "type": "string"
+              },
+              "currentVersion": {
+                "type": "integer"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 409,
+          "code": "INVALID_STATUS_TRANSITION",
+          "message": "This status change is not allowed",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "INVALID_STATUS_TRANSITION"
+              },
+              "message": {
+                "type": "string"
+              },
+              "currentStatusId": {
+                "type": "integer"
+              },
+              "requestedStatusId": {
+                "type": "integer"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-orders-status-patch",
+      "method": "PATCH",
+      "path": "/api/orders/{id}/status",
+      "summary": "Advance or cancel an order using an allowed statusId and current version",
+      "success_status": 200,
+      "response_schema": {
+        "$ref": "#/components/OrderDetail"
+      }
+    },
+    {
+      "parameters": [],
+      "request_schema": {
+        "type": "object",
+        "required": [
+          "quoteId"
+        ],
+        "properties": {
+          "quoteId": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 403,
+          "code": "CSRF_TOKEN_INVALID",
+          "message": "Invalid CSRF token",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "CSRF_TOKEN_INVALID"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "message": "quoteId is required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "VALIDATION_ERROR"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 404,
+          "code": "NOT_FOUND",
+          "message": "Quote not found",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 404,
+          "code": "NOT_FOUND",
+          "message": "Customer not found",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 404,
+          "code": "NOT_FOUND",
+          "message": "Address not found",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 404,
+          "code": "NOT_FOUND",
+          "message": "Product not found",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 409,
+          "code": "QUOTE_ALREADY_USED",
+          "message": "This quote has already been used.",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "QUOTE_ALREADY_USED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 410,
+          "code": "QUOTE_EXPIRED",
+          "message": "This quote has expired. Request a new quote.",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "QUOTE_EXPIRED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 422,
+          "code": "CUSTOMER_ARCHIVED",
+          "message": "Archived customers cannot place new orders.",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "CUSTOMER_ARCHIVED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 422,
+          "code": "PRODUCT_INACTIVE",
+          "message": "Inactive products cannot be ordered",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "PRODUCT_INACTIVE"
+              },
+              "message": {
+                "type": "string"
+              },
+              "productId": {
+                "type": "integer"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 409,
+          "code": "OUT_OF_STOCK",
+          "message": "Requested quantity exceeds available stock",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "OUT_OF_STOCK"
+              },
+              "message": {
+                "type": "string"
+              },
+              "productId": {
+                "type": "integer"
+              },
+              "availableQty": {
+                "type": "integer"
+              },
+              "requestedQty": {
+                "type": "integer"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "message": "Shipping method is not available for this destination",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "VALIDATION_ERROR"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-orders-create",
+      "method": "POST",
+      "path": "/api/orders",
+      "summary": "Create a draft unpaid order from a quoteId; decrements stock",
+      "success_status": 201,
+      "response_schema": {
+        "$ref": "#/components/OrderDetail"
+      }
+    },
+    {
+      "parameters": [
+        {
+          "name": "id",
+          "location": "path",
+          "required": true,
+          "type": "integer"
+        }
+      ],
+      "request_schema": null,
+      "error_responses": [
+        {
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "message": "Authentication required",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "UNAUTHENTICATED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 403,
+          "code": "CSRF_TOKEN_INVALID",
+          "message": "Invalid CSRF token",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "CSRF_TOKEN_INVALID"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 404,
+          "code": "NOT_FOUND",
+          "message": "Order not found",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        {
+          "status": 409,
+          "code": "ORDER_CANNOT_BE_DELETED",
+          "message": "Only draft orders can be permanently deleted.",
+          "schema": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "ORDER_CANNOT_BE_DELETED"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      ],
+      "authentication": "session-cookie",
+      "id": "op-orders-delete",
+      "method": "DELETE",
+      "path": "/api/orders/{id}",
+      "summary": "Permanently delete a draft order and restore stock",
+      "success_status": 204,
+      "response_schema": null
+    }
+  ]
+}

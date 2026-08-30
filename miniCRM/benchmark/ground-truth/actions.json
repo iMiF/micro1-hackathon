@@ -1,0 +1,303 @@
+{
+  "actions": [
+    {
+      "id": "act-login",
+      "page": "/login",
+      "label_or_description": "Sign in",
+      "risk": "safe_mutation",
+      "expected_operations": [
+        "POST /api/auth/login"
+      ]
+    },
+    {
+      "id": "act-logout",
+      "page": "*",
+      "label_or_description": "Log out",
+      "risk": "safe_mutation",
+      "expected_operations": [
+        "POST /api/auth/logout"
+      ]
+    },
+    {
+      "id": "act-nav-dashboard",
+      "page": "/",
+      "label_or_description": "Open Dashboard",
+      "risk": "read_only",
+      "expected_operations": [
+        "GET /api/auth/session",
+        "GET /api/dashboard/summary",
+        "GET /api/orders"
+      ]
+    },
+    {
+      "id": "act-nav-customers",
+      "page": "/customers",
+      "label_or_description": "Open Customers",
+      "risk": "read_only",
+      "expected_operations": [
+        "GET /api/auth/session",
+        "GET /api/customers"
+      ]
+    },
+    {
+      "id": "act-search-customers",
+      "page": "/customers",
+      "label_or_description": "Search customers",
+      "risk": "read_only",
+      "expected_operations": [
+        "GET /api/customers"
+      ]
+    },
+    {
+      "id": "act-filter-customers-archived",
+      "page": "/customers",
+      "label_or_description": "Filter Active / Archived / All",
+      "risk": "read_only",
+      "expected_operations": [
+        "GET /api/customers"
+      ]
+    },
+    {
+      "id": "act-paginate-customers",
+      "page": "/customers",
+      "label_or_description": "Paginate customers",
+      "risk": "read_only",
+      "expected_operations": [
+        "GET /api/customers"
+      ]
+    },
+    {
+      "id": "act-open-customer",
+      "page": "/customers/{id}",
+      "label_or_description": "Open customer detail",
+      "risk": "read_only",
+      "expected_operations": [
+        "GET /api/customers/{id}",
+        "GET /api/customers/{customerId}/addresses",
+        "GET /api/countries"
+      ]
+    },
+    {
+      "id": "act-create-customer",
+      "page": "/customers/new",
+      "label_or_description": "Create customer",
+      "risk": "safe_mutation",
+      "expected_operations": [
+        "POST /api/customers"
+      ]
+    },
+    {
+      "id": "act-save-customer",
+      "page": "/customers/{id}/edit",
+      "label_or_description": "Save customer edits",
+      "risk": "safe_mutation",
+      "expected_operations": [
+        "GET /api/customers/{id}",
+        "PATCH /api/customers/{id}"
+      ]
+    },
+    {
+      "id": "act-archive-customer",
+      "page": "/customers/{id}",
+      "label_or_description": "Archive customer",
+      "risk": "reversible",
+      "expected_operations": [
+        "PATCH /api/customers/{id}"
+      ]
+    },
+    {
+      "id": "act-unarchive-customer",
+      "page": "/customers/{id}",
+      "label_or_description": "Unarchive customer",
+      "risk": "reversible",
+      "expected_operations": [
+        "PATCH /api/customers/{id}"
+      ]
+    },
+    {
+      "id": "act-delete-customer",
+      "page": "/customers/{id}",
+      "label_or_description": "Delete customer (confirm dialog)",
+      "risk": "destructive",
+      "expected_operations": [
+        "DELETE /api/customers/{id}"
+      ]
+    },
+    {
+      "id": "act-change-address-country",
+      "page": "/customers/{id}",
+      "label_or_description": "Select address country",
+      "risk": "read_only",
+      "expected_operations": [
+        "GET /api/regions"
+      ]
+    },
+    {
+      "id": "act-add-address",
+      "page": "/customers/{id}",
+      "label_or_description": "Add address",
+      "risk": "safe_mutation",
+      "expected_operations": [
+        "POST /api/customers/{customerId}/addresses",
+        "GET /api/customers/{customerId}/addresses"
+      ]
+    },
+    {
+      "id": "act-search-orders",
+      "page": "/orders",
+      "label_or_description": "Search orders",
+      "risk": "read_only",
+      "expected_operations": [
+        "GET /api/orders"
+      ]
+    },
+    {
+      "id": "act-filter-orders-status",
+      "page": "/orders",
+      "label_or_description": "Filter orders by status",
+      "risk": "read_only",
+      "expected_operations": [
+        "GET /api/orders"
+      ]
+    },
+    {
+      "id": "act-paginate-orders",
+      "page": "/orders",
+      "label_or_description": "Paginate orders",
+      "risk": "read_only",
+      "expected_operations": [
+        "GET /api/orders"
+      ]
+    },
+    {
+      "id": "act-open-order",
+      "page": "/orders/{id}",
+      "label_or_description": "Open order detail",
+      "risk": "read_only",
+      "expected_operations": [
+        "GET /api/orders/{id}",
+        "GET /api/orders/{id}/activity"
+      ]
+    },
+    {
+      "id": "act-search-order-customer",
+      "page": "/orders/new",
+      "label_or_description": "Search customer for a new order",
+      "risk": "read_only",
+      "expected_operations": [
+        "GET /api/customers/suggest"
+      ]
+    },
+    {
+      "id": "act-select-order-customer",
+      "page": "/orders/new",
+      "label_or_description": "Select customer for a new order",
+      "risk": "read_only",
+      "expected_operations": [
+        "GET /api/customers/{customerId}/addresses"
+      ]
+    },
+    {
+      "id": "act-search-order-product",
+      "page": "/orders/new",
+      "label_or_description": "Search product for a new order",
+      "risk": "read_only",
+      "expected_operations": [
+        "GET /api/products/suggest"
+      ]
+    },
+    {
+      "id": "act-change-order-lines-or-address",
+      "page": "/orders/new",
+      "label_or_description": "Change address or line items (loads shipping when both present)",
+      "risk": "read_only",
+      "expected_operations": [
+        "POST /api/shipping/options"
+      ]
+    },
+    {
+      "id": "act-select-shipping-method",
+      "page": "/orders/new",
+      "label_or_description": "Select shipping method (creates a quote)",
+      "risk": "safe_mutation",
+      "expected_operations": [
+        "POST /api/order-quotes"
+      ]
+    },
+    {
+      "id": "act-submit-create-order",
+      "page": "/orders/new",
+      "label_or_description": "Create order",
+      "risk": "safe_mutation",
+      "expected_operations": [
+        "POST /api/orders"
+      ]
+    },
+    {
+      "id": "act-change-order-status",
+      "page": "/orders/{id}",
+      "label_or_description": "Confirm / Start processing / Mark shipped / Cancel order",
+      "risk": "safe_mutation",
+      "expected_operations": [
+        "PATCH /api/orders/{id}/status",
+        "GET /api/orders/{id}",
+        "GET /api/orders/{id}/activity"
+      ]
+    },
+    {
+      "id": "act-add-order-note",
+      "page": "/orders/{id}",
+      "label_or_description": "Add note",
+      "risk": "safe_mutation",
+      "expected_operations": [
+        "POST /api/orders/{id}/notes",
+        "GET /api/orders/{id}/activity"
+      ]
+    },
+    {
+      "id": "act-delete-draft-order",
+      "page": "/orders/{id}",
+      "label_or_description": "Delete draft",
+      "risk": "destructive",
+      "expected_operations": [
+        "DELETE /api/orders/{id}"
+      ]
+    },
+    {
+      "id": "act-search-products",
+      "page": "/products",
+      "label_or_description": "Search products",
+      "risk": "read_only",
+      "expected_operations": [
+        "GET /api/products"
+      ]
+    },
+    {
+      "id": "act-filter-products-active",
+      "page": "/products",
+      "label_or_description": "Filter products by availability",
+      "risk": "read_only",
+      "expected_operations": [
+        "GET /api/products"
+      ]
+    },
+    {
+      "id": "act-paginate-products",
+      "page": "/products",
+      "label_or_description": "Paginate products",
+      "risk": "read_only",
+      "expected_operations": [
+        "GET /api/products"
+      ]
+    },
+    {
+      "id": "act-open-product",
+      "page": "/products/{id}",
+      "label_or_description": "Open product detail",
+      "risk": "read_only",
+      "expected_operations": [
+        "GET /api/products/{id}"
+      ]
+    }
+  ]
+}

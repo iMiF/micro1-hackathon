@@ -1,0 +1,21 @@
+{
+  "benchmark_name": "MiniCRM",
+  "benchmark_version": "1.0.0",
+  "application_commit": "a287351be704750357cfb55ba50ac85da813d209",
+  "created_at": "2026-08-28T23:26:00Z",
+  "scope": {
+    "protocols": [
+      "REST"
+    ],
+    "transport": [
+      "HTTP"
+    ],
+    "formats": [
+      "JSON"
+    ]
+  },
+  "excluded_from_browser_benchmark": [
+    "PATCH /api/orders/{id} (paymentStatus; no UI)",
+    "PATCH /api/customers/{customerId}/addresses/{addressId} (dead UI path; editingAddressId never set)"
+  ]
+}
