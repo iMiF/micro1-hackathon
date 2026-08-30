@@ -1,38 +1,38 @@
-# 02. Архитектура решения
+# 02. Solution architecture
 
-> **Статус:** черновик (реализована только target-часть; harness, агенты и verifier не написаны)
-> **Обновлено:** 2026-08-29
-> **Источник истины:** проектное решение; фактическое состояние — [`09`](09-status-and-roadmap.md)
-> **Соответствует критериям:** Agent Solution & Engineering (30), End to End Quality (20)
+> **Status:** draft (only the target side is implemented; the harness, agents, and verifier are not written)
+> **Updated:** 2026-08-29
+> **Source of truth:** design decision; actual state — [`09`](09-status-and-roadmap.md)
+> **Maps to criteria:** Agent Solution & Engineering (30), End to End Quality (20)
 
 ---
 
-## 1. Общая схема
+## 1. Overall diagram
 
 ```
 ┌────────────────────┐
-│ Оператор / scope   │  URL + учётные данные тестового контура, budgets, risk policy
+│ Operator / scope   │  staging URL + credentials, budgets, risk policy
 └─────────┬──────────┘
           │
           ▼
-┌────────────────────┐        решение о следующем шаге        ┌──────────────┐
-│ Оркестратор AAE    │ ◄────────────────────────────────────► │     LLM      │
-│ память, policy,    │        tool call + структурный ответ    │ не имеет     │
-│ план экспериментов │                                         │ сетевого     │
-└─────────┬──────────┘                                         │ доступа      │
+┌────────────────────┐        decision on the next step        ┌──────────────┐
+│ AAE orchestrator   │ ◄────────────────────────────────────► │     LLM      │
+│ memory, policy,    │        tool call + structured answer    │ has no       │
+│ experiment plan    │                                         │ network      │
+└─────────┬──────────┘                                         │ access       │
           │ tool call                                          └──────────────┘
           ▼
-┌────────────────────┐        UI + сеть        ┌──────────────────────────┐
+┌────────────────────┐        UI + network        ┌──────────────────────────┐
 │ Browser harness    │ ──────────────────────► │ MiniCRM (target)         │
 │ Playwright+Chromium│ ◄────────────────────── │ UI → XHR/fetch → REST API│
-│ DOM, HAR, snapshots│      наблюдения          │ только разрешённая среда │
+│ DOM, HAR, snapshots│      observations          │ permitted env only       │
 └─────────┬──────────┘                          └──────────────────────────┘
           │ evidence
           ▼
 ┌────────────────────┐   claims + evidence    ┌──────────────────────────┐
 │ Evidence store     │ ─────────────────────► │ Verifier                 │
-│ события, снимки,   │                        │ claim ↔ evidence         │
-│ req/resp refs      │                        │ confidence / conflicts   │
+│ events, snapshots,  │                        │ claim ↔ evidence         │
+│ req/resp refs       │                        │ confidence / conflicts   │
 └────────────────────┘                        └────────────┬─────────────┘
                                                             │ verified facts
                                                             ▼
@@ -43,55 +43,56 @@
                                               └──────────────────────────┘
 ```
 
-**Главный архитектурный принцип: решение отделено от действия.** LLM не имеет прямого доступа к
-`localhost` или к сети. Локальный runner запускает Chromium через Playwright, исполняет tool calls,
-собирает наблюдения и передаёт модели только разрешённый контекст.
+**Main architectural principle: the decision is separated from the action.** The LLM has no
+direct access to `localhost` or the network. A local runner drives Chromium via Playwright,
+executes tool calls, gathers observations, and only passes the model the permitted context.
 
-Три следствия:
+Three consequences:
 
-1. Всё, что агент «знает», прошло через harness и, значит, записано как evidence.
-2. Risk policy применяется в harness — до выполнения действия, а не в промпте.
-3. Утечка ground truth в контекст физически невозможна, если harness её не отдаёт.
+1. Everything the agent "knows" went through the harness and, therefore, is recorded as evidence.
+2. Risk policy is applied inside the harness — before an action runs, not in the prompt.
+3. Leaking ground truth into the context is physically impossible if the harness never hands it out.
 
 ---
 
-## 2. Контракт наблюдений
+## 2. Observation contract
 
-Что harness передаёт агенту на каждом шаге:
+What the harness passes to the agent at every step:
 
-| Слой | Что передаётся | Зачем |
+| Layer | What's passed | Why |
 | --- | --- | --- |
-| **Страница** | URL, видимый текст, доступные элементы с идентификаторами, состояния форм | Понимать, что делает пользовательское действие |
-| **Сеть** | Метод, нормализованный путь, статус, request/response body, тайминг, correlation id | Восстановить операцию, параметры и схемы |
-| **Переход** | Какое действие произошло до/после запроса; diff состояния UI | Вывести эффект и связать enum с видимой семантикой |
-| **Память** | Подтверждённые claims, неопределённости, покрытие, незакрытые гипотезы | Не переоткрывать известное; планировать самый ценный эксперимент |
+| **Page** | URL, visible text, available elements with identifiers, form state | Understand what a user action does |
+| **Network** | Method, normalized path, status, request/response body, timing, correlation id | Reconstruct the operation, parameters, and schemas |
+| **Transition** | Which action happened before/after the request; UI state diff | Infer the effect and tie the enum to visible semantics |
+| **Memory** | Confirmed claims, uncertainties, coverage, open hypotheses | Avoid re-discovering the known; plan the highest-value experiment |
 
-Слой «Память» доступен **только финальному агенту** — это одно из отличий от baseline.
+The "Memory" layer is available **only to the final agent** — this is one of the differences from
+the baseline.
 
-### Инструменты, видимые агенту
+### Tools visible to the agent
 
-Одинаковые для baseline и AAE (требование fairness):
+Identical for baseline and AAE (fairness requirement):
 
 ```
-observe_page()                      → страница + доступные элементы
+observe_page()                      → page + available elements
 click(element_id)
 fill(element_id, value)
 select(element_id, value)
 go_back()
-get_network_events()                → нормализованные сетевые события с correlation id
-submit_reconstruction(reconstruction)  → структурированный вывод, завершает прогон
+get_network_events()                → normalized network events with correlation id
+submit_reconstruction(reconstruction)  → structured output, ends the run
 ```
 
-`submit_reconstruction` принимает **структурированный аргумент**, а не Markdown. Это исключает
-ситуацию, где модель вместо результата печатает прозу и прогон нельзя оценить.
+`submit_reconstruction` takes a **structured argument**, not Markdown. This rules out a situation
+where the model prints prose instead of a result and the run can't be scored.
 
 ---
 
-## 3. Baseline: general-purpose браузерный агент
+## 3. Baseline: general-purpose browser agent
 
-Baseline — не «один промпт „исследуй приложение“». Это один general-purpose LLM-агент с теми же
-браузерными инструментами, тем же target и тем же output contract. Соответствует варианту
-брифа «One general purpose agent with basic tools».
+The baseline is not "a single 'go explore the app' prompt." It's a single general-purpose LLM
+agent with the same browser tools, the same target, and the same output contract. It matches the
+brief's "One general purpose agent with basic tools" option.
 
 ```
 SYSTEM / task
@@ -107,84 +108,88 @@ observe_page() | click(element_id) | fill(element_id, value) | select(element_id
 go_back() | get_network_events() | submit_reconstruction(reconstruction)
 ```
 
-**Цикл baseline:** наблюдать → выдвинуть гипотезу → проверить безопасным действием → сверить с
-evidence → задокументировать подтверждённое. При неуверенности или конфликте — следующий эксперимент.
+**Baseline loop:** observe → form a hypothesis → test with a safe action → check against evidence
+→ record what's confirmed. On uncertainty or conflict — run the next experiment.
 
-**Чего у baseline нет** (и это ровно то, что добавляет AAE):
+**What the baseline lacks** (and this is exactly what AAE adds):
 
-- явного планирования по information gain и покрытию;
-- долговременного журнала гипотез и конфликтов;
-- обязательной повторной проверки claims;
-- risk classifier и компилятора политик действий;
-- отдельного verifier и генерации доказательного отчёта.
+- explicit planning by information gain and coverage;
+- a persistent log of hypotheses and conflicts;
+- mandatory re-verification of claims;
+- a risk classifier and an action-policy compiler;
+- a separate verifier and evidence-report generation.
 
-Обоснование выбора именно такого baseline — [`06`](06-baseline-and-changelog.md) §1.
+Rationale for choosing this particular baseline —
+[`06`](06-baseline-and-changelog.md) §1.
 
 ---
 
-## 4. Компоненты финального агента
+## 4. Components of the final agent
 
-Каждый компонент существует, потому что устраняет **названный** failure mode. Компонент без
-измеренного эффекта удаляется и попадает в changelog как убранный эксперимент (требование брифа).
+Every component exists because it eliminates a **named** failure mode. A component with no
+measured effect is removed and logged in the changelog as a removed experiment (a brief
+requirement).
 
-| Компонент | Устраняемый failure mode | Ожидаемый эффект | Как проверяется |
+| Component | Failure mode it eliminates | Expected effect | How it's checked |
 | --- | --- | --- | --- |
-| **Coverage planner** | Агент застревает в одном разделе, не видит непокрытых операций | Меньше пропущенных endpoints и path-параметров | ablation: выключить, сравнить recall по `operations` |
-| **Hypothesis ledger** | Гипотеза теряется между шагами; догадка тихо становится «фактом» | Сохранён контекст; догадки помечены | ablation: сравнить hallucination rate |
-| **Experiment planner** | Одно наблюдение принимается за значение enum | Лучше enum semantics и business rules | ablation: сравнить F1 по `semantic_facts` |
-| **Risk classifier** | Агент делает разрушительное действие ради исследования | Ноль неразрешённых действий | лог policy-решений |
-| **Verifier** | Правдоподобные, но неподтверждённые утверждения в выводе | Ниже hallucination rate, выше evidence support | ablation: выключить, сравнить precision |
-| **Artifact generator** | Формально корректный JSON, бесполезный человеку | Готовый OpenAPI/docs | человеческая оценка (критерий End to End Quality) |
+| **Coverage planner** | The agent gets stuck in one section, misses uncovered operations | Fewer missed endpoints and path parameters | ablation: turn it off, compare recall on `operations` |
+| **Hypothesis ledger** | A hypothesis is lost between steps; a guess quietly becomes a "fact" | Context preserved; guesses are flagged | ablation: compare hallucination rate |
+| **Experiment planner** | A single observation is treated as an enum value | Better enum semantics and business rules | ablation: compare F1 on `semantic_facts` |
+| **Risk classifier** | The agent takes a destructive action in the name of exploration | Zero unapproved actions | log of policy decisions |
+| **Verifier** | Plausible but unconfirmed claims in the output | Lower hallucination rate, higher evidence support | ablation: turn it off, compare precision |
+| **Artifact generator** | Formally correct JSON that's useless to a human | Ready-to-use OpenAPI/docs | human evaluation (End to End Quality criterion) |
 
-> **Artifact generator не влияет на primary score.** Он конвертирует уже проверенный canonical
-> JSON в OpenAPI и документацию. Это сознательно: качество прозы оценивает человек, а не
-> детерминированный оценщик.
+> **The artifact generator doesn't affect the primary score.** It converts already-verified
+> canonical JSON into OpenAPI and documentation. This is deliberate: prose quality is judged by a
+> human, not by the deterministic evaluator.
 
 ---
 
-## 5. Пример активного эксперимента
+## 5. Example of an active experiment
 
-Иллюстрация цикла на реальной механике MiniCRM:
+Illustrating the cycle with real MiniCRM mechanics:
 
-1. **Наблюдение.** На странице заказа зафиксирован `PATCH /api/orders/12/status` с телом
-   `{"statusId": 40, "version": 3}`, ответ 200.
-2. **Гипотеза.** `statusId=40` соответствует состоянию, подписанному в UI как «Shipped».
-   Одного наблюдения недостаточно: подпись кнопки была «Mark shipped», а подпись состояния могла
-   отличаться.
-3. **План эксперимента.** Найти другой заказ в состоянии `Processing`, нажать ту же кнопку,
-   сравнить: подпись кнопки, тело запроса, подпись состояния после перезагрузки карточки.
-4. **Проверка.** Совпало на втором объекте → claim получает
+1. **Observation.** On the order page, `PATCH /api/orders/12/status` is observed with body
+   `{"statusId": 40, "version": 3}`, response 200.
+2. **Hypothesis.** `statusId=40` corresponds to the state labeled "Shipped" in the UI. One
+   observation isn't enough: the button's label was "Mark shipped," and the state label might
+   differ.
+3. **Experiment plan.** Find another order in the `Processing` state, click the same button,
+   compare: the button label, the request body, and the state label after reloading the order
+   card.
+4. **Verification.** It matches on the second object → the claim gets
    `verification: {status: passed, rule: two_independent_observations}`.
-5. **Фиксация.** `order.status_id:40 = shipped` попадает в verified output вместе с вложенным
-   блоком `evidence` (UI-подпись + сетевое наблюдение). Если бы наблюдения разошлись — claim
-   остался бы неподтверждённым и в verified output не попал.
+5. **Recording.** `order.status_id:40 = shipped` lands in the verified output together with a
+   nested `evidence` block (UI label + network observation). If the observations had diverged,
+   the claim would have stayed unconfirmed and would not have made it into the verified output.
 
-Побочно из того же эксперимента выводится: `version` — оптимистическая блокировка (повтор с тем же
-`version` даёт 409 `VERSION_CONFLICT`), а `Cancelled` доступен из `Processing`, но не наоборот.
-
----
-
-## 6. Правило документации
-
-> **Наблюдаемое → подтверждённое.**
-
-Система может вывести полезное prose-объяснение, но утверждение в продукции обязано либо иметь
-ссылку на facts/evidence, либо быть явно помечено как `hypothesis` / `low confidence`.
-
-Это же правило действует для самой этой документации — см. [`README.md`](README.md) §Правила сопровождения.
+As a side effect of the same experiment: `version` turns out to be optimistic locking (a repeat
+with the same `version` returns 409 `VERSION_CONFLICT`), and `Cancelled` is reachable from
+`Processing` but not the other way around.
 
 ---
 
-## 7. Границы ответственности компонентов
+## 6. Documentation rule
 
-Чтобы не размывать роли при разработке:
+> **Observed → confirmed.**
 
-| Компонент | Отвечает | **Не** отвечает |
+The system may produce a useful prose explanation, but a claim in production output must either
+carry a facts/evidence reference or be explicitly flagged as `hypothesis` / `low confidence`.
+
+The same rule governs this documentation itself — see [`README.md`](README.md) §Maintenance rules.
+
+---
+
+## 7. Component responsibility boundaries
+
+To keep roles from blurring during development:
+
+| Component | Responsible for | **Not** responsible for |
 | --- | --- | --- |
-| Runner | Reset target, запуск системы, budgets, сохранение траектории, вызов оценщика | Не оценивает качество, не принимает решений агента |
-| Harness | Исполнение tool calls, нормализация наблюдений, применение risk policy | Не планирует, не интерпретирует |
-| Агент (baseline / AAE) | Решения о следующем шаге, формирование reconstruction | Не имеет доступа к ground truth и исходникам |
-| Evaluator | Валидация схемы, нормализация, сопоставление фактов, метрики | Не использует LLM, embeddings и fuzzy matching |
-| Artifact generator | Превращение verified JSON в OpenAPI/docs | Не добавляет фактов |
+| Runner | Resetting the target, launching the system, budgets, saving the trajectory, invoking the evaluator | Does not judge quality, does not make agent decisions |
+| Harness | Executing tool calls, normalizing observations, applying risk policy | Does not plan, does not interpret |
+| Agent (baseline / AAE) | Deciding the next step, producing the reconstruction | Has no access to ground truth or source code |
+| Evaluator | Schema validation, normalization, fact matching, metrics | Uses no LLM, embeddings, or fuzzy matching |
+| Artifact generator | Turning verified JSON into OpenAPI/docs | Does not add facts |
 
-Нарушение любой из этих границ — дефект, а не оптимизация.
+Violating any of these boundaries is a defect, not an optimization.

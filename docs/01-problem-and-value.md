@@ -1,113 +1,115 @@
-# 01. Проблема, пользователь и ценность
+# 01. Problem, user, and value
 
-> **Статус:** активная
-> **Обновлено:** 2026-08-29
-> **Источник истины:** бриф хакатона §«Your challenge»; концепция проекта
-> **Соответствует критерию:** Problem & User Value (15 баллов)
+> **Status:** active
+> **Updated:** 2026-08-29
+> **Source of truth:** hackathon brief §"Your challenge"; project concept
+> **Maps to criterion:** Problem & User Value (15 points)
 
 ---
 
-## 1. Кто испытывает проблему
+## 1. Who has this problem
 
-**Основной пользователь — интеграционный/backend-инженер, которому поручили подключиться к
-внутреннему или унаследованному веб-приложению, у которого нет актуальной документации API.**
+**Primary user: an integration/backend engineer tasked with connecting to an internal or legacy
+web application that has no up-to-date API documentation.**
 
-Конкретный портрет: разработчик, который получил доступ к тестовому контуру чужой (или своей же,
-но давно забытой) системы и должен за несколько дней понять, какие HTTP-операции существуют, какие
-у них параметры, что значат числовые enum'ы и какие бизнес-правила сервер применяет молча.
+Concrete portrait: a developer who gets access to a staging environment for someone else's system
+(or their own, long forgotten) and has a few days to figure out which HTTP operations exist, what
+their parameters are, what the numeric enums mean, and which business rules the server enforces
+silently.
 
-Смежные пользователи, для которых ценность та же:
+Adjacent users for whom the value is the same:
 
-| Роль | Ситуация |
+| Role | Situation |
 | --- | --- |
-| Команда миграции | Переносят систему; поведение старого API нигде не записано |
-| QA / SDET | Пишут API-тесты для приложения без спецификации |
-| Platform engineering | Инвентаризируют внутренние сервисы перед введением API gateway |
-| Технический due diligence | Оценивают чужую систему до покупки/интеграции |
+| Migration team | Migrating a system whose old API behavior is written down nowhere |
+| QA / SDET | Writing API tests for an application with no spec |
+| Platform engineering | Inventorying internal services before rolling out an API gateway |
+| Technical due diligence | Assessing someone else's system before a purchase or integration |
 
 ---
 
-## 2. Какой bottleneck делает задачу достойной решения
+## 2. What bottleneck makes this worth solving
 
-Сегодня путь выглядит так: открыть DevTools, покликать интерфейс, выписать запросы, догадаться о
-смысле полей, спросить у того, кто «вроде знал», записать в Confluence, через месяц обнаружить, что
-половина неверна.
+Today the path looks like this: open DevTools, click around the UI, jot down requests, guess at
+what the fields mean, ask whoever "sort of knew," write it up in Confluence, discover a month
+later that half of it is wrong.
 
-Три конкретных места, где этот процесс ломается:
+Three specific places where this process breaks:
 
-1. **HTTP-трафика недостаточно для смысла.** Запрос `PATCH /api/orders/12/status` с телом
-   `{"statusId": 40, "version": 3}` показывает форму, но не значение. Что такое 40? Почему нужен
-   `version`? Что произойдёт, если прислать 50 из состояния 40? Ответ живёт в связке
-   «UI-действие → запрос → ответ → новое состояние UI», а не в самом запросе.
+1. **HTTP traffic alone isn't enough for meaning.** A request `PATCH /api/orders/12/status` with
+   body `{"statusId": 40, "version": 3}` shows the shape, not the meaning. What is 40? Why is
+   `version` required? What happens if you send 50 from state 40? The answer lives in the chain
+   "UI action → request → response → new UI state," not in the request itself.
 
-2. **Скрытые зависимости невидимы в одиночном запросе.** Создание заказа в MiniCRM требует цепочки
-   `suggest → addresses → shipping/options → order-quotes → orders`, где непрозрачный `quoteId`
-   переносит состояние между шагами и живёт 10 минут. Ни один HAR-файл не объясняет, что этот
-   идентификатор нельзя переиспользовать.
+2. **Hidden dependencies are invisible in a single request.** Creating an order in MiniCRM
+   requires the chain `suggest → addresses → shipping/options → order-quotes → orders`, where an
+   opaque `quoteId` carries state between steps and lives for 10 minutes. No HAR file explains
+   that this identifier cannot be reused.
 
-3. **Правдоподобные догадки дороже пропусков.** LLM, которой дали HAR, охотно напишет
-   «`status: 4` означает shipped». Инженер, который на это положится, найдёт ошибку в проде.
-   Документация, где неизвестное помечено как неизвестное, полезнее уверенной и неверной.
+3. **Plausible guesses are more costly than gaps.** An LLM given a HAR file will happily write
+   "`status: 4` means shipped." An engineer who relies on that will find the bug in production.
+   Documentation that flags the unknown as unknown is more useful than documentation that is
+   confident and wrong.
 
-**Почему решать это ценно:** результат — не текст, а способность безопасно интегрироваться.
-Разница между «два дня раскопок с риском ошибки» и «спецификация с указанием, на каком наблюдении
-основано каждое утверждение».
-
----
-
-## 3. Формула решения
-
-**Вход:** URL тестового контура + разрешённые учётные данные.
-
-**Выход:** структурированная реконструкция API + OpenAPI + человекочитаемая документация +
-граф зависимостей и workflows + отчёт об уверенности + evidence bundle.
-
-**Механизм, создающий ценность** — не обход интерфейса сам по себе, а цикл экспериментального
-reverse engineering:
-
-> наблюдать → выдвинуть гипотезу → безопасно проверить → зафиксировать **только подтверждённое**
-
-Ключевое отличие от «LLM по HAR-файлу»: агент может *поставить эксперимент*. Увидев
-`statusId: 40` один раз, он не называет значение — он находит другой заказ, нажимает конкретную
-кнопку с видимой подписью и проверяет, совпадает ли результат. Два независимых наблюдения →
-факт. Одно наблюдение или конфликт → явная неопределённость.
+**Why this is worth solving:** the result isn't text — it's the ability to integrate safely. The
+difference between "two days of digging with a risk of getting it wrong" and "a spec that states,
+for every claim, which observation it rests on."
 
 ---
 
-## 4. Позиционирование
+## 3. Solution formula
 
-| Подход | Что делает хорошо | Ограничение | Позиция AAE |
+**Input:** staging environment URL + permitted credentials.
+
+**Output:** structured API reconstruction + OpenAPI + human-readable documentation + dependency
+and workflow graph + confidence report + evidence bundle.
+
+**The mechanism that creates the value** is not merely crawling the UI — it's a cycle of
+experimental reverse engineering:
+
+> observe → form a hypothesis → safely test it → record **only what's confirmed**
+
+The key difference from "an LLM given a HAR file": the agent can *run an experiment*. Having seen
+`statusId: 40` once, it doesn't name the value — it finds another order, clicks the specific
+button with a visible label, and checks whether the result matches. Two independent observations
+→ a fact. One observation or a conflict → explicit uncertainty.
+
+---
+
+## 4. Positioning
+
+| Approach | What it does well | Limitation | AAE's position |
 | --- | --- | --- | --- |
-| DevTools / HAR / прокси | Показывает фактические запросы | Не объясняет, какое действие вызвало запрос и что значат значения | Использует как первичное доказательство |
-| OpenAPI scanners, traffic-to-spec | Строит синтаксический каркас | Не восстанавливает семантику, workflows, скрытые зависимости | Добавляет UI-контекст, гипотезы, verification loop |
-| RPA / browser automation | Выполняет известные сценарии | Не реконструирует неизвестную модель | Переиспользует браузер как инструмент исследования |
-| Ручной reverse engineering | Богатый контекст | Дорого, плохо масштабируется, невоспроизводимо | Формализует путь от наблюдения до доказуемого утверждения |
-| LLM по HAR-файлу | Быстрый черновик | Слаба в семантике и зависимостях, склонна к правдоподобным галлюцинациям | Это разумный **baseline**, но не финальный агент |
+| DevTools / HAR / proxy | Shows the actual requests | Doesn't explain which action triggered the request or what the values mean | Used as primary evidence |
+| OpenAPI scanners, traffic-to-spec | Builds a syntactic skeleton | Doesn't recover semantics, workflows, hidden dependencies | Adds UI context, hypotheses, a verification loop |
+| RPA / browser automation | Executes known scenarios | Doesn't reconstruct an unknown model | Reuses the browser as an exploration tool |
+| Manual reverse engineering | Rich context | Expensive, doesn't scale, not reproducible | Formalizes the path from observation to a provable claim |
+| LLM given a HAR file | Fast draft | Weak on semantics and dependencies, prone to plausible hallucination | A reasonable **baseline**, not the final agent |
 
 ---
 
-## 5. Границы MVP
+## 5. MVP boundaries
 
-| Поддерживаем | Сознательно **не** включаем |
+| Supported | Deliberately **not** included |
 | --- | --- |
 | Single-page web apps | GraphQL, WebSocket, gRPC-web |
-| REST / JSON | CAPTCHA, OAuth-исследование, SSO между доменами |
-| Cookie-сессия + CSRF-заголовок | Bearer-токены (в target их нет — см. [`03`](03-target-minicrm.md)) |
-| Chromium через Playwright | Загрузка файлов, платежи |
-| XHR / fetch | Произвольные production-сайты |
-| Только синтетическая/разрешённая среда | Обход защит любого рода |
+| REST / JSON | CAPTCHA, OAuth discovery, cross-domain SSO |
+| Cookie session + CSRF header | Bearer tokens (not present in the target — see [`03`](03-target-minicrm.md)) |
+| Chromium via Playwright | File uploads, payments |
+| XHR / fetch | Arbitrary production sites |
+| Synthetic/permitted environments only | Bypassing protections of any kind |
 
-> Bearer-токенов в мишени нет, поэтому поддержка такой аутентификации не заявляется: утверждение
-> о возможности, для которой нет кейса, нарушает ground rule 09.
+> The target has no bearer tokens, so support for that auth method isn't claimed: claiming a
+> capability with no backing case violates ground rule 09.
 
 ---
 
-## 6. Как проверяется, что решение действительно работает
+## 6. How we verify the solution actually works
 
-Заявление «агент реконструирует API лучше» проверяемо только на контролируемой мишени, где
-истина известна авторам и скрыта от агента. Поэтому проект включает собственный benchmark —
-**MiniCRM** ([`03`](03-target-minicrm.md)) — и детерминированный оценщик
+The claim "the agent reconstructs the API better" is only testable on a controlled target whose
+ground truth is known to the authors and hidden from the agent. That's why the project includes
+its own benchmark — **MiniCRM** ([`03`](03-target-minicrm.md)) — and a deterministic evaluator
 ([`05`](05-evaluation-and-metrics.md)).
 
-Это ответ на вопрос 04 брифа («Can another person reproduce the result?»): не «поверьте демо»,
-а «запустите те же 15 кейсов из той же конфигурации прогона и получите те же числа».
+This answers the brief's question 04 ("Can another person reproduce the result?"): not "trust the
+demo," but "run the same 15 cases from the same run configuration and get the same numbers."

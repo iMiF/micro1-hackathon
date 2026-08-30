@@ -1,219 +1,243 @@
-# 11. Журнал решений и открытые вопросы
+# 11. Decision log and open questions
 
-> **Статус:** активная — пополняется по ходу проекта
-> **Обновлено:** 2026-08-29
+> **Status:** active — updated as the project proceeds
+> **Updated:** 2026-08-29
 
-Два списка: принятые решения (ADR) и открытые вопросы (OQ). Решение не удаляется и не
-переписывается — оно получает статус `заменено` и ссылку на новое. Так видно, почему проект
-устроен именно так, а не иначе.
-
----
-
-## Принятые решения
-
-### ADR-1 — Источником истины о поведении мишени является код, а не концепт-документ
-
-**Дата:** 2026-08-29 · **Статус:** принято
-
-**Контекст.** `Autonomous_API_Explorer_Technical_Documentation_RU.pdf` писался до сверки с
-реализацией: он предлагает структуру и механику, а не описывает существующую. Построчная сверка
-его утверждений с кодом — в архиве [`10`](10-source-review.md).
-
-**Решение.** Иерархия источников: бриф → код → `miniCRM/benchmark/ground-truth/` → `docs/` → концепт-PDF
-(только исторический контекст).
-
-**Последствия.** Любое утверждение о MiniCRM в документации снабжается указателем на символ в коде.
-`miniCRM/benchmark/ground-truth/` регенерируется из кода, а не правится руками.
+Two lists: accepted decisions (ADR) and open questions (OQ). A decision is never deleted or
+rewritten — it gets a `superseded` status and a link to the new one. That way it stays visible why
+the project is built the way it is, and not some other way.
 
 ---
 
-### ADR-2 — Primary metric — собственная (VARS), но стандартная таблица брифа заполняется тоже
+## Accepted decisions
 
-**Дата:** 2026-08-29 · **Статус:** ⚠️ принято частично — **веса не утверждены**
+### ADR-1 — The source of truth for the target's behavior is the code, not the concept document
 
-**Контекст.** Бриф просит одну primary metric и разрешает предложить свою rubric. Стандартная
-таблица (`Primary outcome`, `Human time per task`, `Cost per task`) плохо описывает
-качество реконструкции API, но выкидывать её нельзя.
+**Date:** 2026-08-29 · **Status:** accepted
 
-**Решение.** VARS как primary metric ([`05`](05-evaluation-and-metrics.md)) **плюс** стандартная
-таблица брифа целиком.
+**Context.** `Autonomous_API_Explorer_Technical_Documentation_RU.pdf` was written before
+reconciliation with the implementation: it proposes a structure and mechanics rather than
+describing an existing one. A line-by-line reconciliation of its claims against the code is in the
+archive [`10`](10-source-review.md).
 
-**Что не решено.** Веса категорий (0.25 / 0.20 / 0.25 / 0.15 / 0.15) — предложение, не решение.
-Их надо утвердить **до** первого зачётного прогона и заморозить, иначе появляется возможность
-подогнать метрику под результат. Открыт вопрос о подвесах внутри `semantic_facts`.
+**Decision.** Hierarchy of sources: brief → code → `miniCRM/benchmark/ground-truth/` → `docs/` →
+concept PDF (historical context only).
 
-**Срок:** D-12…D-10.
-
----
-
-### ADR-3 — Baseline: general-purpose агент с тем же tool surface
-
-**Дата:** 2026-08-29 · **Статус:** принято
-
-**Контекст.** Бриф допускает четыре формы baseline. Слабый baseline даёт большую цифру улучшения
-и слабую работу.
-
-**Решение.** «One general purpose agent with basic tools» — те же семь инструментов, тот же
-target, та же схема вывода, те же бюджеты. Отличается только внутренняя организация.
-
-**Последствия.** Заявленное улучшение будет меньше, чем при слабом baseline, но будет означать
-именно вклад workflow. Обоснование — [`06`](06-baseline-and-changelog.md) §1.
+**Consequences.** Every claim about MiniCRM in the documentation is backed by a pointer to a
+symbol in the code. `miniCRM/benchmark/ground-truth/` is regenerated from the code, never
+hand-edited.
 
 ---
 
-### ADR-4 — Порядок сброса: остановить API → reset → поднять API
+### ADR-2 — The primary metric is our own (VARS), but the brief's standard table is filled in too
 
-**Дата:** 2026-08-29 · **Статус:** принято
+**Date:** 2026-08-29 · **Status:** ⚠️ partially accepted — **weights not approved**
 
-**Контекст.** `miniCRM/apps/api/src/session.ts` хранит сессии в `Map` внутри процесса. `npm run db:reset`
-чистит БД, но не память процесса: сессия, выданная до сброса, продолжает работать, а её
-пользователь может уже не существовать в БД.
+**Context.** The brief asks for a single primary metric and allows proposing our own rubric. The
+standard table (`Primary outcome`, `Human time per task`, `Cost per task`) poorly describes API
+reconstruction quality, but can't be dropped.
 
-**Решение.** Runner в фазе Reset останавливает процесс API, выполняет сброс, затем поднимает API
-заново. Прогон не перезапускает API внутри себя.
+**Decision.** VARS as the primary metric ([`05`](05-evaluation-and-metrics.md)) **plus** the
+brief's standard table in full.
 
-**Последствия.** Фаза Reset дороже по времени, зато прогоны действительно независимы.
+**Not yet decided.** The category weights (0.25 / 0.20 / 0.25 / 0.15 / 0.15) are a proposal, not a
+decision. They need to be approved **before** the first scored run and then frozen, otherwise
+there's a risk of fitting the metric to the result. Whether to add sub-weights inside
+`semantic_facts` is still open.
 
----
-
-### ADR-5 — Документация проекта живёт в репозитории мишени и помечена author-only
-
-**Дата:** 2026-08-29 · **Статус:** ⛔ заменено на ADR-6
-
-**Контекст.** Документация описывает семантику мишени. Размещение внутри репозитория мишени
-удобно: одна история изменений с кодом.
-
-**Решение.** `docs/` внутри репозитория мишени, author-only, в deny-list конфигурации прогона.
+**Deadline:** D-12…D-10.
 
 ---
 
-### ADR-6 — Документация вынесена в корень проекта, рядом с мишенью
+### ADR-3 — Baseline: a general-purpose agent with the same tool surface
 
-**Дата:** 2026-08-29 · **Статус:** принято · **Заменяет:** ADR-5
+**Date:** 2026-08-29 · **Status:** accepted
 
-**Контекст.** `miniCRM/` — испытуемое приложение. Агент, который будет его исследовать, harness,
-оценщик и runner мишенью не являются и внутри неё жить не должны. Документация описывает их все,
-а не только мишень, поэтому её место — уровнем выше.
+**Context.** The brief allows four forms of baseline. A weak baseline yields a bigger improvement
+number and weaker work.
 
-**Решение.** `docs/` лежит в корне проекта рядом с `miniCRM/`. Пометка author-only сохраняется;
-deny-list конфигурации прогона перечисляет каталог `miniCRM/` целиком и `docs/`.
+**Decision.** "One general purpose agent with basic tools" — the same seven tools, the same
+target, the same output schema, the same budgets. Only the internal organization differs.
 
-**Последствия.** Ссылки на код в документации даются от корня проекта
-(`miniCRM/apps/api/src/domain/tax.ts`). Изоляция перестаёт зависеть от того, совпадает ли рабочая
-директория агента с репозиторием мишени: она вне обоих каталогов
+**Consequences.** The claimed improvement will be smaller than with a weak baseline, but it will
+reflect the workflow's actual contribution. Rationale —
+[`06`](06-baseline-and-changelog.md) §1.
+
+---
+
+### ADR-4 — Reset order: stop the API → reset → start the API
+
+**Date:** 2026-08-29 · **Status:** accepted
+
+**Context.** `miniCRM/apps/api/src/session.ts` stores sessions in an in-process `Map`. `npm run
+db:reset` clears the DB but not process memory: a session issued before the reset keeps working,
+even though its user may no longer exist in the DB.
+
+**Decision.** In the Reset phase, the runner stops the API process, performs the reset, then
+starts the API again. A run never restarts the API internally.
+
+**Consequences.** The Reset phase takes longer, but runs are genuinely independent.
+
+---
+
+### ADR-5 — Project documentation lives in the target repository, marked author-only
+
+**Date:** 2026-08-29 · **Status:** ⛔ superseded by ADR-6
+
+**Context.** The documentation describes the target's semantics. Placing it inside the target
+repository is convenient: one shared history with the code.
+
+**Decision.** `docs/` inside the target repository, author-only, on the run configuration's
+deny-list.
+
+---
+
+### ADR-6 — Documentation moved to the project root, alongside the target
+
+**Date:** 2026-08-29 · **Status:** accepted · **Supersedes:** ADR-5
+
+**Context.** `miniCRM/` is the application under test. The agent that explores it, the harness, the
+evaluator, and the runner are not the target and shouldn't live inside it. The documentation
+describes all of them, not just the target, so it belongs one level up.
+
+**Decision.** `docs/` lives at the project root next to `miniCRM/`. The author-only marking stays;
+the run configuration's deny-list lists the whole `miniCRM/` directory plus `docs/`.
+
+**Consequences.** Code references in the documentation are given from the project root
+(`miniCRM/apps/api/src/domain/tax.ts`). Isolation no longer depends on whether the agent's working
+directory matches the target repository: it's outside both
 ([`04`](04-benchmark-contract.md) §1).
 
 ---
 
-### ADR-7 — Оптимистическая блокировка — отдельный `kind` в схеме результата
+### ADR-7 — Optimistic locking gets its own `kind` in the output schema
 
-**Дата:** 2026-08-29 · **Статус:** принято
+**Date:** 2026-08-29 · **Status:** accepted
 
-**Контекст.** `semantic_facts[].kind` — закрытый список категорий, по которым оценщик сопоставляет
-факты. Оптимистическая блокировка (`version` + 409) — не валидация входа: она про согласование
-параллельных изменений, и слияние её с `validation` стёрло бы различие, ради которого факт нужен.
+**Context.** `semantic_facts[].kind` is a closed list of categories the evaluator matches facts by.
+Optimistic locking (`version` + 409) isn't input validation — it's about reconciling concurrent
+changes, and merging it into `validation` would erase the distinction the fact exists to capture.
 
-**Решение.** `concurrency` — девятое значение enum `semanticFact.kind`. Одно и то же в схеме,
-в ground truth и в эталонной реконструкции.
+**Decision.** `concurrency` is the ninth value of the `semanticFact.kind` enum. The same value in
+the schema, in ground truth, and in the reference reconstruction.
 
-**Последствия.** Список `kind` расширяется только решением здесь: каждое значение — отдельный
-ключ сопоставления и отдельная строка в разбивке метрики.
-
----
-
-### ADR-8 — Кейс оценивает только браузерно-наблюдаемые факты
-
-**Дата:** 2026-08-29 · **Статус:** принято
-
-**Контекст.** Часть настоящего API недостижима из UI: клиент всегда посылает свежий `version`,
-рисует только разрешённые переходы статуса, подставляет CSRF-заголовок, создаёт новую котировку на
-каждое изменение заказа и показывает удаление только у черновика.
-
-**Решение.** Такие факты остаются в `miniCRM/benchmark/ground-truth/semantics.json` — они часть
-настоящего API, — но в `ground_truth_fact_ids` кейсов не входят. Перечень с обоснованием по
-каждому — `miniCRM/benchmark/GAPS.md` §«Ground-truth facts that no case scores».
-
-**Последствия.** Recall кейса измеряет исследование, а не угадывание HTTP. Если до заморозки
-мишень получит UI-путь к такому поведению, факт возвращается в кейс вместе с регенерацией
-артефактов benchmark.
+**Consequences.** The `kind` list only grows through a decision recorded here: each value is a
+separate matching key and a separate row in the metric breakdown.
 
 ---
 
-## Открытые вопросы
+### ADR-8 — A case only scores browser-observable facts
 
-### OQ-1 — Фактическая дата дедлайна
+**Date:** 2026-08-29 · **Status:** accepted
 
-**Приоритет:** высокий · **Блокирует:** весь план в [`09`](09-status-and-roadmap.md)
+**Context.** Part of the real API is unreachable from the UI: the client always sends a fresh
+`version`, only draws the allowed status-transition buttons, always attaches the CSRF header,
+creates a new quote on every order edit, and only shows deletion for a draft.
 
-В брифе даты нет. Нужна из письма или лендинга организаторов. Пока план привязан к D-0.
+**Decision.** Such facts stay in `miniCRM/benchmark/ground-truth/semantics.json` — they're part of
+the real API — but are excluded from cases' `ground_truth_fact_ids`. The list, with rationale per
+fact, is in `miniCRM/benchmark/GAPS.md` §"Ground-truth facts that no case scores."
 
----
-
-### OQ-3 — Предзаполненный логин ослабляет benchmark
-
-**Приоритет:** средний · **Влияет на:** `case-01-auth-session-csrf`
-
-`miniCRM/apps/web/src/pages/LoginPage.vue` предзаполняет `admin@minicrm.local` / `demo123`. Это не
-нарушение ground rule 08 (данные синтетические), но упрощает discovery авторизации сильнее, чем
-задумано: агенту не нужно ничего выяснять.
-
-Варианты: (а) оставить и признать в отчёте; (б) убрать предзаполнение, передавать учётные данные
-агенту через конфигурацию кейса. Вариант (б) чище, но это изменение мишени — только **до**
-заморозки.
+**Consequences.** A case's recall measures exploration, not HTTP guessing. If the target gains a UI
+path to such behavior before the freeze, the fact returns to the case along with a regeneration of
+the benchmark artifacts.
 
 ---
 
-### OQ-4 — Какой кейс назначить основным сложным
+### ADR-9 — Project documentation is written in English
 
-**Приоритет:** средний · **Срок:** до D-3
+**Date:** 2026-08-30 · **Status:** accepted
 
-Бриф требует **один** сложный кейс с разбором того, что он выявил. У нас три помечены
-`challenging`: `case-09` (workflow создания заказа, 22 факта), `case-10` (идентификаторы способов
-доставки), `case-11` (налог по регионам).
+**Context.** `docs/` was originally written in Russian (13 files, author-only). The user asked for
+the whole set to be translated to English on 2026-08-30 to avoid mixing languages as the project
+and its documentation grow.
 
-Кандидат — `case-09`: самая длинная цепочка зависимостей и непрозрачный `quoteId`. Остальные два
-остаются в общей таблице.
+**Decision.** All files in `docs/` are written in English going forward. Every file's metadata
+block records this via `README.md` §"Language: English"; new files follow the same convention.
 
----
+**Consequences.** The 2026-08-29 Russian originals are fully superseded — there is no bilingual
+fork of `docs/`. Any new documentation file added to this directory is written in English from the
+start; a file that drifts back into Russian is a defect, not a style choice.
 
-### OQ-5 — Метод измерения «Human time per task»
 
-**Приоритет:** средний · **Срок:** до D-3
+## Open questions
 
-Таблица брифа требует человеко-время. Наша задача автоматическая, эталона нет.
+### OQ-1 — Actual deadline date
 
-Варианты: (а) хронометраж ручной реконструкции одного кейса квалифицированным инженером и
-экстраполяция с оговоркой; (б) честное «не измерялось» с объяснением.
+**Priority:** high · **Blocks:** the whole plan in [`09`](09-status-and-roadmap.md)
 
-Выдуманное число — худший вариант из всех: нарушает ground rule 09 и подрывает доверие ко всем
-остальным числам.
-
----
-
-### OQ-8 — Связывать ли доказательства подачи с журналом прогона
-
-**Приоритет:** низкий · **Влияет на:** аудируемость, не на score
-
-Доказательства существуют на двух уровнях ([`08`](08-evidence-and-trajectories.md) §2): вложенные
-объекты внутри подачи (схема, без идентификаторов) и записи `ev_NNN` в артефактах прогона.
-Связи между ними нет: по факту из подачи нельзя механически найти шаг траектории, который его породил.
-
-Для scoring это не нужно — оценщик читает только подачу. Для человеческого review и для критерия
-Reproducibility связь была бы полезна.
-
-Вариант: добавить в `definitions.evidence` необязательное поле `trace_ref`. Цена — изменение
-схемы; выгода — судья проходит цепочку «утверждение → шаг агента» механически.
-
-Решать **после** того, как harness начнёт писать траектории и станет видно, насколько это болезненно вручную.
+The brief has no date. It needs to come from the organizers' email or landing page. Until then, the
+plan is anchored to D-0.
 
 ---
 
-### OQ-6 — Многоагентная оркестрация: нужна ли она
+### OQ-3 — Pre-filled login weakens the benchmark
 
-**Приоритет:** низкий · **Срок:** после первых прогонов AAE
+**Priority:** medium · **Affects:** `case-01-auth-session-csrf`
 
-Бриф прямо говорит: *«Purposeful choices matter more than the number of components»*. Разделение
-AAE на несколько агентов оправдано, только если ablation покажет выигрыш. Иначе это лишняя
-сложность, которая отнимет баллы, а не добавит.
+`miniCRM/apps/web/src/pages/LoginPage.vue` pre-fills `admin@minicrm.local` / `demo123`. This
+doesn't violate ground rule 08 (the data is synthetic), but it simplifies auth discovery more than
+intended: the agent doesn't need to figure anything out.
 
-Решать **после** того, как станет виден реальный failure mode одноагентной версии.
+Options: (a) leave it and acknowledge it in the report; (b) remove the pre-fill and pass
+credentials to the agent through the case configuration. Option (b) is cleaner, but it's a target
+change — only possible **before** the freeze.
+
+---
+
+### OQ-4 — Which case to designate as the primary hard case
+
+**Priority:** medium · **Deadline:** by D-3
+
+The brief requires **one** hard case with an analysis of what it revealed. We have three marked
+`challenging`: `case-09` (order-creation workflow, 22 facts), `case-10` (shipping-method
+identifiers), `case-11` (tax by region).
+
+Candidate: `case-09` — the longest dependency chain and an opaque `quoteId`. The other two stay in
+the general table.
+
+---
+
+### OQ-5 — Method for measuring "Human time per task"
+
+**Priority:** medium · **Deadline:** by D-3
+
+The brief's table requires human time. Our task is automatic; there's no baseline for it.
+
+Options: (a) time a qualified engineer's manual reconstruction of one case and extrapolate, with a
+caveat; (b) an honest "not measured" with an explanation.
+
+A made-up number is the worst option of all: it violates ground rule 09 and undermines trust in
+every other number in the report.
+
+---
+
+### OQ-8 — Whether to link submission evidence to the run log
+
+**Priority:** low · **Affects:** auditability, not score
+
+Evidence exists at two levels ([`08`](08-evidence-and-trajectories.md) §2): nested objects inside
+the submission (schema, no identifiers) and `ev_NNN` entries in run artifacts. There's no link
+between them: given a fact from the submission, there's no mechanical way to find the trajectory
+step that produced it.
+
+Not needed for scoring — the evaluator only reads the submission. For human review and for the
+Reproducibility criterion, a link would be useful.
+
+Option: add an optional `trace_ref` field to `definitions.evidence`. Cost: a schema change;
+benefit: a judge can mechanically walk the chain "claim → agent step."
+
+Decide **after** the harness starts writing trajectories and it becomes clear how painful this is
+to do by hand.
+
+---
+
+### OQ-6 — Is multi-agent orchestration needed
+
+**Priority:** low · **Deadline:** after AAE's first runs
+
+The brief states directly: *"Purposeful choices matter more than the number of components."*
+Splitting AAE into multiple agents is justified only if an ablation shows a win. Otherwise it's
+unnecessary complexity that costs points rather than earning them.
+
+Decide **after** the single-agent version's real failure mode becomes visible.

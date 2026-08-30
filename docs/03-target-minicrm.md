@@ -1,55 +1,57 @@
-# 03. MiniCRM как контролируемая мишень
+# 03. MiniCRM as a controlled target
 
-> **Статус:** активная
-> **Обновлено:** 2026-08-29
-> **Источник истины:** `miniCRM/apps/api/src`, `miniCRM/apps/web/src`, `miniCRM/db/migrations` (код), `miniCRM/benchmark/INVENTORY.md` (аудит)
-> ⚠️ **AUTHOR-ONLY.** Этот файл не попадает в контекст оцениваемого агента.
+> **Status:** active
+> **Updated:** 2026-08-29
+> **Source of truth:** `miniCRM/apps/api/src`, `miniCRM/apps/web/src`, `miniCRM/db/migrations` (code), `miniCRM/benchmark/INVENTORY.md` (audit)
+> ⚠️ **AUTHOR-ONLY.** This file never enters the evaluated agent's context.
 
-Этот документ описывает мишень как **инженерный артефакт**: стек, запуск, границы, гарантии.
-Детальная поверхность API и семантика — в `miniCRM/benchmark/INVENTORY.md` (человекочитаемо) и
-`miniCRM/benchmark/ground-truth/*.json` (машиночитаемо). Здесь они **не дублируются**, чтобы не появилось
-второго источника истины, который начнёт расходиться с первым.
-
----
-
-## 1. Что это и зачем
-
-MiniCRM — синтетическая CRM для интернет-магазина: сотрудники ведут клиентов, товары и заказы.
-Она существует ровно затем, чтобы benchmark был честным: авторам модель известна полностью,
-агенту — не видна вообще.
-
-**Не является:** production-софтом, продуктом для платежей/налогов/доставки. Налоговые суммы —
-синтетическая benchmark-логика, а не налоговая консультация. Данные синтетические. Внешние
-сервисы, почта, аналитика и платёжные провайдеры не вызываются.
-
-**Ключевое свойство:** приложение **не отдаёт** OpenAPI, справочник статусов, каталог способов
-доставки или таблицу налоговых ставок. Смысл числовых значений выводится только из связки
-«UI-подпись ↔ трафик». Это не недоработка — это и есть сложность benchmark.
+This document describes the target as an **engineering artifact**: stack, how to run it,
+boundaries, guarantees. The detailed API surface and semantics live in
+`miniCRM/benchmark/INVENTORY.md` (human-readable) and `miniCRM/benchmark/ground-truth/*.json`
+(machine-readable). They are **not duplicated** here, so a second source of truth doesn't appear
+and start drifting from the first.
 
 ---
 
-## 2. Стек и версии
+## 1. What it is and why
 
-| Слой | Технология | Версия |
+MiniCRM is a synthetic CRM for an online store: staff manage customers, products, and orders. It
+exists for exactly one reason: to keep the benchmark fair — the authors know the model completely,
+the agent doesn't see it at all.
+
+**Is not:** production software, a product for payments/tax/shipping. Tax amounts are synthetic
+benchmark logic, not tax advice. Data is synthetic. No external services, email, analytics, or
+payment providers are called.
+
+**Key property:** the application **does not expose** an OpenAPI spec, a status reference, a
+shipping-method catalog, or a tax-rate table. The meaning of numeric values can only be derived
+from tying "UI label ↔ traffic" together. This isn't an oversight — it *is* the benchmark's
+difficulty.
+
+---
+
+## 2. Stack and versions
+
+| Layer | Technology | Version |
 | --- | --- | --- |
 | Runtime | Node.js | 22 (`.nvmrc`) |
 | Backend | Fastify | 5 |
 | Frontend | Vue 3 + TypeScript + Vite + Vue Router | — |
-| БД | PostgreSQL | 17 (docker compose) |
+| DB | PostgreSQL | 17 (docker compose) |
 | TypeScript | | 5.7.3 |
 | E2E | Playwright | 1.50.1 |
-| Монорепо | npm workspaces | `miniCRM/apps/*` |
+| Monorepo | npm workspaces | `miniCRM/apps/*` |
 
-Браузер обращается к `http://localhost:5173`; Vite проксирует same-origin `/api` на Fastify
-(`http://localhost:3000`). Для агента это означает: **весь трафик same-origin**, отдельного
-API-хоста не видно.
+The browser talks to `http://localhost:5173`; Vite proxies same-origin `/api` to Fastify
+(`http://localhost:3000`). For the agent this means: **all traffic is same-origin**, there's no
+separate API host to see.
 
 ---
 
-## 3. Запуск и сброс
+## 3. Running and resetting
 
 ```bash
-cd miniCRM        # все команды мишени выполняются из её каталога
+cd miniCRM        # all target commands run from its directory
 npm install
 docker compose up -d
 npm run db:reset
@@ -58,128 +60,130 @@ npm run dev
 
 - Frontend: `http://localhost:5173`
 - API: `http://localhost:3000`
-- Демо-вход: `admin@minicrm.local` / `demo123`
+- Demo login: `admin@minicrm.local` / `demo123`
 
-**Сброс:**
+**Reset:**
 
 ```bash
 npm run db:reset
 ```
 
-Сбрасывает данные приложения, прогоняет миграции заново и восстанавливает тот же
-детерминированный seed. Это **out-of-band команда разработчика**: HTTP-эндпоинта сброса
-не существует, и добавлять его нельзя — агент не должен иметь возможности «перезапустить мир».
+Resets the application data, re-runs migrations, and restores the same deterministic seed. This is
+an **out-of-band developer command**: there is no HTTP reset endpoint, and one must not be added —
+the agent should never be able to "restart the world."
 
-**Тесты:**
+**Tests:**
 
 ```bash
 npm run typecheck
-npm run test:api      # сбрасывает БД самостоятельно
+npm run test:api      # resets the DB on its own
 npx playwright install chromium
-npm run test:e2e      # ожидает запущенный PostgreSQL
+npm run test:e2e      # expects PostgreSQL to be running
 ```
 
-### ⚠️ Сессии живут в памяти процесса
+### ⚠️ Sessions live in process memory
 
-`miniCRM/apps/api/src/session.ts` хранит сессии в `Map` внутри процесса Fastify. Перезапуск API
-инвалидирует все сессии. Следствие для benchmark: **runner не должен перезапускать API внутри
-прогона**, а `db:reset` не очищает сессии — порядок сброса «остановить API → reset → поднять API»
-обязателен для воспроизводимости. Зафиксировано как ADR-4 в [`11`](11-decisions-and-open-questions.md).
+`miniCRM/apps/api/src/session.ts` stores sessions in a `Map` inside the Fastify process.
+Restarting the API invalidates every session. Consequence for the benchmark: **the runner must not
+restart the API mid-run**, and `db:reset` does not clear sessions — the reset order "stop API →
+reset → start API" is mandatory for reproducibility. Recorded as ADR-4 in
+[`11`](11-decisions-and-open-questions.md).
 
 ---
 
-## 4. Поверхность API
+## 4. API surface
 
-Сервер регистрирует **28 маршрутов**. Из них **26 достижимы через UI** и составляют scope
-browser-benchmark; именно эти 26 описаны в `miniCRM/benchmark/ground-truth/api.json`. Полный перечень всех
-28, включая недостижимые, — `miniCRM/benchmark/INVENTORY.md`.
+The server registers **28 routes**. Of those, **26 are reachable through the UI** and make up the
+browser-benchmark scope; exactly those 26 are described in
+`miniCRM/benchmark/ground-truth/api.json`. The full list of all 28, including the unreachable ones,
+is in `miniCRM/benchmark/INVENTORY.md`.
 
-| Группа | Маршрутов | Файл |
+| Group | Routes | File |
 | --- | ---: | --- |
 | Auth | 3 | `miniCRM/apps/api/src/routes/auth.ts` |
-| Customers (+ адреса) | 9 | `miniCRM/apps/api/src/routes/customers.ts` |
-| Orders (+ заметки, статус, активность) | 8 | `miniCRM/apps/api/src/routes/orders.ts` |
+| Customers (+ addresses) | 9 | `miniCRM/apps/api/src/routes/customers.ts` |
+| Orders (+ notes, status, activity) | 8 | `miniCRM/apps/api/src/routes/orders.ts` |
 | Products | 3 | `miniCRM/apps/api/src/routes/products.ts` |
-| Geo (страны/регионы) | 2 | `miniCRM/apps/api/src/routes/geo.ts` |
+| Geo (countries/regions) | 2 | `miniCRM/apps/api/src/routes/geo.ts` |
 | Quotes | 1 | `miniCRM/apps/api/src/routes/quotes.ts` |
 | Shipping | 1 | `miniCRM/apps/api/src/routes/shipping.ts` |
 | Dashboard | 1 | `miniCRM/apps/api/src/routes/dashboard.ts` |
 
-### Вне scope browser-benchmark (2 маршрута)
+### Out of browser-benchmark scope (2 routes)
 
-| Маршрут | Почему исключён |
+| Route | Why excluded |
 | --- | --- |
-| `PATCH /api/orders/{id}` | Меняет `paymentStatus`; в UI нет ни одного элемента управления, который бы его вызывал |
-| `PATCH /api/customers/{customerId}/addresses/{addressId}` | Мёртвый путь во фронтенде: `editingAddressId` инициализируется `null` и никогда не присваивается |
+| `PATCH /api/orders/{id}` | Changes `paymentStatus`; there's no UI control anywhere that calls it |
+| `PATCH /api/customers/{customerId}/addresses/{addressId}` | Dead path in the frontend: `editingAddressId` is initialized to `null` and never assigned |
 
-Эти маршруты существуют и являются частью настоящего API, но browser-only агент их не увидит.
-Оценивать за них нельзя — это измеряло бы угадывание, а не исследование.
+These routes exist and are part of the real API, but a browser-only agent will never see them.
+They must not be scored — that would measure guessing, not exploration.
 
 ---
 
-## 5. Что делает мишень сложной (и это надо сохранить)
+## 5. What makes the target hard (and must be preserved)
 
-Список того, ради чего benchmark вообще имеет смысл. При любых правках приложения эти свойства
-защищаются в первую очередь:
+The list of things the benchmark's entire point rests on. When editing the app, these properties
+are the first thing to protect:
 
-| Свойство | Почему сложно |
+| Property | Why it's hard |
 | --- | --- |
-| Многошаговое создание заказа | `suggest → addresses → shipping/options → order-quotes → orders`; непрозрачный `quoteId` переносит состояние |
-| Числовые статусы заказа | Подписи существуют только во фронтенде (`miniCRM/apps/web/src/orderStatus.ts`); справочника по API нет |
-| Ограниченные переходы состояний | Разрешённые переходы заданы в `miniCRM/apps/api/src/domain/status.ts`; UI показывает только допустимые кнопки, поэтому 409 из UI не увидеть |
-| Зависимый селект страна → регион | Условные вызовы `GET /api/regions` |
-| Оптимистическая блокировка `version` | Скрытая зависимость от предыдущего GET |
-| Способы доставки не хранятся в БД | Вычисляются в `miniCRM/apps/api/src/domain/shipping.ts` в зависимости от страны и суммы |
-| Налог отдаётся только суммой | Ставки не возвращаются; `miniCRM/apps/api/src/domain/tax.ts` |
-| Деньги — целые центы | Легко ошибиться в типе |
-| Cookie-сессия + CSRF-заголовок | Заголовок автоматически подставляется клиентом; агент, копирующий `fetch` из DevTools, контракт пропустит |
-| Бизнес-запреты с 409/422 | Удаление клиента с заказами, архивный клиент, нехватка остатка |
-| Мягкая архивация клиентов | Архивные не попадают в `suggest`, но видны в списке |
+| Multi-step order creation | `suggest → addresses → shipping/options → order-quotes → orders`; an opaque `quoteId` carries state |
+| Numeric order statuses | Labels exist only in the frontend (`miniCRM/apps/web/src/orderStatus.ts`); there's no API reference |
+| Restricted state transitions | Allowed transitions are defined in `miniCRM/apps/api/src/domain/status.ts`; the UI only shows valid buttons, so a 409 is never seen from the UI |
+| Dependent country → region select | Conditional calls to `GET /api/regions` |
+| `version` optimistic locking | A hidden dependency on the previous GET |
+| Shipping methods aren't stored in the DB | Computed in `miniCRM/apps/api/src/domain/shipping.ts` depending on country and total |
+| Tax is returned only as an amount | Rates aren't returned; `miniCRM/apps/api/src/domain/tax.ts` |
+| Money is integer cents | Easy to get the type wrong |
+| Cookie session + CSRF header | The header is auto-attached by the client; an agent that copies a `fetch` call from DevTools will miss the contract |
+| Business-rule 409/422 rejections | Deleting a customer with orders, an archived customer, insufficient stock |
+| Soft-archiving of customers | Archived customers don't appear in `suggest` but are visible in the list |
 
-**Явно запрещено добавлять:** OpenAPI в приложение, эндпоинт-справочник статусов, каталог
-способов доставки, таблицу налоговых ставок, debug-панель, комментарии-подсказки в JSON-ответах.
-Любое из этого превращает benchmark в проверку чтения, а не исследования.
-
----
-
-## 6. Известные пробелы мишени
-
-Полный аудит — `miniCRM/benchmark/GAPS.md`. Кратко, три класса:
-
-1. **API-поверхность, которую UI не задействует.** Фильтры `customerId`, `from`, `to` у списка
-   заказов; произвольное окно `period` у dashboard; запись `paymentStatus`. Не оцениваются.
-
-2. **Ошибки, недостижимые с happy-path UI.** `INVALID_STATUS_TRANSITION` (UI рисует только
-   разрешённые кнопки, а сервер проверяет `version` раньше графа переходов), `CUSTOMER_ARCHIVED`
-   (архивные отфильтрованы в suggest), `PRODUCT_INACTIVE`, `QUOTE_EXPIRED` (TTL 10 минут — короткий
-   прогон не дождётся), `QUOTE_ALREADY_USED`, `VERSION_CONFLICT` (нужны два пересекающихся
-   изменения), `CSRF_TOKEN_INVALID` (клиент всегда подставляет заголовок), `ORDER_CANNOT_BE_DELETED`
-   (кнопка удаления рисуется только у черновика).
-
-3. **UX-дыры, ослабляющие наблюдение.** Адрес можно добавить, но не изменить и не удалить
-   (строки таблицы адресов — только для чтения); заметки не имеют списочного эндпоинта; товары
-   read-only; `pageSize` не меняется из UI (20 на списочных страницах, 5 у недавних заказов на
-   дашборде), хотя сервер принимает до 100; логин предзаполняет учётные данные.
-
-Из третьего пункта следует открытый вопрос OQ-3 ([`11`](11-decisions-and-open-questions.md)):
-предзаполненный логин упрощает discovery авторизации сильнее, чем хотелось бы.
-
-Факты о недостижимом из браузера поведении остаются в ground truth — они часть настоящего API, —
-но кейсами не оцениваются (ADR-8 в [`11`](11-decisions-and-open-questions.md)). Их перечень с
-объяснением, что именно закрывает путь, — в `miniCRM/benchmark/GAPS.md` §«Ground-truth facts that
-no case scores».
+**Explicitly forbidden to add:** an OpenAPI spec inside the app, a status-reference endpoint, a
+shipping-method catalog, a tax-rate table, a debug panel, hint comments in JSON responses. Any of
+these would turn the benchmark into a reading test instead of an exploration test.
 
 ---
 
-## 7. Правила изменения мишени
+## 6. Known target gaps
 
-1. Мишень **заморожена** с момента первого зачётного прогона. Любое изменение обесценивает
-   уже собранные результаты.
-2. До заморозки: изменение кода → регенерация `miniCRM/benchmark/ground-truth/` через
-   `miniCRM/benchmark/scripts/emit-ground-truth.mjs` → `validate-ground-truth.mjs` → обновление
-   `application_commit` в `manifest.json`.
-3. Предпочитать **наблюдаемое, но недокументированное** поведение документации. Если нужно
-   сделать операцию видимой — добавить элемент управления в UI, а не описание в ответе API.
-4. Никогда не добавлять эндпоинт сброса, справочники значений и отладочные панели.
+Full audit: `miniCRM/benchmark/GAPS.md`. In brief, three classes:
 
-Текущий зафиксированный коммит мишени: `miniCRM/benchmark/ground-truth/manifest.json → application_commit`.
+1. **API surface the UI never exercises.** The order list's `customerId`, `from`, `to` filters;
+   the dashboard's arbitrary `period` window; writing `paymentStatus`. Not scored.
+
+2. **Errors unreachable from the happy-path UI.** `INVALID_STATUS_TRANSITION` (the UI only draws
+   the allowed buttons, and the server checks `version` before the transition graph),
+   `CUSTOMER_ARCHIVED` (archived customers are filtered out of suggest), `PRODUCT_INACTIVE`,
+   `QUOTE_EXPIRED` (10-minute TTL — a short run won't wait that long), `QUOTE_ALREADY_USED`,
+   `VERSION_CONFLICT` (needs two overlapping edits), `CSRF_TOKEN_INVALID` (the client always
+   attaches the header), `ORDER_CANNOT_BE_DELETED` (the delete button is only drawn for a draft).
+
+3. **UX gaps that weaken observation.** An address can be added but not edited or deleted (the
+   address table rows are read-only); notes have no list endpoint; products are read-only;
+   `pageSize` can't be changed from the UI (20 on list pages, 5 for recent orders on the
+   dashboard), even though the server accepts up to 100; the login form pre-fills credentials.
+
+The third point produces open question OQ-3 ([`11`](11-decisions-and-open-questions.md)): the
+pre-filled login simplifies auth discovery more than intended.
+
+Facts about behavior unreachable from the browser remain in ground truth — they're part of the
+real API — but aren't scored by any case (ADR-8 in [`11`](11-decisions-and-open-questions.md)).
+Their list, with an explanation of exactly what blocks each path, is in
+`miniCRM/benchmark/GAPS.md` §"Ground-truth facts that no case scores."
+
+---
+
+## 7. Rules for changing the target
+
+1. The target is **frozen** as of the first scored run. Any change devalues results already
+   collected.
+2. Before the freeze: code change → regenerate `miniCRM/benchmark/ground-truth/` via
+   `miniCRM/benchmark/scripts/emit-ground-truth.mjs` → `validate-ground-truth.mjs` → update
+   `application_commit` in `manifest.json`.
+3. Prefer observable-but-undocumented behavior over documenting it. If an operation needs to be
+   made visible, add a UI control for it, rather than a description in an API response.
+4. Never add a reset endpoint, value-reference lookups, or debug panels.
+
+Current pinned target commit: `miniCRM/benchmark/ground-truth/manifest.json → application_commit`.

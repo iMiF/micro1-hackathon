@@ -1,107 +1,112 @@
-# Autonomous API Explorer — документация проекта
+# Autonomous API Explorer — Project Documentation
 
-> **Статус:** активная
-> **Обновлено:** 2026-08-29
-> **Язык:** русский
-> **Область:** документация проекта целиком (agent + benchmark + target-приложение MiniCRM)
-> **Расположение:** корень проекта, рядом с мишенью `miniCRM/`, а не внутри неё
+> **Status:** active
+> **Updated:** 2026-08-29
+> **Language:** English
+> **Scope:** the whole project's documentation (agent + benchmark + MiniCRM target app)
+> **Location:** project root, next to the target app `miniCRM/`, not inside it
 
-Autonomous API Explorer (AAE) — агентная система, которая превращает наблюдаемое поведение
-недокументированного веб-приложения в проверяемую документацию API. Проект подаётся на
+Autonomous API Explorer (AAE) is an agentic system that turns the observed behavior of an
+undocumented web application into verifiable API documentation. The project is submitted to the
 **micro1 Agentic Workflows Hackathon**.
 
 ---
 
-## Карта документации
+## Documentation map
 
-| № | Файл | О чём | Кому нужен |
+| # | File | About | Who needs it |
 | --- | --- | --- | --- |
-| — | [`README.md`](README.md) | Этот индекс и правила сопровождения | всем |
-| 00 | [`00-hackathon-requirements.md`](00-hackathon-requirements.md) | Правила хакатона дословно + матрица соответствия | всем, перед каждым решением о scope |
-| 01 | [`01-problem-and-value.md`](01-problem-and-value.md) | Проблема, пользователь, ценность, границы MVP | README подачи, видео |
-| 02 | [`02-architecture.md`](02-architecture.md) | Архитектура AAE, контракт наблюдений, изоляция | инженерам |
-| 03 | [`03-target-minicrm.md`](03-target-minicrm.md) | MiniCRM как target: стек, запуск, реальная поверхность API | инженерам, авторам ground truth |
-| 04 | [`04-benchmark-contract.md`](04-benchmark-contract.md) | Публичный контракт benchmark: cases, схема вывода, fairness | инженерам, судьям |
-| 05 | [`05-evaluation-and-metrics.md`](05-evaluation-and-metrics.md) | Primary metric, вторичные метрики, форма отчёта | инженерам, судьям |
-| 06 | [`06-baseline-and-changelog.md`](06-baseline-and-changelog.md) | Определение baseline + Improvement Changelog | deliverable 01 |
-| 07 | [`07-safety.md`](07-safety.md) | Risk policy, human control, работа с данными | deliverable 01, ground rules 04–08 |
-| 08 | [`08-evidence-and-trajectories.md`](08-evidence-and-trajectories.md) | Evidence, provenance, требования к trajectories | deliverable 04 |
-| 09 | [`09-status-and-roadmap.md`](09-status-and-roadmap.md) | Что готово, что нет, план и quality gates | всем, еженедельно |
-| 10 | [`10-source-review.md`](10-source-review.md) | Архив: сверка исходного RU-документа с кодом и брифом | архив/аудит |
-| 11 | [`11-decisions-and-open-questions.md`](11-decisions-and-open-questions.md) | Журнал решений (ADR) и открытые вопросы | всем |
+| — | [`README.md`](README.md) | This index and maintenance rules | everyone |
+| 00 | [`00-hackathon-requirements.md`](00-hackathon-requirements.md) | Hackathon rules verbatim + compliance matrix | everyone, before every scope decision |
+| 01 | [`01-problem-and-value.md`](01-problem-and-value.md) | Problem, user, value, MVP boundaries | submission README, video |
+| 02 | [`02-architecture.md`](02-architecture.md) | AAE architecture, observation contract, isolation | engineers |
+| 03 | [`03-target-minicrm.md`](03-target-minicrm.md) | MiniCRM as target: stack, run instructions, real API surface | engineers, ground-truth authors |
+| 04 | [`04-benchmark-contract.md`](04-benchmark-contract.md) | Public benchmark contract: cases, output schema, fairness | engineers, judges |
+| 05 | [`05-evaluation-and-metrics.md`](05-evaluation-and-metrics.md) | Primary metric, secondary metrics, report form | engineers, judges |
+| 06 | [`06-baseline-and-changelog.md`](06-baseline-and-changelog.md) | Baseline definition + Improvement Changelog | deliverable 01 |
+| 07 | [`07-safety.md`](07-safety.md) | Risk policy, human control, data handling | deliverable 01, ground rules 04–08 |
+| 08 | [`08-evidence-and-trajectories.md`](08-evidence-and-trajectories.md) | Evidence, provenance, trajectory requirements | deliverable 04 |
+| 09 | [`09-status-and-roadmap.md`](09-status-and-roadmap.md) | What's done, what isn't, plan and quality gates | everyone, weekly |
+| 10 | [`10-source-review.md`](10-source-review.md) | Archive: reconciliation of the original RU document against the code | archive/audit |
+| 11 | [`11-decisions-and-open-questions.md`](11-decisions-and-open-questions.md) | Decision log (ADR) and open questions | everyone |
 
 ---
 
-## Отношение к исходным материалам
+## Relationship to source material
 
-Эта документация заменяет `Autonomous_API_Explorer_Technical_Documentation_RU.pdf` (v1.0, 29.08.2026).
-Тот PDF — **концепт-документ**, написанный до сверки с кодом: он остаётся историческим контекстом и
-источником истины не является. Построчная сверка его утверждений с кодом сохранена в архиве
-[`10-source-review.md`](10-source-review.md).
+This documentation replaces `Autonomous_API_Explorer_Technical_Documentation_RU.pdf` (v1.0,
+2026-08-29). That PDF is a **concept document**, written before reconciliation with the code: it
+remains historical context and is not a source of truth. A line-by-line reconciliation of its
+claims against the code is preserved in the archive [`10-source-review.md`](10-source-review.md).
 
-Первоисточник правил — `micro1 - First Hackathon97ce7c5.pdf` (бриф, 10 страниц, включая приложение с тремя примерами на стр. 8–10).
-Дословные требования вынесены в [`00-hackathon-requirements.md`](00-hackathon-requirements.md).
+The primary source of the rules is `micro1 - First Hackathon97ce7c5.pdf` (the brief, 10 pages,
+including an appendix with three examples on pages 8–10). Verbatim requirements are extracted into
+[`00-hackathon-requirements.md`](00-hackathon-requirements.md).
 
 ---
 
-## Правила сопровождения
+## Maintenance rules
 
-### Иерархия источников истины
+### Hierarchy of sources of truth
 
-Если два источника расходятся — побеждает тот, что выше:
+If two sources disagree, the higher one wins:
 
-1. **Бриф хакатона** (`micro1 - First Hackathon97ce7c5.pdf`) — для всего, что касается правил, deliverables и судейства.
-2. **Исходный код** `miniCRM/apps/api`, `miniCRM/apps/web`, `miniCRM/db/migrations` — для всего, что касается поведения MiniCRM.
-3. **`miniCRM/benchmark/ground-truth/*`** — для машиночитаемых фактов. Производен от (2); при расхождении регенерируется, а не правится вручную.
-4. **`docs/*`** — эта документация. Производна от (1)–(3).
-5. Концепт-PDF — только исторический контекст.
+1. **Hackathon brief** (`micro1 - First Hackathon97ce7c5.pdf`) — for everything about rules,
+   deliverables, and judging.
+2. **Source code** `miniCRM/apps/api`, `miniCRM/apps/web`, `miniCRM/db/migrations` — for
+   everything about MiniCRM's behavior.
+3. **`miniCRM/benchmark/ground-truth/*`** — for machine-readable facts. Derived from (2); on
+   disagreement it is regenerated, not hand-edited.
+4. **`docs/*`** — this documentation. Derived from (1)–(3).
+5. Concept PDF — historical context only.
 
-### Как ссылаться на факты
+### How to cite facts
 
-Каждое фактическое утверждение о MiniCRM снабжается указателем на код:
-`miniCRM/apps/api/src/domain/tax.ts → taxRateFor`. Номера строк не используются — они устаревают,
-имена символов живут дольше.
+Every factual claim about MiniCRM is backed by a pointer into the code:
+`miniCRM/apps/api/src/domain/tax.ts → taxRateFor`. Line numbers are not used — they go stale;
+symbol names outlive them.
 
-Утверждение о **результате** (число, метрика, сравнение) без ссылки на прогон — запрещено.
-См. ground rule 09 в [`00-hackathon-requirements.md`](00-hackathon-requirements.md).
+A claim about a **result** (a number, a metric, a comparison) without a run reference is
+**forbidden**. See ground rule 09 in [`00-hackathon-requirements.md`](00-hackathon-requirements.md).
 
-### Метаблок в каждом файле
+### Metadata block in every file
 
 ```
-> **Статус:** черновик | активная | заморожена
-> **Обновлено:** YYYY-MM-DD
-> **Источник истины:** <откуда взяты факты>
+> **Status:** draft | active | frozen
+> **Updated:** YYYY-MM-DD
+> **Source of truth:** <where the facts come from>
 ```
 
-`черновик` — содержимое может измениться целиком.
-`активная` — можно опираться, изменения идут инкрементально.
-`заморожена` — менять только через запись в [`11-decisions-and-open-questions.md`](11-decisions-and-open-questions.md).
+`draft` — the content may still change wholesale.
+`active` — safe to rely on; changes are incremental.
+`frozen` — change only via an entry in [`11-decisions-and-open-questions.md`](11-decisions-and-open-questions.md).
 
-### Когда что обновлять
+### When to update what
 
-| Событие | Обновить |
+| Event | Update |
 | --- | --- |
-| Изменился код MiniCRM | `03`, регенерировать `miniCRM/benchmark/ground-truth/`, проверить `04` |
-| Добавлен/изменён case | `04`, `05` |
-| Проведён прогон | `06` (запись в changelog), `09` (статус) |
-| Принято архитектурное решение | `11` (ADR), затем затронутый файл |
-| Изменилась трактовка правил | `00`, затем всё, что от неё зависит |
+| MiniCRM code changed | `03`, regenerate `miniCRM/benchmark/ground-truth/`, check `04` |
+| A case was added or changed | `04`, `05` |
+| A run was performed | `06` (changelog entry), `09` (status) |
+| An architectural decision was made | `11` (ADR), then the affected file |
+| The interpretation of the rules changed | `00`, then everything that depends on it |
 
-### Что сюда НЕ кладут
+### What does NOT belong here
 
-- Секреты, реальные учётные данные, персональные данные (ground rule 08).
-- Числа результатов, полученные не из experiment ledger.
-- Копии ground truth в удобочитаемом виде «для агента».
+- Secrets, real credentials, personal data (ground rule 08).
+- Result numbers not sourced from the experiment ledger.
+- Human-readable copies of ground truth "for the agent."
 
 ---
 
-## ⚠️ Изоляция от агента
+## ⚠️ Isolation from the agent
 
-`docs/` и всё дерево мишени — `miniCRM/benchmark/`, `miniCRM/apps/api`, `miniCRM/apps/web`,
-`miniCRM/db/` и тесты — **никогда не попадают в tool context оцениваемого агента**. Агент видит
-только запущенный UI на `http://localhost:5173` и сетевой трафик same-origin `/api`.
+`docs/` and the entire target tree — `miniCRM/benchmark/`, `miniCRM/apps/api`, `miniCRM/apps/web`,
+`miniCRM/db/`, and the tests — **must never enter the tool context of the evaluated agent**. The
+agent only ever sees the running UI at `http://localhost:5173` and same-origin `/api` network
+traffic.
 
-Документация лежит в корне проекта, а не внутри мишени: `miniCRM/` — испытуемое приложение,
-а `docs/` описывает в том числе агента, который его исследует, и будущие компоненты рядом с ним.
-Механическая защита от утечки описана в
+The documentation lives at the project root, not inside the target: `miniCRM/` is the app under
+test, while `docs/` describes, among other things, the agent that explores it and future
+components alongside it. The mechanical safeguard against leakage is described in
 [`04-benchmark-contract.md`](04-benchmark-contract.md) §1.

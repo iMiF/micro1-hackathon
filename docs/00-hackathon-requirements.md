@@ -1,22 +1,22 @@
-# 00. Требования хакатона и матрица соответствия
+# 00. Hackathon requirements and compliance matrix
 
-> **Статус:** заморожена (правила внешние — менять нельзя, только уточнять трактовку)
-> **Обновлено:** 2026-08-29
-> **Источник истины:** `micro1 - First Hackathon97ce7c5.pdf` (micro1 Agentic Workflows Hackathon brief)
+> **Status:** frozen (the rules are external and cannot be changed, only clarified)
+> **Updated:** 2026-08-29
+> **Source of truth:** `micro1 - First Hackathon97ce7c5.pdf` (micro1 Agentic Workflows Hackathon brief)
 
-Этот файл — единственное место, где живут правила. Остальные документы ссылаются сюда,
-а не пересказывают их.
+This file is the single place where the rules live. Other documents link here instead of
+restating them.
 
 ---
 
-## 1. Постановка от организаторов
+## 1. The organizers' challenge
 
-> «Pick a specific and meaningful problem you understand. Use agents to solve it and show through
-> clear evidence that your solution improves the way the task is handled today.»
+> "Pick a specific and meaningful problem you understand. Use agents to solve it and show through
+> clear evidence that your solution improves the way the task is handled today."
 
-Четыре вопроса, которые бриф просит держать в голове:
+Four questions the brief asks us to keep in mind:
 
-| № | Вопрос | Где отвечаем |
+| # | Question | Where we answer it |
 | --- | --- | --- |
 | 01 | Who has this problem? | [`01-problem-and-value.md`](01-problem-and-value.md) §1 |
 | 02 | What bottleneck makes it worth solving? | [`01-problem-and-value.md`](01-problem-and-value.md) §2 |
@@ -25,127 +25,134 @@
 
 ---
 
-## 2. Рубрика судейства — 100 баллов
+## 2. Judging rubric — 100 points
 
-Это самая важная таблица в проекте. Приоритеты работ выводятся из неё, а не из вкуса.
+This is the most important table in the project. Work priorities are derived from it, not from
+taste.
 
-| Критерий | Баллов | Что бриф считает сильной работой | Наш ответ |
+| Criterion | Points | What the brief counts as strong work | Our answer |
 | --- | ---: | --- | --- |
-| **Problem & User Value** | 15 | Осмысленная проблема для чётко определённого пользователя | [`01`](01-problem-and-value.md) |
-| **Agent Solution & Engineering** | 30 | Агенты применены осмысленно, решение технически состоятельно. Ценны *целенаправленные* решения (context, tools, memory, verification, skills, orchestration), а не их количество | [`02`](02-architecture.md), [`06`](06-baseline-and-changelog.md) |
-| **End to End Quality** | 20 | Реалистичный самодостаточный прогон, готовый результат «с отделкой, под которой человек подпишется», а не очевидный AI-черновик | [`02`](02-architecture.md) §Artifact generator |
-| **Measured Improvement** | 15 | Выигрыш над честным baseline; changelog связывает каждую итерацию с доказательством | [`05`](05-evaluation-and-metrics.md), [`06`](06-baseline-and-changelog.md) |
-| **Reproducibility** | 15 | Другой человек с чистого окружения проходит путь до основного результата | reproduction guide, [`04`](04-benchmark-contract.md) |
-| **Hot Take / Insights** | 5 | Наблюдённый failure mode превращён в практический урок | [`06`](06-baseline-and-changelog.md) §Hot take |
-| **Итого** | **100** | | |
+| **Problem & User Value** | 15 | A meaningful problem for a clearly defined user | [`01`](01-problem-and-value.md) |
+| **Agent Solution & Engineering** | 30 | Agents applied purposefully, solution technically sound. *Purposeful* choices (context, tools, memory, verification, skills, orchestration) matter, not their count | [`02`](02-architecture.md), [`06`](06-baseline-and-changelog.md) |
+| **End to End Quality** | 20 | A realistic, self-contained run, a finished result "polished enough that a person would sign off on it," not an obvious AI draft | [`02`](02-architecture.md) §Artifact generator |
+| **Measured Improvement** | 15 | A win over a fair baseline; the changelog connects every iteration to evidence | [`05`](05-evaluation-and-metrics.md), [`06`](06-baseline-and-changelog.md) |
+| **Reproducibility** | 15 | Another person, from a clean environment, can walk to the main result | reproduction guide, [`04`](04-benchmark-contract.md) |
+| **Hot Take / Insights** | 5 | An observed failure mode turned into a practical lesson | [`06`](06-baseline-and-changelog.md) §Hot take |
+| **Total** | **100** | | |
 
-**Следствия для планирования.**
+**Consequences for planning.**
 
-- 30 баллов за Agent Solution — самый крупный блок. Каждый компонент AAE должен иметь
-  названный failure mode, который он устраняет, и ablation-прогон. Компонент без этого — минус, а не плюс.
-- 20 баллов за End to End Quality оцениваются по *готовому артефакту* (OpenAPI, docs), а не по
-  внутренностям. Это отдельная работа, а не побочный эффект пайплайна.
-- Measured Improvement (15) + Reproducibility (15) = 30 баллов зависят от инфраструктуры
-  benchmark, а не от ума агента. Отсюда правило остановки scope в [`09`](09-status-and-roadmap.md).
+- The 30 points for Agent Solution are the largest block. Every AAE component must have a
+  *named* failure mode it eliminates and an ablation run. A component without one is a minus,
+  not a plus.
+- The 20 points for End to End Quality are judged by the *finished artifact* (OpenAPI, docs), not
+  by internals. That is separate work, not a byproduct of the pipeline.
+- Measured Improvement (15) + Reproducibility (15) = 30 points depend on the benchmark
+  infrastructure, not on the agent's cleverness. Hence the scope stop-rule in
+  [`09`](09-status-and-roadmap.md).
 
 ---
 
-## 3. Ground rules — 10 обязательных
+## 3. Ground rules — 10 mandatory
 
-| № | Правило (бриф) | Наш статус | Где реализовано |
+| # | Rule (brief) | Our status | Where implemented |
 | --- | --- | --- | --- |
-| 01 | Можно строить на уже знакомых инструментах и компонентах | ✅ | Fastify/Vue/Playwright/Postgres |
-| 02 | Явно показать, что существовало до конкурса и что добавлено | ⚠️ требует раздела в README подачи | [`09`](09-status-and-roadmap.md) §«До и после» |
-| 03 | Использовать инструменты по лицензии и ToS | ✅ | все зависимости OSS; target — собственный |
-| 04 | Consequential actions держать в sandbox/симуляции, human approval **до** действия | ⚠️ спроектировано, не реализовано | [`07`](07-safety.md) |
-| 05 | Квалифицированный человек-ревьюер в контуре, если решение может существенно кого-то затронуть | ⚠️ требует явной формулировки | [`07`](07-safety.md) §Human control |
-| 06 | Легальный и этичный use case, ответственное отношение к людям и данным | ✅ | target синтетический, чужие системы не исследуем |
-| 07 | Данные — публичные, синтетические или одобренные анонимные | ✅ | MiniCRM полностью синтетический |
-| 08 | Учётные данные и приватная информация — вне подачи | ⚠️ demo-логин `admin@minicrm.local` / `demo123` в репозитории | [`07`](07-safety.md) §Данные |
-| 09 | Каждое утверждение о результате связано с представленным доказательством | ⚠️ ключевая дисциплина | [`08`](08-evidence-and-trajectories.md) |
-| 10 | Дать судьям доступ, достаточный для воспроизведения основного результата | ⚠️ | reproduction guide |
+| 01 | You may build on tools and components you already know | ✅ | Fastify/Vue/Playwright/Postgres |
+| 02 | Clearly show what existed before the competition and what was added | ⚠️ needs a section in the submission README | [`09`](09-status-and-roadmap.md) §"Before and after" |
+| 03 | Use tools within their license and ToS | ✅ | all dependencies are OSS; the target is our own |
+| 04 | Keep consequential actions in a sandbox/simulation, with human approval **before** the action | ⚠️ designed, not implemented | [`07`](07-safety.md) |
+| 05 | A qualified human reviewer in the loop when a decision could materially affect someone | ⚠️ needs explicit wording | [`07`](07-safety.md) §Human control |
+| 06 | Legal and ethical use case, responsible treatment of people and data | ✅ | target is synthetic, we don't probe others' systems |
+| 07 | Data is public, synthetic, or approved anonymous data | ✅ | MiniCRM is fully synthetic |
+| 08 | Credentials and private information are kept out of the submission | ⚠️ demo login `admin@minicrm.local` / `demo123` is in the repo | [`07`](07-safety.md) §Data |
+| 09 | Every claim about a result is tied to submitted evidence | ⚠️ core discipline | [`08`](08-evidence-and-trajectories.md) |
+| 10 | Give judges enough access to reproduce the main result | ⚠️ | reproduction guide |
 
-> **Про правило 08.** Демо-пароль от локального синтетического приложения — не секрет, но
-> `LoginPage.vue` предзаполняет поля, что одновременно нарушает дух benchmark (упрощает
-> discovery авторизации). Решение зафиксировано как открытый вопрос OQ-3 в [`11`](11-decisions-and-open-questions.md).
-
----
-
-## 4. Требования к baseline
-
-Бриф перечисляет допустимые формы baseline:
-
-- один прямой промпт с базовыми инструкциями;
-- **один general-purpose агент с базовыми инструментами**;
-- простой скрипт или шаблон;
-- ручной процесс, которым люди пользуются сегодня.
-
-И требует: *«Keep the comparison fair by giving the baseline and final solution the same task and
-evaluation cases. Explain any meaningful difference in the resources available to each one.»*
-
-Наш выбор и его обоснование — [`06-baseline-and-changelog.md`](06-baseline-and-changelog.md) §1.
+> **On rule 08.** The demo password for a local synthetic app is not a secret, but
+> `LoginPage.vue` pre-fills the fields, which also runs against the spirit of the benchmark (it
+> simplifies auth discovery). Recorded as open question OQ-3 in
+> [`11`](11-decisions-and-open-questions.md).
 
 ---
 
-## 5. Требования к оценке
+## 4. Baseline requirements
 
-Дословно из брифа:
+The brief lists the acceptable forms of baseline:
 
-- **Одна primary metric**, отражающая, что для пользователя значит успех.
-- Определить, как выглядит хороший результат, **до** прогона.
-- Одинаковые кейсы для baseline и финального решения.
-- Публиковать **полные** результаты.
-- **Десять и более кейсов** — хорошая цель, когда задача позволяет.
-- **Один сложный кейс** обязателен, с объяснением, что он выявил.
-- Предлагаемая форма таблицы: `Primary outcome`, `Human time per task`, `Cost per task`.
-- *«You run this evaluation yourself. If the format above fits your task poorly, design your own
-  clear scoring rubric and propose it, so the judges can use it to assess your workflow.»*
+- a single direct prompt with basic instructions;
+- **a single general-purpose agent with basic tools**;
+- a simple script or template;
+- the manual process people use today.
 
-Последний пункт даёт право **заменить** стандартную форму собственной rubric. Мы этим правом
-пользуемся частично: вводим свою primary metric ([`05`](05-evaluation-and-metrics.md), ADR-2), но
-таблицу брифа с человеко-временем и стоимостью всё равно заполняем.
+And it requires: *"Keep the comparison fair by giving the baseline and final solution the same
+task and evaluation cases. Explain any meaningful difference in the resources available to each
+one."*
 
-Это **наше** решение, более строгое, чем требует бриф, а не его требование. Обоснование: судья
-сравнивает проекты между собой, и знакомая ему форма отчёта снижает цену понимания нашей метрики.
+Our choice and its rationale — [`06-baseline-and-changelog.md`](06-baseline-and-changelog.md) §1.
+
+---
+
+## 5. Evaluation requirements
+
+Verbatim from the brief:
+
+- **A single primary metric** that reflects what success means for the user.
+- Define what a good result looks like **before** the run.
+- The same cases for baseline and final solution.
+- Publish **complete** results.
+- **Ten or more cases** is a good target, when the task allows it.
+- **One hard case** is mandatory, with an explanation of what it revealed.
+- Suggested table form: `Primary outcome`, `Human time per task`, `Cost per task`.
+- *"You run this evaluation yourself. If the format above fits your task poorly, design your own
+  clear scoring rubric and propose it, so the judges can use it to assess your workflow."*
+
+The last point gives us the right to **replace** the standard form with our own rubric. We use
+that right partially: we introduce our own primary metric ([`05`](05-evaluation-and-metrics.md),
+ADR-2), but we still fill in the brief's table with human time and cost.
+
+This is **our own** decision, stricter than the brief requires, not a requirement of the brief.
+Rationale: a judge compares projects against each other, and a report form they already recognize
+lowers the cost of understanding our metric.
 
 ---
 
 ## 6. Improvement Changelog
 
-Бриф требует changelog, который рассказывает историю от baseline до финала:
+The brief requires a changelog telling the story from baseline to final:
 
-- одна запись на каждый значимый эксперимент;
-- что попробовали и **почему**;
-- результат, измеренный **тем же методом**;
-- решение: оставили / переделали / убрали;
-- **включая эксперименты, которые потом убрали**, и чему они научили.
+- one entry per significant experiment;
+- what was tried and **why**;
+- the result, measured by the **same method**;
+- decision: kept / redone / removed;
+- **including experiments that were later removed**, and what they taught us.
 
-Колонки из брифа: `STAGE | WHAT YOU TRIED AND WHY | EVIDENCE | DECISION / LEARNING`.
+Columns from the brief: `STAGE | WHAT YOU TRIED AND WHY | EVIDENCE | DECISION / LEARNING`.
 
-Шаблон — [`06-baseline-and-changelog.md`](06-baseline-and-changelog.md) §3.
+Template — [`06-baseline-and-changelog.md`](06-baseline-and-changelog.md) §3.
 
 ---
 
-## 7. Четыре обязательных deliverable
+## 7. Four mandatory deliverables
 
-| № | Deliverable | Требования брифа | Наш артефакт | Статус |
+| # | Deliverable | Brief requirements | Our artifact | Status |
 | --- | --- | --- | --- | --- |
-| 01 | **Complete solution code + improvement changelog** | Полный проект и всё для запуска, включая **инструкции, формирующие каждого агента**. README вводит пользователя и его bottleneck, объясняет ценность. Отдельный, явно помеченный Improvement Changelog. Финал — main failure mode и hot take | репозиторий + `README.md` подачи + [`06`](06-baseline-and-changelog.md) | ⬜ |
-| 02 | **Reproduction guide** | Для чистого окружения: setup, **точные команды** для solution / baseline / evaluation, какие данные нужны, какой вывод ожидать, версии, примерное время и стоимость | `docs/REPRODUCTION.md` (не создан) | ⬜ |
-| 03 | **Solution video ≤ 5 минут** | Проблема → простой baseline → один реалистичный прогон от начала до конца → финальное сравнение → кратко changelog → главный вклад → один убранный эксперимент | — | ⬜ |
-| 04 | **Agent trajectories** | Репрезентативные траектории **для каждого использованного агента**: от инструкций до результата; что агент делал и как отвечали инструменты; обратная связь, определившая следующий шаг; retry и human checkpoints | `artifacts/runs/<run-id>/` | ⬜ |
+| 01 | **Complete solution code + improvement changelog** | Full project and everything needed to run it, including **the instructions that shape each agent**. README introduces the user and their bottleneck, explains the value. A separate, clearly labeled Improvement Changelog. Ends with the main failure mode and hot take | repo + submission `README.md` + [`06`](06-baseline-and-changelog.md) | ⬜ |
+| 02 | **Reproduction guide** | For a clean environment: setup, **exact commands** for solution / baseline / evaluation, what data is needed, what output to expect, versions, approximate time and cost | `docs/REPRODUCTION.md` (not created) | ⬜ |
+| 03 | **Solution video ≤ 5 minutes** | Problem → simple baseline → one realistic end-to-end run → final comparison → brief changelog → main contribution → one removed experiment | — | ⬜ |
+| 04 | **Agent trajectories** | Representative trajectories **for every agent used**: from instructions to result; what the agent did and how the tools responded; the feedback that shaped the next step; retries and human checkpoints | `artifacts/runs/<run-id>/` | ⬜ |
 
-> Deliverable 04 говорит «для каждого агента». У нас их минимум два (baseline и AAE), и если AAE
-> внутри оркестрирует несколько ролей — траектория нужна для каждой роли.
+> Deliverable 04 says "for every agent." We have at least two (baseline and AAE), and if AAE
+> orchestrates several roles internally, a trajectory is needed for each role.
 
 ---
 
-## 8. Чего в брифе нет
+## 8. What the brief does not say
 
-Зафиксировано, чтобы не додумывать:
+Recorded so we don't invent answers:
 
-- **Дата дедлайна в брифе не указана.** План в [`09`](09-status-and-roadmap.md) привязан к D-0 —
-  фактическому дню подачи. Реальную дату надо взять из письма/лендинга организаторов (OQ-1).
-- Нет ограничений на язык, стек, модель или бюджет.
-- Нет требования к формату видео и площадке загрузки.
-- Нет запрета на использование заранее написанного кода — есть требование **пометить** его (rule 02).
+- **The brief does not state a deadline date.** The plan in [`09`](09-status-and-roadmap.md) is
+  anchored to D-0 — the actual submission day. The real date needs to come from the organizers'
+  email/landing page (OQ-1).
+- No constraints on language, stack, model, or budget.
+- No requirement on video format or hosting platform.
+- No ban on using pre-written code — there is a requirement to **label** it (rule 02).

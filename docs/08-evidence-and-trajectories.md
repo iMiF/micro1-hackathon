@@ -1,39 +1,40 @@
-# 08. Evidence, provenance и траектории
+# 08. Evidence, provenance, and trajectories
 
-> **Статус:** черновик (форматы спроектированы, сбор не реализован)
-> **Обновлено:** 2026-08-29
-> **Источник истины:** бриф deliverable 04, ground rule 09
-> **Соответствует:** deliverable 04 (Agent trajectories), ground rule 09
-
----
-
-## 1. Зачем это отдельный документ
-
-Ground rule 09: *«Connect every claim about your results to the evidence you submit.»*
-Deliverable 04 требует траектории для **каждого** использованного агента.
-
-Обе вещи легко сделать формально и бесполезно — свалка логов, по которой судья не пройдёт за
-пять минут. Поэтому форматы задаются заранее, а не выводятся из того, что случайно попало в лог.
+> **Status:** draft (formats designed, collection not implemented)
+> **Updated:** 2026-08-29
+> **Source of truth:** brief deliverable 04, ground rule 09
+> **Maps to:** deliverable 04 (Agent trajectories), ground rule 09
 
 ---
 
-## 2. Два уровня доказательств
+## 1. Why this is a separate document
 
-Их легко перепутать, и путаница дорого стоит. Уровни живут в разных артефактах и служат разным целям.
+Ground rule 09: *"Connect every claim about your results to the evidence you submit."*
+Deliverable 04 requires trajectories for **every** agent used.
 
-| | **Уровень 1: в подаче** | **Уровень 2: в артефактах прогона** |
+Both are easy to do formally and uselessly — a log dump a judge can't get through in five minutes.
+So the formats are defined up front, rather than derived from whatever happened to end up in a log.
+
+---
+
+## 2. Two levels of evidence
+
+Easy to conflate, and conflating them is costly. The levels live in different artifacts and serve
+different purposes.
+
+| | **Level 1: in the submission** | **Level 2: in run artifacts** |
 | --- | --- | --- |
-| Где | Внутри `reconstruction.json` | `artifacts/runs/<run-id>/evidence/` |
-| Форма | Вложенные объекты `evidence` | Записи с идентификаторами `ev_NNN` |
-| Задаётся | `miniCRM/benchmark/schemas/reconstruction-output.schema.json` | Нашим harness |
-| Кто читает | Детерминированный оценщик | Судья и человек-ревьюер |
-| Влияет на score | Да | Нет |
+| Where | Inside `reconstruction.json` | `artifacts/runs/<run-id>/evidence/` |
+| Form | Nested `evidence` objects | Entries with `ev_NNN` identifiers |
+| Defined by | `miniCRM/benchmark/schemas/reconstruction-output.schema.json` | Our harness |
+| Who reads it | The deterministic evaluator | The judge and a human reviewer |
+| Affects score | Yes | No |
 
-### Уровень 1 — доказательства в подаче
+### Level 1 — evidence in the submission
 
-Схема допускает семь видов, и все они ограничены тем, что видно в браузере:
+The schema allows seven kinds, all limited to what's visible in the browser:
 
-| `kind` | Минимально осмысленные поля |
+| `kind` | Minimally meaningful fields |
 | --- | --- |
 | `network_request` | `method`, `path`, `json_paths` |
 | `network_response` | `method`, `path`, `status`, `json_paths` |
@@ -43,42 +44,42 @@ Deliverable 04 требует траектории для **каждого** и�
 | `cookie` | `cookie_name`, `note` |
 | `header` | `header`, `note` |
 
-Обязательно только `kind`. Ссылаться на исходный код нельзя: это записано в описании схемы
-(«Do not cite source code») и структурно закреплено списком `kind` — все семь видов наблюдаемы
-только из браузера.
+Only `kind` is required. Citing source code is not allowed: this is stated in the schema
+description ("Do not cite source code") and structurally enforced by the `kind` list — all seven
+kinds are only observable from the browser.
 
-**Правило для семантических утверждений:** одного сетевого наблюдения недостаточно. Утверждение о
-*смысле* значения требует и UI-доказательства (`ui_label` / `ui_control` / `ui_action`), и
-сетевого (`network_request` / `network_response`) — иначе это интерпретация трафика, а не
-наблюдение связи.
+**Rule for semantic claims:** a single network observation isn't enough. A claim about the
+*meaning* of a value needs both UI evidence (`ui_label` / `ui_control` / `ui_action`) and network
+evidence (`network_request` / `network_response`) — otherwise it's an interpretation of traffic,
+not an observed connection.
 
-### Уровень 2 — хранилище прогона
+### Level 2 — run store
 
-Наш harness ведёт собственный журнал с идентификаторами. Он богаче схемы, потому что должен
-объяснять поведение агента, а не только обосновывать факты:
+Our harness keeps its own log with identifiers. It's richer than the schema because it has to
+explain the agent's behavior, not just justify the facts:
 
-| Тип | Минимальные поля | Пример связи |
+| Type | Minimal fields | Example link |
 | --- | --- | --- |
-| `ui_action` | URL, подпись элемента, действие, снимки до/после | Была нажата кнопка «Mark shipped» |
-| `network_event` | метод, путь, статус, хеш/ссылка на тела, correlation id | `PATCH /api/orders/12/status`, тело `statusId=40` |
-| `state_transition` | сущность, поля до/после, состояние UI | `Processing → Shipped` |
-| `experiment` | id гипотезы, решение, ожидаемый различитель, результат | Повтор на другом заказе |
-| `policy_decision` | класс риска, allow/block/approval, причина | Удаление заблокировано политикой |
+| `ui_action` | URL, element label, action, before/after snapshots | The "Mark shipped" button was clicked |
+| `network_event` | method, path, status, hash/reference to bodies, correlation id | `PATCH /api/orders/12/status`, body `statusId=40` |
+| `state_transition` | entity, before/after fields, UI state | `Processing → Shipped` |
+| `experiment` | hypothesis id, decision, expected discriminator, result | Repeated on another order |
+| `policy_decision` | risk class, allow/block/approval, reason | Deletion blocked by policy |
 
-> **Оценщик уровень 2 не читает.** Он работает только с тем, что внутри `reconstruction.json`.
-> Связывать уровни сквозными идентификаторами было бы удобно для аудита, но потребует изменения
-> схемы — OQ-8 в [`11`](11-decisions-and-open-questions.md).
+> **The evaluator never reads level 2.** It only works with what's inside `reconstruction.json`.
+> Linking the two levels with cross-referencing identifiers would be convenient for auditing, but
+> would require a schema change — OQ-8 in [`11`](11-decisions-and-open-questions.md).
 
 ---
 
-## 3. Claims и верификация
+## 3. Claims and verification
 
-`definitions.claim` в схеме:
+`definitions.claim` in the schema:
 
 ```json
 {
   "id": "claim-order-status-40",
-  "statement": "PATCH /api/orders/{id}/status с statusId=40 переводит заказ в состояние Shipped.",
+  "statement": "PATCH /api/orders/{id}/status with statusId=40 moves the order to the Shipped state.",
   "supports": ["fact-order-status-40"],
   "confidence": 0.96,
   "evidence": [
@@ -90,90 +91,91 @@ Deliverable 04 требует траектории для **каждого** и�
 }
 ```
 
-| Поле | Обязательно | Смысл |
+| Field | Required | Meaning |
 | --- | :---: | --- |
-| `id` | ✅ | Идентификатор внутри документа |
-| `statement` | ✅ | Утверждение человеческим языком |
-| `supports` | | Какие факты/операции подкрепляет |
-| `confidence` | | Число 0..1; не заменяет верификацию, а дополняет |
-| `evidence` | | Вложенные доказательства |
+| `id` | ✅ | Identifier within the document |
+| `statement` | ✅ | The claim in human language |
+| `supports` | | Which facts/operations it backs |
+| `confidence` | | A number 0..1; supplements verification, doesn't replace it |
+| `evidence` | | Nested evidence |
 
-Результат верификации внутри подачи выражается через `confidence` и наличие достаточного
-`evidence`. Подробный журнал (`verification.rule`, конфликты, история гипотез) живёт на уровне 2 —
-в траектории прогона.
+The verification result within the submission is expressed via `confidence` and the presence of
+sufficient `evidence`. The detailed log (`verification.rule`, conflicts, hypothesis history) lives
+at level 2 — in the run trajectory.
 
-### Правила верификации
+### Verification rules
 
-| Правило | Условие |
+| Rule | Condition |
 | --- | --- |
-| `two_independent_observations` | Одинаковый результат на двух разных объектах или в двух разных сессиях |
-| `ui_label_matches_request` | Видимая подпись и содержимое запроса согласованы |
-| `state_after_matches_claim` | Состояние UI после действия соответствует утверждению |
-| `single_observation` | Одно наблюдение → claim не проходит в verified output |
-| `conflicting_observations` | Наблюдения разошлись → `uncertain`, конфликт записан |
+| `two_independent_observations` | Same result on two different objects or in two different sessions |
+| `ui_label_matches_request` | The visible label and the request content agree |
+| `state_after_matches_claim` | The UI state after the action matches the claim |
+| `single_observation` | One observation → the claim doesn't make it into verified output |
+| `conflicting_observations` | Observations diverged → `uncertain`, the conflict is recorded |
 
-**Утверждение, не прошедшее верификацию, не попадает в verified output.** Оно может попасть в
-раздел гипотез с явной пометкой (`notes` или низкий `confidence`) — но не в спецификацию.
+**A claim that fails verification does not enter the verified output.** It may end up in a
+hypotheses section with an explicit flag (`notes` or a low `confidence`) — but not in the spec.
 
 ---
 
-## 4. Траектории
+## 4. Trajectories
 
-Deliverable 04 требует, чтобы траекторию было **легко проследить** от инструкций агента до
-финального результата, с видимыми ответами инструментов, обратной связью, retry и human checkpoints.
+Deliverable 04 requires the trajectory to be **easy to trace** from the agent's instructions to
+the final result, with visible tool responses, feedback, retries, and human checkpoints.
 
-### Формат шага
+### Step format
 
-`trajectory.jsonl`, одна строка — один шаг:
+`trajectory.jsonl`, one line per step:
 
 ```json
 {
   "step": 17,
   "phase": "experiment",
-  "reasoning_summary": "statusId=40 наблюдался один раз; нужен второй объект",
+  "reasoning_summary": "statusId=40 observed once; need a second object",
   "tool_call": {"name": "click", "args": {"element_id": "btn-mark-shipped"}},
-  "policy": {"class": "REVERSIBLE", "decision": "allow", "reason": "в allowlist кейса"},
+  "policy": {"class": "REVERSIBLE", "decision": "allow", "reason": "on the case allowlist"},
   "tool_response": {"ok": true, "url": "/orders/14"},
   "observation_ref": "ev_061",
   "ledger_delta": {"claim_enum_order_status_40": "single → verified"},
-  "next_step_reason": "гипотеза подтверждена, перехожу к покрытию products"
+  "next_step_reason": "hypothesis confirmed, moving on to products coverage"
 }
 ```
 
-Что здесь обязательно и почему:
+What's required here and why:
 
-- `policy` — показывает работу risk classifier (ground rule 04) даже когда решение «allow».
-- `observation_ref` — связывает шаг с evidence, делая цепочку «шаг → доказательство → утверждение» проходимой.
-- `ledger_delta` — показывает, что агент **обновил** знание, а не просто сделал вызов.
-- `next_step_reason` — та самая «обратная связь, определившая следующий шаг» из требований брифа.
+- `policy` — shows the risk classifier at work (ground rule 04) even when the decision is "allow."
+- `observation_ref` — links the step to evidence, keeping the chain "step → evidence → claim"
+  traceable.
+- `ledger_delta` — shows that the agent **updated** its knowledge, not just made a call.
+- `next_step_reason` — the exact "feedback that shaped the next step" the brief requires.
 
-### Что подаётся судье
+### What gets submitted to the judge
 
-Полные траектории всех прогонов слишком объёмны. Подаём:
+Full trajectories of every run are too large. We submit:
 
-1. **Полные** траектории одного baseline-прогона и одного AAE-прогона на одном кейсе — прямое
-   сравнение поведения на одинаковом входе.
-2. **Полную** траекторию AAE на основном сложном кейсе.
-3. Для каждой роли внутри AAE, если оркестрация многоагентная, — репрезентативную траекторию.
-4. Индекс `artifacts/runs/INDEX.md` со ссылками на все прогоны.
+1. **Full** trajectories of one baseline run and one AAE run on the same case — a direct
+   side-by-side comparison of behavior on identical input.
+2. The **full** AAE trajectory on the primary hard case.
+3. For each role inside AAE, if the orchestration is multi-agent, a representative trajectory.
+4. An index, `artifacts/runs/INDEX.md`, linking to every run.
 
-Требование «для каждого агента» толкуется как «для каждой отдельной инструктированной роли», а не
-«для каждого прогона».
+The "for every agent" requirement is interpreted as "for every distinct instructed role," not "for
+every run."
 
-### Читаемость
+### Readability
 
-К каждой подаваемой траектории прикладывается `report.md` — человекочитаемый пересказ: что агент
-искал, какие гипотезы ставил, где ошибся, где повторил попытку, где вмешался человек. Судья
-читает `report.md`, а `trajectory.jsonl` использует для проверки.
+Every submitted trajectory comes with a `report.md` — a human-readable retelling: what the agent
+searched for, which hypotheses it formed, where it made mistakes, where it retried, where a human
+stepped in. The judge reads `report.md` and uses `trajectory.jsonl` to verify it.
 
 ---
 
-## 5. Чек-лист evidence перед подачей
+## 5. Evidence checklist before submission
 
-- [ ] Каждый факт и claim в поданной реконструкции имеет непустой валидный блок `evidence`
-- [ ] Каждое семантическое утверждение опирается минимум на два evidence: UI и сетевое
-- [ ] Ни одно доказательство не ссылается на исходный код (схема это запрещает)
-- [ ] Конфликты записаны, а не потеряны
-- [ ] Решения политики видны в траектории, включая разрешающие
-- [ ] Есть индекс прогонов и `report.md` для каждой подаваемой траектории
-- [ ] Ни одно число в отчёте не существует без ссылки на прогон
+- [ ] Every fact and claim in the submitted reconstruction has a non-empty, valid `evidence` block
+- [ ] Every semantic claim rests on at least two pieces of evidence: UI and network
+- [ ] No evidence cites source code (the schema forbids it)
+- [ ] Conflicts are recorded, not lost
+- [ ] Policy decisions are visible in the trajectory, including the ones that allowed an action
+- [ ] There's a run index and a `report.md` for every submitted trajectory
+- [ ] No number in the report exists without a link to a run

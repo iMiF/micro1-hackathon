@@ -1,47 +1,48 @@
-# 04. Публичный контракт benchmark
+# 04. Public benchmark contract
 
-> **Статус:** активная (кейсы и схема существуют; runner и evaluator — нет)
-> **Обновлено:** 2026-08-29
-> **Источник истины:** `miniCRM/benchmark/cases.json`, `miniCRM/benchmark/schemas/reconstruction-output.schema.json`, `miniCRM/benchmark/README.md`
-> **Соответствует критериям:** Reproducibility (15), Measured Improvement (15)
+> **Status:** active (cases and schema exist; runner and evaluator do not)
+> **Updated:** 2026-08-29
+> **Source of truth:** `miniCRM/benchmark/cases.json`, `miniCRM/benchmark/schemas/reconstruction-output.schema.json`, `miniCRM/benchmark/README.md`
+> **Maps to criteria:** Reproducibility (15), Measured Improvement (15)
 
 ---
 
-## 1. Что публично, а что нет
+## 1. What's public and what isn't
 
-Разделение — сердце честности benchmark.
+This split is the heart of the benchmark's fairness.
 
-| Публично (можно показывать судьям и класть в контекст агента при необходимости) | Только для авторов и evaluator |
+| Public (can be shown to judges and placed in the agent's context if needed) | Authors and evaluator only |
 | --- | --- |
-| Схема результата `reconstruction-output.schema.json` | `miniCRM/benchmark/ground-truth/*.json` |
-| Список разрешённых инструментов | `miniCRM/benchmark/INVENTORY.md`, `miniCRM/benchmark/GAPS.md` |
-| Бюджеты (действия, время, токены) | Исходный код `miniCRM/apps/api`, `miniCRM/apps/web`, `miniCRM/db/` |
-| Правила нормализации и canonical labels | Тесты и seed |
-| Идентификаторы и описания кейсов | `ground_truth_fact_ids` внутри кейсов |
-| — | `docs/` целиком: author-only |
+| Output schema `reconstruction-output.schema.json` | `miniCRM/benchmark/ground-truth/*.json` |
+| List of allowed tools | `miniCRM/benchmark/INVENTORY.md`, `miniCRM/benchmark/GAPS.md` |
+| Budgets (actions, time, tokens) | Source code `miniCRM/apps/api`, `miniCRM/apps/web`, `miniCRM/db/` |
+| Normalization rules and canonical labels | Tests and seed |
+| Case identifiers and descriptions | `ground_truth_fact_ids` inside cases |
+| — | `docs/` as a whole: author-only |
 
-**Правило:** код мишени и ground truth не попадают в tool context агента. Иначе benchmark
-измерит утечку, а не исследование. Runner имеет к ним доступ только для reset и scoring.
+**Rule:** the target's code and ground truth never enter the agent's tool context. Otherwise the
+benchmark would measure a leak, not exploration. The runner only has access to them for reset and
+scoring.
 
-### Механическая защита (обязательна к реализации)
+### Mechanical safeguard (must be implemented)
 
-Дисциплины недостаточно — нужен барьер, который нельзя нарушить по невнимательности:
+Discipline alone isn't enough — we need a barrier that can't be broken by carelessness:
 
-1. Harness экспортирует **фиксированный** список из семи инструментов. Ничего, что читает файлы,
-   среди них нет.
-2. Процесс агента запускается с рабочей директорией **вне** репозитория мишени.
-3. Runner проверяет перед стартом: в собранном контексте агента нет строк из
-   `miniCRM/benchmark/ground-truth/` (проверка по хешам известных значений).
-4. Весь каталог `miniCRM/` и каталог `docs/` перечислены в deny-list конфигурации прогона.
+1. The harness exports a **fixed** list of seven tools. None of them reads files.
+2. The agent process runs with a working directory **outside** the target repo.
+3. Before each run, the runner checks that the assembled agent context contains no strings from
+   `miniCRM/benchmark/ground-truth/` (checked via hashes of known values).
+4. The whole `miniCRM/` directory and the `docs/` directory are listed in the run configuration's
+   deny-list.
 
 ---
 
-## 2. Набор кейсов
+## 2. Case set
 
-**Текущее состояние: 15 кейсов** в `miniCRM/benchmark/cases.json`. Бриф просит «десять и более» —
-требование выполнено с запасом.
+**Current state: 15 cases** in `miniCRM/benchmark/cases.json`. The brief asks for "ten or more" —
+the requirement is met with margin.
 
-| ID | Сложность | Challenging | Фактов |
+| ID | Difficulty | Challenging | Facts |
 | --- | --- | :---: | ---: |
 | `case-01-auth-session-csrf` | basic | | 11 |
 | `case-02-customer-list-search-pagination` | basic | | 6 |
@@ -59,21 +60,21 @@
 | `case-14-draft-order-delete` | medium | | 3 |
 | `case-15-dashboard-summary-semantics` | medium | | 9 |
 
-**Кейс оценивает только то, что видно из браузера.** Факт, который нельзя получить кликами по UI
-(например, ошибка, которую фронтенд физически не даёт вызвать), остаётся в ground truth, но в
-список фактов кейса не входит — иначе оценка измеряла бы угадывание HTTP. Правило — ADR-8,
-перечень таких фактов — `miniCRM/benchmark/GAPS.md`.
+**A case only scores what's visible from the browser.** A fact that can't be reached by clicking
+through the UI (for example, an error the frontend physically cannot trigger) stays in ground
+truth but is excluded from the case's fact list — otherwise the score would measure guessing HTTP,
+not exploration. The rule is ADR-8; the list of such facts is in `miniCRM/benchmark/GAPS.md`.
 
-Бриф требует **один** сложный кейс с разбором. У нас три помечены `challenging`. Для подачи нужно
-**назначить один основной** и разобрать его подробно — остальные останутся в общей таблице.
-Кандидат: `case-09-create-order-workflow` (22 факта, полная цепочка с непрозрачным `quoteId`).
-Решение — OQ-4 в [`11`](11-decisions-and-open-questions.md).
+The brief requires **one** hard case with a write-up. We have three marked `challenging`. For the
+submission we need to **designate one as primary** and analyze it in depth — the other two stay in
+the general table. Candidate: `case-09-create-order-workflow` (22 facts, the full chain with an
+opaque `quoteId`). Decision — OQ-4 in [`11`](11-decisions-and-open-questions.md).
 
-### Проверяемые способности
+### Tested capabilities
 
-Поле `capabilities_tested` в `miniCRM/benchmark/cases.json` использует закрытый список из 16 значений:
+The `capabilities_tested` field in `miniCRM/benchmark/cases.json` uses a closed list of 16 values:
 
-| # | Способность | # | Способность |
+| # | Capability | # | Capability |
 | ---: | --- | ---: | --- |
 | 1 | endpoint discovery | 9 | one UI action causing several API calls |
 | 2 | request schema reconstruction | 10 | multi-request workflow |
@@ -84,148 +85,150 @@
 | 7 | filtering/search | 15 | business validation/error behavior |
 | 8 | numeric or otherwise opaque enum semantics | 16 | destructive action safety |
 
-Список закрыт: новый кейс либо использует существующее значение, либо расширение списка
-оформляется как решение в [`11`](11-decisions-and-open-questions.md).
+The list is closed: a new case either uses an existing value, or extending the list is recorded as
+a decision in [`11`](11-decisions-and-open-questions.md).
 
 ---
 
-## 3. Схема результата
+## 3. Output schema
 
 `miniCRM/benchmark/schemas/reconstruction-output.schema.json` (JSON Schema draft-07).
 
-Обязательные секции: `schema_version`, `operations`, `semantic_facts`, `dependencies`,
-`workflows`, `claims`.
-Необязательные: `benchmark_name`, `reconstructed_at`, `notes`, `components`, `confidence`, `actions`.
-`additionalProperties: false` — расширять схему на ходу нельзя.
+Required sections: `schema_version`, `operations`, `semantic_facts`, `dependencies`, `workflows`,
+`claims`.
+Optional: `benchmark_name`, `reconstructed_at`, `notes`, `components`, `confidence`, `actions`.
+`additionalProperties: false` — the schema can't be extended on the fly.
 
-### Единицы оценки
+### Scoring units
 
-| Секция | Единица | Пример |
+| Section | Unit | Example |
 | --- | --- | --- |
-| `operations` | метод + нормализованный путь | `PATCH /api/orders/{id}/status` |
-| `operations[].parameters` | операция + location + имя + тип + обязательность | `query.status: integer` |
+| `operations` | method + normalized path | `PATCH /api/orders/{id}/status` |
+| `operations[].parameters` | operation + location + name + type + required | `query.status: integer` |
 | `semantic_facts` | `kind` + `subject` + `value` | `enum_mapping / order.status_id / 40` |
-| `dependencies` | источник → артефакт → потребитель | `POST /api/order-quotes → quoteId → POST /api/orders` |
-| `workflows` | последовательность шагов с ролями | создание заказа |
-| `claims` | утверждение + confidence + вложенный `evidence` | см. [`08`](08-evidence-and-trajectories.md) |
+| `dependencies` | source → artifact → consumer | `POST /api/order-quotes → quoteId → POST /api/orders` |
+| `workflows` | sequence of steps with roles | order creation |
+| `claims` | statement + confidence + nested `evidence` | see [`08`](08-evidence-and-trajectories.md) |
 
-### Модель доказательств
+### Evidence model
 
-Доказательства **вложены** в факт, операцию или claim, а не хранятся отдельным реестром с
-идентификаторами. `definitions.evidence` допускает семь видов:
+Evidence is **nested** inside a fact, operation, or claim rather than kept in a separate registry
+with identifiers. `definitions.evidence` allows seven kinds:
 
 `network_request`, `network_response`, `ui_label`, `ui_control`, `ui_action`, `cookie`, `header`.
 
-Обязательно только поле `kind`; остальные (`page`, `method`, `path`, `status`, `json_paths`,
-`header`, `cookie_name`, `ui_text`, `note`) заполняются по применимости.
+Only `kind` is required; the rest (`page`, `method`, `path`, `status`, `json_paths`, `header`,
+`cookie_name`, `ui_text`, `note`) are filled in where applicable.
 
-**Ссылаться на исходный код нельзя** — это записано в описании схемы («Do not cite source
-code») и структурно закреплено самим списком `kind`: все семь видов наблюдаемы только из браузера.
+**Citing source code is not allowed** — this is stated in the schema description ("Do not cite
+source code") and structurally enforced by the `kind` list itself: all seven kinds are only
+observable from the browser.
 
-> Следствие: сквозных идентификаторов `ev_NNN` в схеме нет, и проверка ссылочной целостности
-> между фактом и отдельным хранилищем evidence невозможна. Хранение траекторий
-> ([`08`](08-evidence-and-trajectories.md)) идентификаторы использует — это два разных уровня.
-> Нужно ли их связать, решается в OQ-8 ([`11`](11-decisions-and-open-questions.md)).
+> Consequence: there are no cross-referencing `ev_NNN` identifiers in the schema, and checking
+> referential integrity between a fact and a separate evidence store is impossible. Trajectory
+> storage ([`08`](08-evidence-and-trajectories.md)) does use identifiers — that's a different
+> level. Whether they should be linked is decided in OQ-8
+> ([`11`](11-decisions-and-open-questions.md)).
 
-### Виды семантических фактов
+### Kinds of semantic facts
 
-`semantic_facts[].kind` — закрытый список. В ground truth 71 факт со следующим распределением:
+`semantic_facts[].kind` is a closed list. Ground truth has 71 facts, distributed as:
 
-| kind | Фактов | Что фиксирует |
+| kind | Facts | What it records |
 | --- | ---: | --- |
-| `enum_mapping` | 15 | Числовое/строковое значение ↔ видимый смысл |
-| `business_constraint` | 13 | Условие → отказ (409/422) |
-| `query_semantics` | 12 | Что делает параметр запроса |
-| `derived_value` | 10 | Вычисляемое сервером значение |
-| `auth` | 5 | Механика сессии и CSRF |
-| `validation` | 5 | Правила валидации входа |
-| `identifier_meaning` | 5 | Смысл идентификатора |
-| `state_transition` | 5 | Допустимые переходы |
-| `concurrency` | 1 | Оптимистическая блокировка |
+| `enum_mapping` | 15 | A numeric/string value ↔ its visible meaning |
+| `business_constraint` | 13 | A condition → rejection (409/422) |
+| `query_semantics` | 12 | What a query parameter does |
+| `derived_value` | 10 | A server-computed value |
+| `auth` | 5 | Session and CSRF mechanics |
+| `validation` | 5 | Input validation rules |
+| `identifier_meaning` | 5 | The meaning of an identifier |
+| `state_transition` | 5 | Allowed transitions |
+| `concurrency` | 1 | Optimistic locking |
 
-> Девять значений `kind` — закрытый список, одинаковый в ground truth и в схеме. Расширять его
-> можно только решением в [`11`](11-decisions-and-open-questions.md): каждое значение — отдельная
-> категория сопоставления у оценщика.
+> The nine `kind` values are a closed list, identical in ground truth and in the schema.
+> Extending it requires a decision in [`11`](11-decisions-and-open-questions.md): each value is a
+> separate matching category for the evaluator.
 
 ---
 
-## 4. Canonical vocabulary и нормализация
+## 4. Canonical vocabulary and normalization
 
-Оценщик не понимает смысл — он сравнивает нормализованные ключи. Поэтому правила
-нормализации публичны и агент о них знает:
+The evaluator doesn't understand meaning — it compares normalized keys. That's why the
+normalization rules are public and the agent is aware of them:
 
-1. **Пути** нормализуются: конкретные идентификаторы → `{id}`, `{customerId}`, `{addressId}`.
-2. **Методы** — верхний регистр.
-3. **Canonical labels** для перечислений: точная **видимая в UI подпись**, приведённая к
+1. **Paths** are normalized: concrete identifiers → `{id}`, `{customerId}`, `{addressId}`.
+2. **Methods** are upper-case.
+3. **Canonical labels** for enums: the exact label **visible in the UI**, converted to
    `lower_snake_case`.
-4. **Алиасы**, если нужны, объявляются заранее в открытом evaluation config.
+4. **Aliases**, if needed, are declared up front in the public evaluation config.
 
-**Жёсткая граница:** оценщик не признаёт `sent` эквивалентом `shipped`, если такого алиаса нет в
-публичной таблице. Это намеренно. Benchmark измеряет способность восстановить **наблюдаемые
-canonical-факты**, а не вкус LLM-судьи.
+**Hard boundary:** the evaluator does not accept `sent` as equivalent to `shipped` unless that
+alias is in the public table. This is deliberate. The benchmark measures the ability to recover
+**observed canonical facts**, not an LLM judge's taste.
 
-> Список допустимых меток берётся из ground truth и публикуется в evaluation config **до**
-> прогонов. Для статусов заказа это `draft`, `confirmed`, `processing`, `shipped`, `cancelled` —
-> ровно те подписи, что рисует `miniCRM/apps/web/src/orderStatus.ts`.
-
----
-
-## 5. Fairness: что должно совпадать
-
-Сравнение имеет смысл только при одинаковой постановке. Baseline и AAE получают идентичные:
-
-- набор кейсов и seed'ы (seed задаётся конфигурацией прогона: в `cases.json` поля `seed` нет);
-- URL мишени и версию мишени (`application_commit`);
-- роль и учётные данные;
-- поверхность инструментов (те же семь функций);
-- схему вывода;
-- бюджет действий, wall-clock и токенов;
-- модель — если сравнивается workflow, а не модель.
-
-**Любое отклонение фиксируется в отчёте с объяснением** (прямое требование брифа:
-*«Explain any meaningful difference in the resources available to each one»*).
-
-### Чек-лист fairness
-
-- [ ] Публичная схема вывода и canonical vocabulary одинаковы для обеих систем
-- [ ] Кейсы, seed'ы, версия мишени, роль, инструменты и бюджеты совпадают
-- [ ] Ground truth и исходный код мишени недоступны в контексте агента (проверено механически)
-- [ ] Оценщик детерминирован: без LLM, embeddings и скрытого fuzzy matching
-- [ ] Кейсов ≥ 10; назначен и разобран один основной сложный кейс
-- [ ] Ledger содержит по каждому кейсу: score, runtime, cost, seed, версию модели
-- [ ] Любое различие ресурсов объяснено
-- [ ] В отчёте нет целевых или примерных значений вместо фактических
+> The list of allowed labels comes from ground truth and is published in the evaluation config
+> **before** any runs. For order statuses this is `draft`, `confirmed`, `processing`, `shipped`,
+> `cancelled` — exactly the labels drawn by `miniCRM/apps/web/src/orderStatus.ts`.
 
 ---
 
-## 6. Runner: фазы прогона
+## 5. Fairness: what must match
 
-Runner — не LLM и не оценщик. Это диспетчер эксперимента.
+A comparison is only meaningful under identical setup. Baseline and AAE receive identical:
 
-| Фаза | Что делает | Какую гарантию даёт |
+- case set and seeds (the seed is set by the run configuration: `cases.json` has no `seed` field);
+- target URL and target version (`application_commit`);
+- role and credentials;
+- tool surface (the same seven functions);
+- output schema;
+- action, wall-clock, and token budgets;
+- model — when comparing the workflow rather than the model.
+
+**Any deviation is recorded in the report with an explanation** (a direct brief requirement:
+*"Explain any meaningful difference in the resources available to each one"*).
+
+### Fairness checklist
+
+- [ ] Public output schema and canonical vocabulary are identical for both systems
+- [ ] Cases, seeds, target version, role, tools, and budgets match
+- [ ] Ground truth and target source code are unavailable in the agent's context (mechanically checked)
+- [ ] The evaluator is deterministic: no LLM, embeddings, or hidden fuzzy matching
+- [ ] Cases ≥ 10; one primary hard case designated and analyzed
+- [ ] The ledger records, per case: score, runtime, cost, seed, model version
+- [ ] Any resource difference is explained
+- [ ] The report contains no target or approximate figures in place of actual ones
+
+---
+
+## 6. Runner: run phases
+
+The runner is neither an LLM nor an evaluator. It's the experiment dispatcher.
+
+| Phase | What it does | What guarantee it provides |
 | --- | --- | --- |
-| **Reset** | Останавливает API, поднимает MiniCRM из чистого seed, стартует API, применяет роль прогона | Независимость прогонов и повторяемость |
-| **Launch** | Запускает baseline или AAE с одинаковой поверхностью инструментов, версиями и бюджетами | Честность ресурсов |
-| **Capture** | Сохраняет последовательность tool calls, наблюдения, сеть, снимки экрана, итоговый JSON | Траектория и evidence проверяемы |
-| **Evaluate** | Вызывает детерминированный оценщик с ground truth кейса | Одинаковая rubric без ручной подгонки |
-| **Aggregate** | Фиксирует seed, версию модели, wall time, токены, стоимость, результаты | Полный experiment ledger |
+| **Reset** | Stops the API, brings MiniCRM up from a clean seed, starts the API, applies the run's role | Run independence and repeatability |
+| **Launch** | Runs baseline or AAE with the same tool surface, versions, and budgets | Resource fairness |
+| **Capture** | Saves the sequence of tool calls, observations, network activity, screenshots, final JSON | Trajectory and evidence are verifiable |
+| **Evaluate** | Invokes the deterministic evaluator with the case's ground truth | The same rubric with no manual tuning |
+| **Aggregate** | Records seed, model version, wall time, tokens, cost, results | A complete experiment ledger |
 
-Завершение прогона: вызов `submit_reconstruction` **или** исчерпание бюджета. Исчерпание бюджета
-без вызова — это результат (невалидный вывод), а не ошибка запуска.
+A run ends when `submit_reconstruction` is called **or** the budget is exhausted. Running out of
+budget without a submission is a result (an invalid output), not a launch error.
 
 ---
 
-## 7. Структура артефактов прогона
+## 7. Run artifact structure
 
 ```
 artifacts/runs/<run-id>/
-  meta.json           # case, seed, система, версия модели, версия мишени, бюджеты
-  trajectory.jsonl    # шаги: инструкция → tool call → ответ → наблюдение → решение
-  evidence/           # снимки, тела запросов/ответов, UI-состояния
-  reconstruction.json # то, что подал агент
-  evaluation.json     # метрики
+  meta.json           # case, seed, system, model version, target version, budgets
+  trajectory.jsonl    # steps: instruction → tool call → response → observation → decision
+  evidence/           # snapshots, request/response bodies, UI states
+  reconstruction.json # what the agent submitted
+  evaluation.json     # metrics
   diff.json           # matched / missing / spurious / invalid
-  report.md           # человекочитаемый разбор
+  report.md           # human-readable write-up
 ```
 
-`<run-id>` формируется как `<система>-<case>-<seed>`, например `aae-case09-seed41`.
+`<run-id>` is formed as `<system>-<case>-<seed>`, e.g. `aae-case09-seed41`.

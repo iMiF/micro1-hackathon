@@ -1,115 +1,118 @@
-# 07. Safety, risk policy и человеческий контроль
+# 07. Safety, risk policy, and human control
 
-> **Статус:** черновик (политика спроектирована, механика не реализована)
-> **Обновлено:** 2026-08-29
-> **Источник истины:** бриф §«Ground rules» 04–08
-> **Соответствует:** ground rules 04, 05, 06, 07, 08; критерий Agent Solution & Engineering
-
----
-
-## 1. Область применения
-
-AAE предназначен для **синтетической, sandbox или явно разрешённой** среды. Он не пытается
-«проверить всё возможное» ценой последствий.
-
-Инструмент, который исследует чужой API методом проб, по природе опасен. Поэтому граница
-проведена не в промпте, а в коде harness: **risk policy применяется до выполнения действия** и
-может потребовать симуляцию или человека.
+> **Status:** draft (policy designed, mechanics not implemented)
+> **Updated:** 2026-08-29
+> **Source of truth:** brief §"Ground rules" 04–08
+> **Maps to:** ground rules 04, 05, 06, 07, 08; Agent Solution & Engineering criterion
 
 ---
 
-## 2. Классы действий и политика
+## 1. Scope
 
-| Класс | Примеры | Политика |
+AAE is intended for **synthetic, sandboxed, or explicitly permitted** environments. It does not
+try to "test everything possible" regardless of consequences.
+
+A tool that probes someone else's API by trial and error is inherently risky. That's why the
+boundary is drawn not in the prompt but in the harness's code: **risk policy is applied before an
+action executes** and can require simulation or a human.
+
+---
+
+## 2. Action classes and policy
+
+| Class | Examples | Policy |
 | --- | --- | --- |
-| `READ_ONLY` | Открыть страницу, сменить фильтр, `GET /api/*` | Разрешить автоматически |
-| `SAFE_MUTATION` | Создать тестовый draft в seeded sandbox | Разрешить только в контролируемом кейсе; логировать |
-| `REVERSIBLE` | Изменить статус тестового заказа, добавить комментарий | Разрешить при наличии в allowlist; сохранить ID и план отката |
-| `DESTRUCTIVE` | Удалить клиента, удалить заказ, сбросить пароль | Блокировать либо симулировать; human approval, если разрешено вообще |
-| `EXTERNAL_SIDE_EFFECT` / `UNKNOWN` | Отправить письмо, платёж, публикация, непонятное действие | Блокировать. Никаких внешних эффектов без отдельного разрешения |
+| `READ_ONLY` | Open a page, change a filter, `GET /api/*` | Allow automatically |
+| `SAFE_MUTATION` | Create a test draft in a seeded sandbox | Allow only in a controlled case; log it |
+| `REVERSIBLE` | Change a test order's status, add a comment | Allow if on the allowlist; save the ID and a rollback plan |
+| `DESTRUCTIVE` | Delete a customer, delete an order, reset a password | Block or simulate; human approval if allowed at all |
+| `EXTERNAL_SIDE_EFFECT` / `UNKNOWN` | Send an email, a payment, a publish action, an unclear action | Block. No external effects without separate authorization |
 
-**Классификация выполняется до действия**, по паре «UI-элемент + предполагаемый запрос». Класс
-`UNKNOWN` — блокирующий по умолчанию: неизвестное действие считается опасным, а не безопасным.
+**Classification happens before the action**, based on the pair "UI element + expected request."
+`UNKNOWN` defaults to blocking: an unrecognized action is treated as dangerous, not safe.
 
-Каждое решение политики записывается как evidence типа `policy_decision`
-([`08`](08-evidence-and-trajectories.md)) — судья видит не только что агент сделал, но и что ему
-не дали сделать.
+Every policy decision is recorded as `policy_decision` evidence
+([`08`](08-evidence-and-trajectories.md)) — the judge sees not only what the agent did, but also
+what it was not allowed to do.
 
-### Применительно к MiniCRM
+### Applied to MiniCRM
 
-Мишень содержит два разрушительных действия, достижимых из UI: удаление клиента и удаление
-черновика заказа. Оба входят в кейсы (`case-13`, `case-14`) — но именно как проверка того, что
-агент **корректно обрабатывает отказ и подтверждение**, а не как разрешение удалять что угодно.
+The target has two destructive actions reachable from the UI: deleting a customer and deleting a
+draft order. Both are covered by cases (`case-13`, `case-14`) — but specifically as a check that
+the agent **correctly handles rejection and confirmation**, not as permission to delete anything.
 
 ---
 
-## 3. Человеческий контроль
+## 3. Human control
 
-**Ground rule 04:** consequential actions — через sandbox или симуляцию, с human approval **до**
-действия.
+**Ground rule 04:** consequential actions go through a sandbox or simulation, with human approval
+**before** the action.
 
-**Ground rule 05:** квалифицированный человек-ревьюер — часть решения, если оно может существенно
-кого-то затронуть.
+**Ground rule 05:** a qualified human reviewer is part of the solution when it could materially
+affect someone.
 
-Как это выглядит у нас:
+How this looks in our system:
 
-| Точка контроля | Что делает человек | Когда |
+| Control point | What the human does | When |
 | --- | --- | --- |
-| **Определение scope** | Указывает URL, учётные данные, allowlist действий, бюджеты (конфигурация прогона, не поле кейса) | До прогона |
-| **Approval gate** | Подтверждает или отклоняет действие класса `DESTRUCTIVE` | Во время прогона, до действия |
-| **Review вывода** | Проверяет финальную документацию перед использованием | После прогона |
+| **Scope definition** | Sets the URL, credentials, action allowlist, budgets (run configuration, not a case field) | Before the run |
+| **Approval gate** | Confirms or rejects a `DESTRUCTIVE`-class action | During the run, before the action |
+| **Output review** | Checks the final documentation before use | After the run |
 
-Третья точка — не формальность. **Выход AAE — черновик спецификации, а не источник истины.**
-Документация, помеченная как проверенная агентом, не должна использоваться для интеграции без
-человеческого review: цена ошибки в API-контракте несёт последствия дальше по цепочке.
+The third point isn't a formality. **AAE's output is a draft spec, not a source of truth.**
+Documentation flagged as agent-verified should not be used for integration without human review —
+the cost of a mistake in an API contract carries downstream consequences.
 
-Это утверждение должно быть явно написано в README подачи и в шапке генерируемых артефактов.
+This statement must be written explicitly in the submission README and in the header of the
+generated artifacts.
 
 ---
 
-## 4. Данные и учётные данные
+## 4. Data and credentials
 
 **Ground rules 06, 07, 08.**
 
-| Требование | Наш статус |
+| Requirement | Our status |
 | --- | --- |
-| Легальный и этичный use case | ✅ Исследуется только собственное синтетическое приложение |
-| Публичные / синтетические / одобренные анонимные данные | ✅ MiniCRM полностью синтетический; внешние сервисы не вызываются |
-| Учётные данные вне подачи | ⚠️ см. ниже |
-| Персональные данные отделены от артефактов | ⚠️ требует редактирования тел запросов в evidence |
+| Legal and ethical use case | ✅ Only our own synthetic application is probed |
+| Public / synthetic / approved anonymous data | ✅ MiniCRM is fully synthetic; no external services are called |
+| Credentials kept out of the submission | ⚠️ see below |
+| Personal data separated from artifacts | ⚠️ requires redacting request bodies in evidence |
 
-### Демо-учётные данные
+### Demo credentials
 
-`admin@minicrm.local` / `demo123` присутствуют в `README.md` мишени, в seed и предзаполнены в
-`miniCRM/apps/web/src/pages/LoginPage.vue`.
+`admin@minicrm.local` / `demo123` appear in the target's `README.md`, in the seed, and are
+pre-filled in `miniCRM/apps/web/src/pages/LoginPage.vue`.
 
-Это **не секрет** — учётная запись локального синтетического приложения, которое поднимается из
-docker compose на машине судьи. Ground rule 08 не нарушается: приватной информации нет.
+This is **not a secret** — it's an account for a local synthetic app that gets spun up from docker
+compose on the judge's machine. Ground rule 08 isn't violated: there's no private information.
 
-Но предзаполнение формы логина ослабляет benchmark — оно упрощает discovery авторизации сильнее,
-чем задумано. Это вопрос качества benchmark, а не безопасности. OQ-3 в [`11`](11-decisions-and-open-questions.md).
+But pre-filling the login form weakens the benchmark — it simplifies auth discovery more than
+intended. This is a benchmark quality issue, not a security one. OQ-3 in
+[`11`](11-decisions-and-open-questions.md).
 
-**Правило для подачи:** никаких реальных учётных данных, ключей API или токенов ни в репозитории,
-ни в артефактах прогонов, ни в видео. Перед подачей — прогон поиска секретов по репозиторию и по
+**Submission rule:** no real credentials, API keys, or tokens anywhere in the repository, in run
+artifacts, or in the video. Before submission — a secret-scanning pass over the repo and over
 `artifacts/`.
 
-### Редактирование evidence
+### Evidence redaction
 
-Тела запросов и ответов сохраняются в evidence. В MiniCRM они синтетические, но механизм
-редактирования нужен заранее — он часть продукта, а не benchmark:
+Request and response bodies are saved in evidence. In MiniCRM they're synthetic, but the redaction
+mechanism needs to exist ahead of time — it's part of the product, not the benchmark:
 
-- поля, похожие на пароли, токены и ключи, заменяются на `[redacted]` до записи;
-- редактирование применяется **при записи**, а не при показе.
+- fields that look like passwords, tokens, and keys are replaced with `[redacted]` before being
+  written;
+- redaction is applied **at write time**, not at display time.
 
 ---
 
-## 5. Чек-лист safety перед подачей
+## 5. Safety checklist before submission
 
-- [ ] У каждого verified claim есть непустой валидный блок `evidence`
-- [ ] Evidence включает UI-контекст **и** сетевое наблюдение для семантических переходов
-- [ ] Конфликтующее или одиночное наблюдение остаётся неопределённостью, а не утверждением
-- [ ] Разрушительные, внешние и неизвестные действия блокируются либо симулируются
-- [ ] Решения политики записаны как evidence и видны в траектории
-- [ ] В подаче нет production-учётных данных, персональных данных и чувствительных тел запросов
-- [ ] Human approval продемонстрирован для действий вне безопасной sandbox-политики
-- [ ] В README и в шапке генерируемых артефактов сказано, что вывод требует человеческого review
+- [ ] Every verified claim has a non-empty, valid `evidence` block
+- [ ] Evidence includes both UI context **and** a network observation for semantic transitions
+- [ ] A conflicting or single observation remains an uncertainty, not a claim
+- [ ] Destructive, external, and unknown actions are blocked or simulated
+- [ ] Policy decisions are recorded as evidence and visible in the trajectory
+- [ ] No production credentials, personal data, or sensitive request bodies in the submission
+- [ ] Human approval is demonstrated for actions outside the safe sandbox policy
+- [ ] The README and the header of generated artifacts state that the output requires human review

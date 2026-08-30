@@ -1,29 +1,29 @@
-# 05. Оценка и метрики
+# 05. Evaluation and metrics
 
-> **Статус:** черновик (оценщик не реализован; веса требуют утверждения — ADR-2)
-> **Обновлено:** 2026-08-29
-> **Источник истины:** бриф §«How to evaluate your solution»; `miniCRM/benchmark/schemas/reconstruction-output.schema.json`
-> **Соответствует критериям:** Measured Improvement (15), Reproducibility (15)
-
----
-
-## 1. Что бриф требует и что мы делаем
-
-Бриф разрешает предложить собственную rubric, если стандартная форма плохо подходит:
-
-> «You run this evaluation yourself. If the format above fits your task poorly, design your own
-> clear scoring rubric and propose it, so the judges can use it to assess your workflow.»
-
-Мы этим правом пользуемся — но **дополняем**, а не заменяем. В отчёте будут обе формы:
-собственная primary metric и стандартная таблица брифа с человеко-временем и стоимостью.
+> **Status:** draft (evaluator not implemented; weights need approval — ADR-2)
+> **Updated:** 2026-08-29
+> **Source of truth:** brief §"How to evaluate your solution"; `miniCRM/benchmark/schemas/reconstruction-output.schema.json`
+> **Maps to criteria:** Measured Improvement (15), Reproducibility (15)
 
 ---
 
-## 2. Почему смысл можно оценивать без LLM
+## 1. What the brief requires and what we do
 
-Свободный текст вроде «seems to update an order after shipment» нельзя использовать как основной
-объект scoring: детерминированный оценщик не обязан понимать, что это близко к «marks an order as
-shipped». Вместо этого агент подаёт **машиночитаемый факт**:
+The brief allows proposing our own rubric if the standard form fits poorly:
+
+> "You run this evaluation yourself. If the format above fits your task poorly, design your own
+> clear scoring rubric and propose it, so the judges can use it to assess your workflow."
+
+We use that right — but we **add to**, not replace, the standard form. The report will include
+both: our own primary metric and the brief's standard table with human time and cost.
+
+---
+
+## 2. Why meaning can be scored without an LLM
+
+Free text like "seems to update an order after shipment" can't be used as the primary scoring
+object: a deterministic evaluator has no obligation to understand that this is close to "marks an
+order as shipped." Instead, the agent submits a **machine-readable fact**:
 
 ```json
 {
@@ -37,161 +37,166 @@ shipped». Вместо этого агент подаёт **машиночит�
     "evidence": [
       {"kind": "ui_control", "page": "/orders/12", "ui_text": "Mark shipped"},
       {"kind": "network_request", "method": "PATCH", "path": "/api/orders/{id}/status",
-       "json_paths": ["statusId"], "note": "statusId=40 после нажатия"}
+       "json_paths": ["statusId"], "note": "statusId=40 after the click"}
     ]
   }]
 }
 ```
 
-Форма соответствует `definitions.semanticFact` в
-`miniCRM/benchmark/schemas/reconstruction-output.schema.json`: обязательны `id` и `meaning`,
-`additionalProperties: false`, доказательства лежат **внутри** факта.
+The shape matches `definitions.semanticFact` in
+`miniCRM/benchmark/schemas/reconstruction-output.schema.json`: `id` and `meaning` are required,
+`additionalProperties: false`, and evidence lives **inside** the fact.
 
-Для человека описание остаётся в финальной документации. Primary score считается по фактам.
+For a human reader, the prose description still lives in the final documentation. The primary
+score is computed from the facts.
 
-Плата за это — оценщик не признаёт синонимы вне публичной таблицы алиасов. Это осознанное
-ограничение, объявленное заранее ([`04`](04-benchmark-contract.md) §4).
+The price for this is that the evaluator does not recognize synonyms outside the public alias
+table. This is a deliberate constraint, declared up front
+([`04`](04-benchmark-contract.md) §4).
 
-> **`id` не является ключом сопоставления.** Агент не знает идентификаторов ground truth и
-> назначает свои. Оценщик сопоставляет по каноническому ключу (`kind` + `subject` + `value`),
-> а `id` использует только для ссылок изнутри того же документа.
+> **`id` is not the matching key.** The agent doesn't know ground truth's identifiers and assigns
+> its own. The evaluator matches by canonical key (`kind` + `subject` + `value`); `id` is only
+> used for references within the same document.
 
 ---
 
 ## 3. Primary metric: VARS
 
-**VARS — Verified API Reconstruction Score.** Рабочее название. Агрегирует корректность фактов с
-весами, отражающими пользовательскую ценность. Засчитываются только проверяемые совпадения
-`схема ↔ ground truth`.
+**VARS — Verified API Reconstruction Score.** Working name. Aggregates fact correctness with
+weights reflecting user value. Only verifiable matches between `schema ↔ ground truth` are scored.
 
 ```
 VARS = 100 × Σ (weight_category × F1_category)
 ```
 
-### Предлагаемые веса
+### Proposed weights
 
-Категории соответствуют секциям схемы результата — сопоставление идёт по тем же единицам, что перечислены в [`04`](04-benchmark-contract.md) §3.
+Categories correspond to the sections of the output schema — matching uses the same units listed
+in [`04`](04-benchmark-contract.md) §3.
 
-| Категория | Единица сопоставления | Вес | Обоснование |
+| Category | Matching unit | Weight | Rationale |
 | --- | --- | ---: | --- |
-| Операции и пути | метод + нормализованный путь | 0.25 | Без списка операций остальное некуда крепить |
-| Параметры и схемы | операция + location + имя + тип + обязательность | 0.20 | Без этого нельзя вызвать операцию |
-| Семантические факты | `kind` + `subject` + `value` | 0.25 | Ядро ценности: то, чего HAR не даёт |
-| Зависимости и правила | `dependencies` + `business_constraint` | 0.15 | Скрытые связи, из-за которых интеграции ломаются |
-| Workflows | последовательность шагов | 0.15 | Пользовательские сценарии целиком |
+| Operations and paths | method + normalized path | 0.25 | Without an operations list, nothing else has anywhere to attach |
+| Parameters and schemas | operation + location + name + type + required | 0.20 | Without this you can't call the operation |
+| Semantic facts | `kind` + `subject` + `value` | 0.25 | The core value: what a HAR file doesn't give you |
+| Dependencies and rules | `dependencies` + `business_constraint` | 0.15 | The hidden links that break integrations |
+| Workflows | sequence of steps | 0.15 | Whole user scenarios |
 
-> ⚠️ **Веса не утверждены.** Их надо зафиксировать **до** первого зачётного прогона и не менять
-> после — иначе появляется соблазн подогнать метрику под результат. ADR-2 в [`11`](11-decisions-and-open-questions.md).
+> ⚠️ **Weights are not approved.** They need to be fixed **before** the first scored run and never
+> changed afterward — otherwise there's a temptation to fit the metric to the result. ADR-2 in
+> [`11`](11-decisions-and-open-questions.md).
 >
-> Открытый вопрос: категория «Семантические факты» объединяет разные `kind` с очень разной
-> ценностью для пользователя (`enum_mapping` важнее, чем `identifier_meaning`). Рассматривается
-> вариант с подвесами внутри категории — но только если это не сделает метрику непрозрачной для судьи.
+> Open question: the "Semantic facts" category lumps together different `kind` values with very
+> different user value (`enum_mapping` matters more than `identifier_meaning`). A version with
+> sub-weights inside the category is being considered — but only if it doesn't make the metric
+> opaque to a judge.
 
-### Что такое F1 здесь
+### What F1 means here
 
-Для каждой категории оценщик сравнивает множество предсказанных атомарных фактов с множеством
-фактов ground truth по каноническому ключу:
+For each category, the evaluator compares the set of predicted atomic facts with the set of ground
+truth facts by canonical key:
 
-- **TP** — предсказанный факт совпал с фактом ground truth
-- **FP** — предсказан факт, которого в ground truth нет (spurious)
-- **FN** — факт ground truth не предсказан (missing)
+- **TP** — a predicted fact matches a ground truth fact
+- **FP** — a predicted fact that isn't in ground truth (spurious)
+- **FN** — a ground truth fact that wasn't predicted (missing)
 
 `precision = TP / (TP + FP)`, `recall = TP / (TP + FN)`, `F1 = 2PR / (P + R)`.
 
-Факты, не прошедшие валидацию схемы или поданные с пустым либо невалидным блоком `evidence`,
-попадают в `invalid` и **не засчитываются как TP**, но учитываются в знаменателе precision.
+Facts that fail schema validation, or are submitted with an empty or invalid `evidence` block, go
+into `invalid` and **do not count as TP**, but are counted in the precision denominator.
 
 ---
 
-## 4. Вторичные метрики
+## 4. Secondary metrics
 
-| Метрика | Определение | Зачем |
+| Metric | Definition | Why |
 | --- | --- | --- |
-| **Hallucination rate** | FP-claims / все предсказанные claims | Цена лишних правдоподобных утверждений — главный риск для пользователя |
-| **Evidence support rate** | факты и claims с непустым валидным блоком `evidence` / все поданные | Дисциплина provenance; требование ground rule 09 |
-| **Coverage** | обнаруженные группы операций ground truth / всего | Помогает интерпретировать VARS: низкий VARS от узкого обзора ≠ низкий VARS от ошибок |
-| **Wall time** | на кейс, медиана + p90 | Операционная практичность |
-| **Cost** | на кейс, медиана + p90 | Требование таблицы брифа |
-| **Tool actions** | на кейс, медиана + p90 | Эффективность исследования |
-| **Valid submission rate** | прогонов с валидным `submit_reconstruction` / всего | Базовая надёжность; кейс без валидной подачи = 0 |
+| **Hallucination rate** | FP claims / all predicted claims | The cost of extra plausible-sounding claims — the main risk to the user |
+| **Evidence support rate** | facts and claims with a non-empty, valid `evidence` block / all submitted | Provenance discipline; required by ground rule 09 |
+| **Coverage** | discovered ground-truth operation groups / total | Helps interpret VARS: low VARS from narrow exploration ≠ low VARS from errors |
+| **Wall time** | per case, median + p90 | Operational practicality |
+| **Cost** | per case, median + p90 | Required by the brief's table |
+| **Tool actions** | per case, median + p90 | Exploration efficiency |
+| **Valid submission rate** | runs with a valid `submit_reconstruction` / total | Basic reliability; a case with no valid submission scores 0 |
 
 ---
 
-## 5. Обязательная таблица брифа
+## 5. Mandatory brief table
 
-Заполняется **только** из experiment ledger, после реальных прогонов.
+Filled in **only** from the experiment ledger, after actual runs.
 
 | METRIC | SIMPLE BASELINE | AGENT SOLUTION | CHANGE |
 | --- | --- | --- | --- |
-| Primary outcome (VARS) | _не заполнено_ | _не заполнено_ | — |
-| Human time per task | _не заполнено_ | _не заполнено_ | — |
-| Cost per task | _не заполнено_ | _не заполнено_ | — |
+| Primary outcome (VARS) | _not filled in_ | _not filled in_ | — |
+| Human time per task | _not filled in_ | _not filled in_ | — |
+| Cost per task | _not filled in_ | _not filled in_ | — |
 
-**Про «Human time per task».** Наша задача автоматическая, поэтому человеко-время меряется как
-время квалифицированного инженера на достижение сопоставимого результата вручную. Метод замера
-надо зафиксировать до подачи (OQ-5): либо хронометраж одного кейса вручную и экстраполяция,
-либо честное «не измерялось» — второе лучше, чем выдуманное число.
-
----
-
-## 6. Три уровня качества
-
-Разные вещи оцениваются разными способами. Смешивать их — типичная ошибка.
-
-| Уровень | Как оценивается | Для чего |
-| --- | --- | --- |
-| **Primary quantitative** | Детерминированный fact-level оценщик | Честное сравнение baseline и AAE |
-| **Qualitative product quality** | Человеческий review готовых OpenAPI/docs/workflows | Критерий End to End Quality (20 баллов) |
-| **Evidence quality** | Доля supported claims, валидность provenance | Проверить, что агент не маскирует догадки под факты |
-
-Второй уровень оценивает **человек**, и он же оценивается судьями. Артефакт должен выглядеть так,
-«под чем человек подпишется», а не как очевидный AI-черновик — формулировка из рубрики.
+**On "Human time per task."** Our task is automatic, so human time is measured as the time a
+qualified engineer needs to reach a comparable result manually. The measurement method needs to be
+fixed before submission (OQ-5): either time one case manually and extrapolate, or an honest "not
+measured" — the latter is better than a made-up number.
 
 ---
 
-## 7. Алгоритм оценщика
+## 6. Three levels of quality
 
-Пять шагов. Ни на одном не используется LLM, embeddings или fuzzy semantic matching.
+Different things are judged in different ways. Mixing them up is a common mistake.
 
-| Шаг | Действие | Результат |
+| Level | How it's evaluated | What it's for |
 | --- | --- | --- |
-| 1. **Validate** | JSON Schema, типы, обязательные ключи, валидность вложенных объектов `evidence` | Невалидный вывод не засчитывается; причина сохранена |
-| 2. **Normalize** | Методы, пути, идентификаторы, пробелы, canonical labels — к заданным правилам | Сопоставимые ключи без языковой интерпретации |
-| 3. **Match** | Каждое предсказание сопоставляется факту ground truth по типу и каноническому ключу | TP / FP / FN по каждой категории |
-| 4. **Score** | precision, recall, F1 по категориям; hallucination rate; VARS | Итоговые метрики + разбивка по кейсам |
-| 5. **Audit** | Проверка полноты и валидности блоков `evidence`; формирование `diff.json` и отчёта | Судья и разработчик видят, что именно зачтено |
+| **Primary quantitative** | Deterministic fact-level evaluator | Fair comparison of baseline and AAE |
+| **Qualitative product quality** | Human review of the finished OpenAPI/docs/workflows | End to End Quality criterion (20 points) |
+| **Evidence quality** | Share of supported claims, provenance validity | Checks that the agent isn't dressing up guesses as facts |
 
-### Golden-тесты оценщика
+The second level is judged by a **human**, and it's what judges evaluate too. The artifact must
+look like something "a person would sign off on," not an obvious AI draft — the rubric's own
+wording.
 
-Оценщик сам должен быть проверен. Обязательный минимум:
+---
 
-- валидное точное совпадение → TP;
-- пропущенный факт → FN, не влияет на precision;
-- лишний факт → FP, снижает precision;
-- факт без блока `evidence` или с `evidence[].kind` вне разрешённого списка → `invalid`, не TP;
-- несовпадение canonical label (`sent` вместо `shipped`) → не TP;
-- невалидная схема → нулевой результат кейса с сохранённой причиной;
+## 7. Evaluator algorithm
+
+Five steps. None of them uses an LLM, embeddings, or fuzzy semantic matching.
+
+| Step | Action | Result |
+| --- | --- | --- |
+| 1. **Validate** | JSON Schema, types, required keys, validity of nested `evidence` objects | Invalid output doesn't score; the reason is recorded |
+| 2. **Normalize** | Methods, paths, identifiers, whitespace, canonical labels — per the defined rules | Comparable keys with no linguistic interpretation |
+| 3. **Match** | Each prediction is matched against a ground-truth fact by type and canonical key | TP / FP / FN per category |
+| 4. **Score** | precision, recall, F1 per category; hallucination rate; VARS | Final metrics + per-case breakdown |
+| 5. **Audit** | Check completeness and validity of `evidence` blocks; produce `diff.json` and the report | Judge and developer can see exactly what was credited |
+
+### Evaluator golden tests
+
+The evaluator itself must be verified. Mandatory minimum:
+
+- a valid exact match → TP;
+- a missing fact → FN, doesn't affect precision;
+- an extra fact → FP, lowers precision;
+- a fact with no `evidence` block, or `evidence[].kind` outside the allowed list → `invalid`, not TP;
+- a canonical-label mismatch (`sent` instead of `shipped`) → not TP;
+- an invalid schema → a zero case score with the reason recorded;
 - `miniCRM/benchmark/examples/perfect-reconstruction.json` → VARS = 100.
 
-Последний тест — самый важный: он доказывает, что 100 достижимо и метрика не сломана.
-`miniCRM/benchmark/examples/perfect-reconstruction.json` содержит все 71 факт ground truth с теми
-же значениями `kind`, поэтому при сопоставлении по ключу `kind + subject + value` он обязан давать
-ноль FP и ноль FN. Расхождение здесь означает поломку оценщика или дрейф артефактов benchmark.
+The last test is the most important: it proves 100 is achievable and the metric isn't broken.
+`miniCRM/benchmark/examples/perfect-reconstruction.json` contains all 71 ground-truth facts with
+the same `kind` values, so matching by `kind + subject + value` must give zero FP and zero FN. A
+discrepancy here means the evaluator is broken or the benchmark artifacts have drifted.
 
 ---
 
-## 8. Отчётность без выдуманных результатов
+## 8. Reporting without invented results
 
-**Числа baseline → final появляются только после реальных прогонов.** До этого допустимы цели и
-шаблоны, но не «51% → 86%» как заявленный результат.
+**Baseline → final numbers only appear after real runs.** Until then, targets and templates are
+fine, but not "51% → 86%" presented as an achieved result.
 
-В итоговой таблице приводятся:
+The final table includes:
 
-- все кейсы, без черри-пикинга;
-- seed каждого прогона;
-- среднее и разброс;
-- полный diff;
-- разбор одного основного сложного кейса с failure mode.
+- all cases, no cherry-picking;
+- the seed for each run;
+- mean and spread;
+- the full diff;
+- an analysis of the one primary hard case with its failure mode.
 
-Это одновременно ground rule 09 («Connect every claim about your results to the evidence you
-submit») и условие критерия Measured Improvement.
+This is simultaneously ground rule 09 ("Connect every claim about your results to the evidence you
+submit") and a condition of the Measured Improvement criterion.

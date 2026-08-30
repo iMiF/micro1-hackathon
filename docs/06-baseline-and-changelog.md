@@ -1,110 +1,114 @@
-# 06. Baseline и Improvement Changelog
+# 06. Baseline and Improvement Changelog
 
-> **Статус:** черновик (прогонов не было — все записи пусты по построению)
-> **Обновлено:** 2026-08-29
-> **Источник истины:** бриф §«Show how the solution improved», §«Tell the story with an improvement changelog»
-> **Соответствует критериям:** Measured Improvement (15), Hot Take (5), deliverable 01
-
----
-
-## 1. Выбор baseline и его обоснование
-
-Бриф предлагает четыре формы baseline. Наш выбор — **«One general purpose agent with basic tools»**.
-
-**Почему не «один прямой промпт»:** мы измеряем ценность *специализированного агентного
-workflow*, а не ценность агентности вообще. Если baseline не умеет пользоваться браузером,
-сравнение покажет «агент лучше не-агента» — тривиальный и неинтересный результат, который к тому
-же завышает наш выигрыш.
-
-**Почему не «ручной процесс»:** он был бы честной точкой отсчёта для человеко-времени, но его
-нельзя прогнать 15 раз на 15 кейсах воспроизводимо.
-
-**Что это значит на практике:** baseline получает **тот же** target, **те же** семь инструментов,
-**ту же** схему вывода и **те же** бюджеты. Отличается только внутренняя организация: у него нет
-планировщика покрытия, журнала гипотез, активного экспериментирования, risk classifier и verifier.
-
-Это сознательно **сильный** baseline. Слабый baseline даёт красивую цифру и слабую работу —
-рубрика прямо спрашивает «Which changes truly improved the outcome?».
-
-Полное описание baseline и его промпт — [`02-architecture.md`](02-architecture.md) §3.
-
-### Различия в ресурсах
-
-По плану различий нет. Если они появятся (например, AAE делает больше tool calls в рамках того же
-budget), это **фиксируется в отчёте явно** — прямое требование брифа.
+> **Status:** draft (no runs yet — all entries are empty by construction)
+> **Updated:** 2026-08-29
+> **Source of truth:** brief §"Show how the solution improved", §"Tell the story with an improvement changelog"
+> **Maps to criteria:** Measured Improvement (15), Hot Take (5), deliverable 01
 
 ---
 
-## 2. Метод сравнения
+## 1. Baseline choice and rationale
 
-- Одни и те же 15 кейсов из `miniCRM/benchmark/cases.json`.
-- Одни и те же seed'ы.
-- Один и тот же зафиксированный `application_commit` мишени.
-- Одна и та же модель (если сравнивается workflow, а не модель).
-- Оценка — детерминированный оценщик, [`05`](05-evaluation-and-metrics.md).
-- Каждая итерация changelog измеряется **тем же** методом.
+The brief offers four forms of baseline. Our choice is **"One general purpose agent with basic
+tools."**
+
+**Why not "a single direct prompt":** we're measuring the value of a *specialized agentic
+workflow*, not the value of agency in general. If the baseline can't use a browser, the comparison
+shows "an agent beats a non-agent" — a trivial, uninteresting result that also inflates our
+apparent win.
+
+**Why not "the manual process":** it would be a fair reference point for human time, but it can't
+be run 15 times across 15 cases reproducibly.
+
+**What this means in practice:** the baseline gets the **same** target, the **same** seven tools,
+the **same** output schema, and the **same** budgets. Only the internal organization differs: it
+has no coverage planner, no hypothesis ledger, no active experimentation, no risk classifier, and
+no verifier.
+
+This is deliberately a **strong** baseline. A weak baseline produces an impressive number and weak
+work — the rubric asks directly, "Which changes truly improved the outcome?"
+
+Full baseline description and its prompt — [`02-architecture.md`](02-architecture.md) §3.
+
+### Resource differences
+
+There are no planned differences. If any appear (for example, AAE making more tool calls within
+the same budget), that is **recorded explicitly in the report** — a direct brief requirement.
+
+---
+
+## 2. Comparison method
+
+- The same 15 cases from `miniCRM/benchmark/cases.json`.
+- The same seeds.
+- The same pinned target `application_commit`.
+- The same model (when comparing the workflow rather than the model).
+- Scoring by the deterministic evaluator, [`05`](05-evaluation-and-metrics.md).
+- Every changelog iteration is measured by the **same** method.
 
 ---
 
 ## 3. Improvement Changelog
 
-Формат колонок задан брифом. Заполняется по мере проведения экспериментов.
+Column format is defined by the brief. Filled in as experiments are run.
 
-> **Правило заполнения:** запись добавляется, когда прогон **проведён**, а не когда изменение
-> написано. Колонка EVIDENCE содержит ссылку на `artifacts/runs/<run-id>/`, а не описание.
-> Записи об убранных экспериментах **обязательны** — бриф требует их отдельно.
+> **Fill-in rule:** an entry is added when a run **has been performed**, not when the change was
+> written. The EVIDENCE column contains a link to `artifacts/runs/<run-id>/`, not a description.
+> Entries for removed experiments are **mandatory** — the brief requires them explicitly.
 
 | STAGE | WHAT YOU TRIED AND WHY | EVIDENCE | DECISION / LEARNING |
 | --- | --- | --- | --- |
-| Baseline | General-purpose браузерный агент с семью инструментами и общей инструкцией. Устанавливает честную точку отсчёта на том же tool surface | _прогон не проведён_ | _—_ |
-| Iteration 1 | _не начата_ | | |
-| Iteration 2 | _не начата_ | | |
-| Iteration 3 | _не начата_ | | |
-| Final | _не начата_ | | |
+| Baseline | General-purpose browser agent with seven tools and a shared instruction. Establishes a fair reference point on the same tool surface | _run not performed_ | _—_ |
+| Iteration 1 | _not started_ | | |
+| Iteration 2 | _not started_ | | |
+| Iteration 3 | _not started_ | | |
+| Final | _not started_ | | |
 
-### Запланированные итерации
+### Planned iterations
 
-Порядок выведен из того, какие failure modes ожидаются самыми дорогими. Порядок может измениться —
-но каждая итерация обязана иметь **названный failure mode до прогона**, иначе она превращается в
-«добавили компонент, потому что можем».
+The order is derived from which failure modes are expected to be the most costly. The order may
+change — but every iteration must have a **named failure mode before the run**, otherwise it
+becomes "we added a component because we could."
 
-| # | Что добавляем | Ожидаемый failure mode baseline | Как измеряем эффект |
+| # | What we add | Expected baseline failure mode | How we measure the effect |
 | --- | --- | --- | --- |
-| 1 | Coverage planner | Агент исследует один раздел глубоко и не доходит до остальных; низкий recall по `operations` | Δ recall(operations), Δ coverage |
-| 2 | Hypothesis ledger | Гипотеза теряется между шагами; одиночное наблюдение подаётся как факт | Δ hallucination rate |
-| 3 | Experiment planner | Значение enum названо по одному наблюдению; неверная привязка к UI-подписи | Δ F1(semantic_facts) |
-| 4 | Verifier | Правдоподобные неподтверждённые утверждения в финальном выводе | Δ precision, Δ evidence support rate |
-| 5 | Artifact generator | Валидный JSON, бесполезный человеку | человеческая оценка, не влияет на VARS |
+| 1 | Coverage planner | Agent explores one section deeply and never gets to the rest; low recall on `operations` | Δ recall(operations), Δ coverage |
+| 2 | Hypothesis ledger | A hypothesis is lost between steps; a single observation is submitted as a fact | Δ hallucination rate |
+| 3 | Experiment planner | An enum value is named from a single observation; wrong tie to the UI label | Δ F1(semantic_facts) |
+| 4 | Verifier | Plausible but unconfirmed claims in the final output | Δ precision, Δ evidence support rate |
+| 5 | Artifact generator | Valid JSON that's useless to a human | human evaluation, doesn't affect VARS |
 
-Для каждой итерации проводится **ablation**: система целиком минус этот компонент. Без ablation
-нельзя утверждать, что вклад именно его.
+Every iteration gets an **ablation**: the whole system minus this component. Without an ablation
+we can't claim the contribution is specifically its.
 
 ---
 
 ## 4. Main failure mode
 
-> Заполняется после прогонов. Требование deliverable 01: «Close with the main failure mode and your hot take».
+> Filled in after the runs. Required by deliverable 01: "Close with the main failure mode and your
+> hot take."
 
-Гипотеза до измерения (**не** результат): самым дорогим окажется не пропуск операций, а
-**уверенно неверная семантика** — правдоподобное объяснение числового значения, построенное на
-одном наблюдении. Это гипотеза, которую прогоны должны подтвердить или опровергнуть; если
-опровергнут — запись меняется, а не подгоняется.
+Hypothesis before measurement (**not** a result): the most costly issue will not be missed
+operations, but **confidently wrong semantics** — a plausible explanation of a numeric value built
+on a single observation. This is a hypothesis the runs are meant to confirm or refute; if refuted,
+the entry changes rather than being forced to fit.
 
 ---
 
 ## 5. Hot take
 
-> Заполняется после прогонов. Критерий Hot Take / Insights, 5 баллов.
+> Filled in after the runs. Hot Take / Insights criterion, 5 points.
 
-Рубрика просит превратить наблюдённый failure mode в практический урок для построения надёжных
-агентов. Не общее рассуждение — конкретный вывод, который изменил бы то, что мы построим следующим.
+The rubric asks us to turn an observed failure mode into a practical lesson for building reliable
+agents. Not a general observation — a concrete conclusion that would change what we build next.
 
 ---
 
-## 6. Дисциплина честности
+## 6. Honesty discipline
 
-- Ни одно число в этом файле не появляется без ссылки на `artifacts/runs/<run-id>/`.
-- Отрицательные результаты записываются. Итерация, ухудшившая метрику, — это запись в changelog,
-  а не удалённая ветка.
-- Эксперимент, который убрали, описывается вместе с тем, чему он научил — бриф требует этого прямо.
-- Черри-пикинг кейсов запрещён: публикуются все 15.
+- No number in this file appears without a link to `artifacts/runs/<run-id>/`.
+- Negative results get recorded. An iteration that made a metric worse is a changelog entry, not a
+  deleted branch.
+- A removed experiment is described together with what it taught us — the brief requires this
+  explicitly.
+- Cherry-picking cases is forbidden: all 15 are published.

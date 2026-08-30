@@ -1,108 +1,110 @@
-# 10. Проверка выводов исходного RU-документа
+# 10. Review of the original RU document's claims
 
-> **Статус:** заморожена (аудит проведён 2026-08-29; при повторной сверке — новый раздел, не правка старого)
-> **Обновлено:** 2026-08-29
-> **Проверяемый документ:** `Autonomous_API_Explorer_Technical_Documentation_RU.pdf`, v1.0 от 29.08.2026, 18 стр.
-> **Против чего проверялось:** `micro1 - First Hackathon97ce7c5.pdf` (бриф) и код репозитория MiniCRM на коммите `a287351`
+> **Status:** frozen (audit performed 2026-08-29; a re-review adds a new section, it doesn't edit the old one)
+> **Updated:** 2026-08-29
+> **Document reviewed:** `Autonomous_API_Explorer_Technical_Documentation_RU.pdf`, v1.0 dated 2026-08-29, 18 pages
+> **Checked against:** `micro1 - First Hackathon97ce7c5.pdf` (the brief) and the MiniCRM repository at commit `a287351`
 
-Концепт-документ писался до сверки с кодом и до полного разбора брифа. Он содержит верную
-стратегию и несколько фактических ошибок. Этот файл фиксирует результат построчной проверки,
-чтобы ошибки не переехали в подачу.
+The concept document was written before reconciliation with the code and before a full read of the
+brief. It contains a sound strategy and several factual errors. This file records the result of a
+line-by-line check so the errors don't carry over into the submission.
 
 ---
 
-## 1. Ошибки: утверждения, противоречащие коду или брифу
+## 1. Errors: claims that contradict the code or the brief
 
-| # | Утверждение PDF | Как на самом деле | Источник | Последствие |
+| # | PDF claim | What's actually true | Source | Consequence |
 | --- | --- | --- | --- | --- |
-| E-1 | Пример: «`PATCH /api/orders/{id}` с body `{"status": 4}` → shipped» | Реально `PATCH /api/orders/{id}/status`, тело `{statusId, version}`, значение `40`. Отдельный `PATCH /api/orders/{id}` существует, но меняет `paymentStatus` и **не достижим из UI** | `miniCRM/apps/api/src/routes/orders.ts`, `miniCRM/apps/api/src/domain/status.ts` | Сквозной пример документа неверен во всех трёх компонентах: путь, имя поля, значение |
-| E-2 | Canonical vocabulary: `new, confirmed, processing, shipped, cancelled` | Реально: `Draft (10), Confirmed (20), Processing (30), Shipped (40), Cancelled (50)`. Метки `new` не существует | `miniCRM/apps/web/src/orderStatus.ts` | Публикация неверного словаря сломала бы сопоставление у оценщика |
-| E-4 | Схема результата: секции `enum_mappings`, `operation_effects`, `triggers`, `business_rules` | Реализованная схема: `operations`, `semantic_facts` (с полем `kind`), `dependencies`, `workflows`, `actions`, `claims` | `miniCRM/benchmark/schemas/reconstruction-output.schema.json` | Веса VARS в PDF считаются по несуществующим категориям |
-| E-8 | Модель доказательств: реестр evidence со стабильными `ev_NNN` и полем `evidence_ids` в фактах; оценщик проверяет ссылочную целостность | В реализованной схеме **идентификаторов evidence нет вообще**. Доказательства вложены в факт/claim как массив объектов с обязательным `kind` из семи значений. Строка `evidence_id` в схеме встречается 0 раз. Поле `canonical_meaning` тоже отсутствует — в схеме оно называется `meaning` | `miniCRM/benchmark/schemas/reconstruction-output.schema.json`, `definitions.evidence`, `definitions.semanticFact` | Самое серьёзное расхождение после E-1: вся описанная в PDF механика provenance неприменима как есть. Разведено на два уровня в [`08`](08-evidence-and-trajectories.md) §2 |
-| E-5 | Структура репозитория: `apps/minicrm/`, `benchmarks/`, `packages/schema`, `packages/evaluator`, `packages/browser-harness`, `agents/` | Реально: `miniCRM/apps/api`, `miniCRM/apps/web`, `miniCRM/benchmark/`, `miniCRM/db/`, `miniCRM/tests/`. Пакетов оценщика, harness и агентов не существует | репозиторий | PDF называет структуру «рекомендуемой», то есть предлагает, а не описывает. Но опираться на неё при планировании нельзя: фактические пути другие |
-| E-6 | Область MVP мишени включает «Payments / tasks» как связанные сущности | Сущности `tasks` нет вовсе. Платежи представлены только полем `payment_status` заказа, которое **нельзя изменить из UI** | `miniCRM/db/migrations/001_initial.sql`, `miniCRM/apps/api/src/routes/orders.ts` | Заявленное покрытие шире фактического |
-| E-7 | MVP поддерживает «cookie **или** Bearer auth» | В мишени только cookie-сессия (`sid`, HttpOnly, SameSite=Lax) + заголовок `x-csrf-token`. Bearer отсутствует | `miniCRM/apps/api/src/session.ts`, `miniCRM/apps/api/src/hooks.ts` | Заявление о поддержке без кейса — нарушение ground rule 09 |
+| E-1 | Example: "`PATCH /api/orders/{id}` with body `{"status": 4}` → shipped" | The real route is `PATCH /api/orders/{id}/status`, body `{statusId, version}`, value `40`. A separate `PATCH /api/orders/{id}` exists, but changes `paymentStatus` and **is not reachable from the UI** | `miniCRM/apps/api/src/routes/orders.ts`, `miniCRM/apps/api/src/domain/status.ts` | The document's flagship example is wrong on all three counts: path, field name, and value |
+| E-2 | Canonical vocabulary: `new, confirmed, processing, shipped, cancelled` | Actual: `Draft (10), Confirmed (20), Processing (30), Shipped (40), Cancelled (50)`. There is no `new` label | `miniCRM/apps/web/src/orderStatus.ts` | Publishing the wrong vocabulary would have broken the evaluator's matching |
+| E-4 | Output schema: sections `enum_mappings`, `operation_effects`, `triggers`, `business_rules` | Implemented schema: `operations`, `semantic_facts` (with a `kind` field), `dependencies`, `workflows`, `actions`, `claims` | `miniCRM/benchmark/schemas/reconstruction-output.schema.json` | The PDF's VARS weights are computed over categories that don't exist |
+| E-8 | Evidence model: an evidence registry with stable `ev_NNN` ids and an `evidence_ids` field on facts; the evaluator checks referential integrity | The implemented schema has **no evidence identifiers at all**. Evidence is nested inside the fact/claim as an array of objects with a required `kind` from seven values. The string `evidence_id` appears zero times in the schema. The field `canonical_meaning` is also absent — the schema calls it `meaning` | `miniCRM/benchmark/schemas/reconstruction-output.schema.json`, `definitions.evidence`, `definitions.semanticFact` | The most serious discrepancy after E-1: the entire provenance mechanism described in the PDF doesn't apply as written. Resolved into two levels in [`08`](08-evidence-and-trajectories.md) §2 |
+| E-5 | Repo layout: `apps/minicrm/`, `benchmarks/`, `packages/schema`, `packages/evaluator`, `packages/browser-harness`, `agents/` | Actual: `miniCRM/apps/api`, `miniCRM/apps/web`, `miniCRM/benchmark/`, `miniCRM/db/`, `miniCRM/tests/`. There are no evaluator, harness, or agent packages | repository | The PDF calls the layout "recommended," i.e. a proposal rather than a description. But it can't be relied on for planning: the actual paths differ |
+| E-6 | The target's MVP scope includes "Payments / tasks" as related entities | There is no `tasks` entity at all. Payments are represented only by the order's `payment_status` field, which **cannot be changed from the UI** | `miniCRM/db/migrations/001_initial.sql`, `miniCRM/apps/api/src/routes/orders.ts` | Claimed coverage is broader than actual |
+| E-7 | The MVP supports "cookie **or** Bearer auth" | The target only has cookie sessions (`sid`, HttpOnly, SameSite=Lax) + the `x-csrf-token` header. No Bearer support | `miniCRM/apps/api/src/session.ts`, `miniCRM/apps/api/src/hooks.ts` | Claiming support with no backing case violates ground rule 09 |
 
 ---
 
-## 2. Существенные пропуски: чего в PDF нет, а в брифе есть
+## 2. Significant omissions: what's in the brief but missing from the PDF
 
-| # | Что пропущено | Почему это важно |
+| # | What's missing | Why it matters |
 | --- | --- | --- |
-| G-1 | **Рубрика судейства на 100 баллов и её веса** | Самый крупный пропуск. Приоритеты работ должны выводиться из неё: Agent Solution & Engineering = 30, End to End Quality = 20 |
-| G-2 | **End to End Quality (20 баллов)** как отдельный критерий | Бриф оценивает *готовый артефакт* — «с отделкой, под которой человек подпишется, а не очевидный AI-черновик». В PDF генерация артефактов упомянута вскользь |
-| G-3 | ~~Ground rule 02~~ — **находка отозвана.** PDF правило не пропускает: Приложение C содержит «Чётко показано, что было до конкурса и что добавлено». Пропуска нет | Строка сохранена, чтобы номер не переиспользовался |
-| G-4 | **Ground rule 05** — квалифицированный человек-ревьюер как *средство контроля* | Частичный пропуск. PDF §7.2 упоминает «Human review готовых OpenAPI/docs/workflows», но подаёт это как способ оценки качества, а не как обязательное требование безопасности. Формулировка правила требует, чтобы ревьюер был **частью решения** |
-| G-5 | **Human time per task и Cost per task** в стандартной таблице брифа | PDF относит их к «дополнительным метрикам». Бриф ставит в основную форму отчёта |
-| G-6 | Разрешение брифа предложить **свою** rubric | PDF вводит VARS, не сославшись на это разрешение — выглядит как самоуправство, хотя прямо разрешено |
-| G-7 | Перечень допустимых форм baseline из брифа | Наш выбор («general purpose agent with basic tools») — один из четырёх названных; это стоит указать явно как соответствие |
+| G-1 | **The 100-point judging rubric and its weights** | The biggest omission. Work priorities should be derived from it: Agent Solution & Engineering = 30, End to End Quality = 20 |
+| G-2 | **End to End Quality (20 points)** as a distinct criterion | The brief judges the *finished artifact* — "polished enough that a person would sign off on it, not an obvious AI draft." The PDF mentions artifact generation only in passing |
+| G-3 | ~~Ground rule 02~~ — **finding retracted.** The PDF does not actually omit the rule: Appendix C contains "Clearly shows what existed before the competition and what was added." There is no omission | Row kept so the number isn't reused |
+| G-4 | **Ground rule 05** — a qualified human reviewer as a *control mechanism* | Partial omission. PDF §7.2 mentions "human review of the finished OpenAPI/docs/workflows," but frames it as a quality-assessment method rather than a mandatory safety requirement. The rule's wording requires the reviewer to be **part of the solution** |
+| G-5 | **Human time per task and Cost per task** in the standard brief table | The PDF treats them as "additional metrics." The brief puts them in the main report form |
+| G-6 | The brief's explicit permission to propose **your own** rubric | The PDF introduces VARS without referencing this permission — it reads as overreach, even though it's directly allowed |
+| G-7 | The brief's list of acceptable baseline forms | Our choice ("general purpose agent with basic tools") is one of the four named forms; worth stating explicitly as compliance |
 
 ---
 
-## 3. Устаревшее: было верно как план, разошлось с фактом
+## 3. Outdated: correct as a plan, drifted from fact
 
-| # | Утверждение PDF | Текущее состояние |
+| # | PDF claim | Current state |
 | --- | --- | --- |
-| S-1 | «Ground truth — dataset, отделённый от агента» как план | Реализовано: `miniCRM/benchmark/ground-truth/` с 26 операциями, 71 фактом, 22 зависимостями, 18 workflows, 32 действиями |
-| S-2 | Задача D-12…D-10: «Собрать MiniCRM: 12 cases, seed/reset, скрытый ground truth, deterministic evaluator» | Выполнено частично и с перевыполнением по кейсам: мишень, seed, reset, ground truth и **15** кейсов готовы; **детерминированный оценщик не написан** и остаётся блокирующим ([`09`](09-status-and-roadmap.md)) |
-| S-3 | Промпты для Cursor (§14) | Устарели: описывают создание уже существующего. Актуальны только §14.2–14.4 (оценщик, harness, агенты) |
-| S-4 | «Payments / tasks» в наборе областей мишени | См. E-6 |
+| S-1 | "Ground truth — a dataset separated from the agent" as a plan | Implemented: `miniCRM/benchmark/ground-truth/` with 26 operations, 71 facts, 22 dependencies, 18 workflows, 32 actions |
+| S-2 | D-12…D-10 task: "Build MiniCRM: 12 cases, seed/reset, hidden ground truth, deterministic evaluator" | Partially done, and overshot on cases: the target, seed, reset, ground truth, and **15** cases are ready; **the deterministic evaluator is not written** and remains the blocker ([`09`](09-status-and-roadmap.md)) |
+| S-3 | Cursor prompts (§14) | Outdated: they describe building what already exists. Only §14.2–14.4 (evaluator, harness, agents) are still relevant |
+| S-4 | "Payments / tasks" in the target's domain areas | See E-6 |
 
 ---
 
-## 4. Подтверждено: выводы, устоявшие против проверки
+## 4. Confirmed: conclusions that held up under review
 
-Это ядро документа, и оно верно.
+This is the document's solid core, and it's correct.
 
-| # | Утверждение PDF | Проверка |
+| # | PDF claim | Verification |
 | --- | --- | --- |
-| C-1 | Приложение не отдаёт OpenAPI и справочники значений | ✅ Ни одного такого маршрута; смысл статусов только во фронтенде |
-| C-2 | Ценность создаёт не обход, а цикл «наблюдать → гипотеза → безопасно проверить → зафиксировать подтверждённое» | ✅ Соответствует брифу: агентные возможности применяются целенаправленно |
-| C-3 | Baseline должен быть general-purpose агентом с тем же tool surface, а не одним промптом | ✅ Прямо назван брифом как допустимая форма; честнее слабого baseline |
-| C-4 | Детерминированный оценщик без LLM, embeddings и fuzzy matching | ✅ Даёт воспроизводимость (критерий Reproducibility, 15 баллов) |
-| C-5 | Ground truth и код мишени не попадают в контекст агента | ✅ Совпадает с `miniCRM/benchmark/README.md`; иначе benchmark измерит утечку |
-| C-6 | Отдельный `reset(seed)` и скрытый ground-truth exporter, недоступные browser-агенту | ✅ Реализовано как `npm run db:reset` (out-of-band) и `miniCRM/benchmark/scripts/emit-ground-truth.mjs`. Требование «HTTP-эндпоинта сброса нет» PDF не формулировал — оно взято из `README.md` мишени и добавлено нами |
-| C-7 | Не публиковать числа до реальных прогонов | ✅ Прямо соответствует ground rule 09 |
-| C-8 | Пять классов риска действий с блокировкой `DESTRUCTIVE` и `UNKNOWN` | ✅ Соответствует ground rule 04 |
-| C-9 | «≥10 кейсов и отдельный сложный кейс» | ✅ Дословное требование брифа |
-| C-10 | Четыре deliverable и их состав | ✅ Совпадает с брифом |
-| C-11 | «В брифе дата дедлайна не указана» | ✅ Подтверждено: даты в брифе нет |
-| C-12 | Требование structured tool arguments вместо свободного Markdown | ✅ Иначе прогон невозможно оценить механически |
+| C-1 | The app exposes no OpenAPI spec or value references | ✅ No such route exists; status meaning lives only in the frontend |
+| C-2 | Value comes not from crawling but from the cycle "observe → hypothesize → safely test → record what's confirmed" | ✅ Matches the brief: agentic capability applied purposefully |
+| C-3 | The baseline should be a general-purpose agent with the same tool surface, not a single prompt | ✅ Explicitly named by the brief as an acceptable form; more honest than a weak baseline |
+| C-4 | A deterministic evaluator with no LLM, embeddings, or fuzzy matching | ✅ Delivers reproducibility (Reproducibility criterion, 15 points) |
+| C-5 | Ground truth and the target's code never enter the agent's context | ✅ Matches `miniCRM/benchmark/README.md`; otherwise the benchmark would measure a leak |
+| C-6 | A separate `reset(seed)` and a hidden ground-truth exporter, unreachable by the browser agent | ✅ Implemented as `npm run db:reset` (out-of-band) and `miniCRM/benchmark/scripts/emit-ground-truth.mjs`. The PDF never stated "there's no HTTP reset endpoint" — that requirement comes from the target's `README.md` and was added by us |
+| C-7 | Don't publish numbers before real runs | ✅ Directly matches ground rule 09 |
+| C-8 | Five action-risk classes, with `DESTRUCTIVE` and `UNKNOWN` blocked | ✅ Matches ground rule 04 |
+| C-9 | "≥10 cases plus a separate hard case" | ✅ A verbatim brief requirement |
+| C-10 | The four deliverables and their content | ✅ Matches the brief |
+| C-11 | "The brief does not state a deadline date" | ✅ Confirmed: there is no date in the brief |
+| C-12 | Requirement for structured tool arguments instead of free-form Markdown | ✅ Otherwise a run couldn't be scored mechanically |
 
 ---
 
-## 5. Что сделано с находками
+## 5. What was done with the findings
 
-| Категория | Действие |
+| Category | Action |
 | --- | --- |
-| E-1, E-2, E-4 … E-8 | Исправлено в [`02`](02-architecture.md), [`03`](03-target-minicrm.md), [`04`](04-benchmark-contract.md), [`05`](05-evaluation-and-metrics.md), [`08`](08-evidence-and-trajectories.md), [`01`](01-problem-and-value.md) |
-| G-1, G-2, G-4 … G-7 | Восполнено в [`00`](00-hackathon-requirements.md), [`05`](05-evaluation-and-metrics.md), [`06`](06-baseline-and-changelog.md), [`07`](07-safety.md), [`09`](09-status-and-roadmap.md) |
-| G-3, C-12 (прежний) | Отозваны как ошибочные при повторной проверке — см. §6 |
-| S-1 … S-4 | Актуальный статус — [`09`](09-status-and-roadmap.md) §2 |
-| C-1 … C-12 | Перенесено в соответствующие разделы как действующие решения |
-| S-1 … S-4 (кроме S-2) | Отражено в статусе компонентов |
+| E-1, E-2, E-4 … E-8 | Corrected in [`02`](02-architecture.md), [`03`](03-target-minicrm.md), [`04`](04-benchmark-contract.md), [`05`](05-evaluation-and-metrics.md), [`08`](08-evidence-and-trajectories.md), [`01`](01-problem-and-value.md) |
+| G-1, G-2, G-4 … G-7 | Filled in in [`00`](00-hackathon-requirements.md), [`05`](05-evaluation-and-metrics.md), [`06`](06-baseline-and-changelog.md), [`07`](07-safety.md), [`09`](09-status-and-roadmap.md) |
+| G-3, C-12 (previous) | Retracted as incorrect on re-review — see §6 |
+| S-1 … S-4 | Current status — [`09`](09-status-and-roadmap.md) §2 |
+| C-1 … C-12 | Carried into the corresponding sections as standing decisions |
+| S-1 … S-4 (except S-2) | Reflected in the component status |
 
 ---
 
-## 6. Отозванные находки
+## 6. Retracted findings
 
-Аудит проверялся повторно. Две находки первой редакции оказались неверными и отозваны — записи
-сохранены, потому что «мы это проверили и ошиблись» полезнее, чем тихое исчезновение строки.
+The audit was re-checked. Two findings from the first pass turned out to be wrong and are
+retracted — the entries are kept, because "we checked this and got it wrong" is more useful than a
+line quietly disappearing.
 
-| Прежний ID | Что утверждалось | Почему отозвано |
+| Former ID | What was claimed | Why it was retracted |
 | --- | --- | --- |
-| G-3 | PDF не упоминает ground rule 02 («показать, что было до конкурса») | Упоминает: Приложение C, строка «Complete code + Improvement Changelog» |
-| C-12 | PDF верно отмечает недостижимость способа доставки `methodId: 5` | В PDF нет ни одного упоминания доставки, `methodId` или «International». Факт верен сам по себе (`miniCRM/apps/api/src/domain/shipping.ts` + seed только с CA и US) и зафиксирован в `miniCRM/benchmark/GAPS.md`, но приписывать его проверяемому документу было ошибкой |
+| G-3 | The PDF doesn't mention ground rule 02 ("show what existed before the competition") | It does: Appendix C, the line "Complete code + Improvement Changelog" |
+| C-12 | The PDF correctly notes that shipping method `methodId: 5` is unreachable | The PDF has no mention of shipping, `methodId`, or "International" anywhere. The fact itself is true (`miniCRM/apps/api/src/domain/shipping.ts` + a seed with only CA and US) and is recorded in `miniCRM/benchmark/GAPS.md`, but attributing it to the reviewed document was a mistake |
 
-Идентификаторы отозванных находок не переиспользуются.
+Retracted finding IDs are never reused.
 
 ---
 
-## 7. Вывод
+## 7. Conclusion
 
-Стратегия исходного документа выдержала проверку; фактическая часть — нет. Самые дорогие
-расхождения — E-1 (неверный сквозной пример) и E-8 (несуществующая модель provenance): оба
-касаются механики, которую легко скопировать в реализацию не глядя.
+The source document's strategy held up under review; its factual content did not. The costliest
+discrepancies are E-1 (a wrong flagship example) and E-8 (a nonexistent provenance model): both
+concern mechanics that could easily be copied straight into an implementation without a second
+look.
 
-PDF переводится в статус исторического контекста и источником истины не является
-(см. [`README.md`](README.md) §Иерархия источников истины).
+The PDF is downgraded to historical-context status and is not a source of truth (see
+[`README.md`](README.md) §Hierarchy of sources of truth).
