@@ -157,7 +157,16 @@ observable from the browser.
 The evaluator doesn't understand meaning — it compares normalized keys. That's why the
 normalization rules are public and the agent is aware of them:
 
-1. **Paths** are normalized: concrete identifiers → `{id}`, `{customerId}`, `{addressId}`.
+1. **Paths** are normalized: concrete identifiers *and the names of path parameters* are erased —
+   `/api/customers/12/addresses`, `/api/customers/{id}/addresses` and
+   `/api/customers/{customerId}/addresses` all reduce to `/api/customers/{}/addresses`.
+   The name has to go because ground truth itself is not consistent about it: it has
+   `GET /api/orders/{id}/activity` next to `GET /api/customers/{customerId}/addresses`, and an
+   agent has no way to know which convention applies where. A name-sensitive key would cost points
+   for an operation that was correctly discovered, and would drag its parameters down with it.
+   The implementation both the agent-side serializer and the evaluator must use is
+   `tooling/browser/paths.ts` (`normalizePath`, `operationKey`) — two implementations of this rule
+   will disagree.
 2. **Methods** are upper-case.
 3. **Canonical labels** for enums: the exact label **visible in the UI**, converted to
    `lower_snake_case`.
