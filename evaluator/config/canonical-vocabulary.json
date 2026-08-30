@@ -1,0 +1,33 @@
+{
+  "$comment": "Public canonical vocabulary and alias table (docs/04-benchmark-contract.md §4, rule 4). Reference material for agents and for anyone extending matching. The evaluator's normalizer (src/normalize.mjs) does NOT look values up in this file at match time for scalar semantic_facts values -- it applies structural, declared rules only (trim, path-shape, prefix casing) and never fuzzy/synonym matching. 'aliases' below is the single place where an explicit synonym could be declared for a specific (kind, subject) pair; it is EMPTY by design (ADR-14 closed the author-notation gap by restructuring values instead of aliasing them). Adding an alias here is a benchmark-authoring decision recorded in docs/11, not something the evaluator invents on its own.",
+  "order_status_labels": {
+    "$comment": "UI labels for semantic_facts kind=enum_mapping subject=order.statusId, drawn from apps/web/src/orderStatus.ts. The scored value is the numeric statusId; these labels live in the fact's free-text 'meaning' and are informational only -- they are never part of a matching key.",
+    "10": "draft",
+    "20": "confirmed",
+    "30": "processing",
+    "40": "shipped",
+    "50": "cancelled"
+  },
+  "payment_status_values": ["unpaid", "paid", "refunded"],
+  "activity_event_types": ["ORDER_CREATED", "STATUS_CHANGED", "NOTE_ADDED"],
+  "dependency_field_prefixes": {
+    "$comment": "docs/04 §4 rule 6. header: and cookie: names are case-folded for comparison because HTTP header names and this benchmark's single cookie name are case-insensitive on the wire; $. (JSONPath into a body) and {param} (path placeholder) are left case-sensitive because JSON keys are.",
+    "header": "case-insensitive name",
+    "cookie": "case-insensitive name (single cookie: sid)",
+    "Set-Cookie": "response header, case-insensitive name",
+    "$.": "JSONPath into a response/request body, case-sensitive",
+    "{param}": "path placeholder, case-sensitive, drawn from the operation's own normalized path"
+  },
+  "path_placeholders": {
+    "$comment": "docs/04 §1: the only placeholder names ground truth uses. Not a closed enum the schema enforces -- an agent-chosen placeholder name that differs from these will simply fail to match a ground-truth operation/dependency/workflow-step key, which is a real (if maybe unfair) scoring outcome, not a bug. See evaluator/README.md 'Known interpretation calls'.",
+    "names": ["id", "customerId", "addressId"]
+  },
+  "unordered_value_keys": {
+    "$comment": "Keys inside a structured semantic_facts.value object (definitions.semanticFactValue) whose array is treated as a set, not a sequence, when computing the canonical matching key -- ground truth writes them in one order (e.g. ascending numeric) but that order carries no semantic meaning. Declared here, applied by src/normalize.mjs normalizeValue(), so it is a public rule rather than a silent code behavior.",
+    "keys": ["to", "accepts", "matches", "requires", "base", "excludedStatusIds"]
+  },
+  "aliases": {
+    "$comment": "Explicit (kind, subject, value) synonyms the evaluator should treat as equal. Empty on purpose -- see top-level $comment. Shape if ever populated: [{\"kind\":\"...\",\"subject\":\"...\",\"from\":\"...\",\"to\":\"...\"}]",
+    "semantic_fact_value_aliases": []
+  }
+}

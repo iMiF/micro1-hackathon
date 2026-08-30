@@ -1,0 +1,30 @@
+{
+  "$comment": "VARS category weights. 'active' selects which named vector the evaluator uses unless --weights-set overrides it on the command line. Categories must sum to 1.0. See docs/05-evaluation-and-metrics.md §3 and docs/11-decisions-and-open-questions.md ADR-13.",
+  "active": "frozen",
+  "vectors": {
+    "frozen": {
+      "$comment": "Frozen 2026-08-30 by ADR-13, before any scored run. Not revisited afterward.",
+      "operations": 0.15,
+      "parameters": 0.15,
+      "semantic_facts": 0.35,
+      "dependencies": 0.20,
+      "workflows": 0.15
+    },
+    "rejected_balanced": {
+      "$comment": "The original ADR-2 proposal, superseded by ADR-13. Kept so every VARS figure can also be reported under it (ADR-13 obligation #2).",
+      "operations": 0.25,
+      "parameters": 0.20,
+      "semantic_facts": 0.25,
+      "dependencies": 0.15,
+      "workflows": 0.15
+    },
+    "rejected_flat": {
+      "$comment": "Equal weighting across all five categories, rejected by ADR-13. Kept for the same reason as rejected_balanced.",
+      "operations": 0.20,
+      "parameters": 0.20,
+      "semantic_facts": 0.20,
+      "dependencies": 0.20,
+      "workflows": 0.20
+    }
+  }
+}

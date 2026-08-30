@@ -1,0 +1,17 @@
+{
+  "name": "evaluator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Deterministic evaluator for the MiniCRM API-reconstruction benchmark (VARS). No LLM, no embeddings, no fuzzy matching.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test",
+    "evaluate": "node bin/evaluate.mjs"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1"
+  }
+}
