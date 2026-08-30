@@ -1,7 +1,7 @@
 # 09. Status, plan, and quality gates
 
 > **Status:** active — **update on every component status change**
-> **Updated:** 2026-08-29
+> **Updated:** 2026-08-30
 > **Source of truth:** repository state; brief §"Final deliverables"
 
 ---
@@ -78,22 +78,34 @@ Everything else is sequential.
 
 ---
 
-## 4. Day-by-day plan
+## 4. Plan for the time that actually remains
 
-The brief **does not state** a deadline date (OQ-1). The plan is anchored to D-0 — the actual
-submission day. If there's less time, cut **scope**, not quality gates.
+**The deadline is known (OQ-1 resolved 2026-08-30):** the challenge runs Aug 28 – Aug 31, 2026,
+closing 11:00 AM – 2:00 PM America/Toronto on Aug 31. The 14-day table this section used to contain
+was written against a runway that never existed and has been replaced.
 
-| Window | Outcome | Quality gate |
-| --- | --- | --- |
-| **D-14 – D-13** | MVP, public contract, risk policy, and reproducible environment locked in | Schema is versioned; target scope is frozen |
-| **D-12 – D-10** | Metric weights approved (ADR-2); deterministic evaluator written | Evaluator passes golden tests and produces `diff.json`; `perfect-reconstruction.json` gives VARS = 100 |
-| **D-9 – D-8** | Browser harness and general-purpose baseline; first trajectories | Baseline completes a valid `submit_reconstruction` on at least 10 cases |
-| **D-7 – D-5** | Coverage planner, hypothesis ledger, active experiments | Every component has a named failure mode and an ablation run |
-| **D-4** | Verifier, evidence bundle, OpenAPI/docs generation | No claims without evidence or an explicit uncertainty flag |
-| **D-3** | Baseline and final runs on fixed seeds; full ledger | Fairness checklist signed off; no cherry-picking |
-| **D-2** | Submission README, reproduction guide, changelog; trajectories selected | A clean environment reproduces one full run |
-| **D-1** | Video under 5 minutes; links and artifacts checked | The video is understandable without narration |
-| **D-0** | Final smoke test and submission | All four deliverables are available to the judge |
+**As of 2026-08-30 there is roughly one working day.** The order below is by rubric value per hour,
+and every line after the first three is optional. If something has to give, it is agent features —
+never the quality gates, and never a number that wasn't measured.
+
+| # | Outcome | Gate | Rubric |
+| --- | --- | --- | --- |
+| 1 | Freeze the VARS weights (ADR-2) — a 10-minute decision that blocks nothing downstream | Written down before any scored run | Measured Improvement |
+| 2 | Deterministic evaluator | Golden tests of §7 in [`05`](05-evaluation-and-metrics.md) pass; `perfect-reconstruction.json` → VARS = 100 | Measured Improvement 15 |
+| 3 | Harness + baseline; one full run end to end | A valid `submit_reconstruction` and a real VARS number on ≥1 case | the floor for everything else |
+| 4 | AAE with the one or two components with the clearest named failure mode | Each has an ablation, or it isn't claimed | Agent Solution 30 |
+| 5 | Runs on the full case set, both systems, fixed seeds | Full ledger, no cherry-picking | Measured Improvement |
+| 6 | Reproduction guide + submission README | A clean environment reproduces one run | Reproducibility 15 |
+| 7 | Video under 5 minutes | Understandable without narration | required deliverable |
+| 8 | Hot take, main failure mode | Written from what the runs showed | 5 |
+
+**What is cut, explicitly:** the OQ-10 ground-truth rework (deferred — it costs hours and changes
+no ranking), sub-weights inside `semantic_facts` (ADR-2 — adds opacity, not signal), the OQ-9 LLM
+judge, multi-agent orchestration (OQ-6), and the OQ-11 repository split.
+
+**The honest fallback.** Two systems, one case, one measured number, and a reproduction guide that
+works beats five agent components and an unmeasured claim. Deliverables 5–8 are worth more than
+line 4 — if the day runs short, ship the measurement, not the architecture.
 
 ---
 

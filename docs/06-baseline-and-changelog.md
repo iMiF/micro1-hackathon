@@ -1,7 +1,7 @@
 # 06. Baseline and Improvement Changelog
 
 > **Status:** draft (no runs yet — all entries are empty by construction)
-> **Updated:** 2026-08-29
+> **Updated:** 2026-08-30
 > **Source of truth:** brief §"Show how the solution improved", §"Tell the story with an improvement changelog"
 > **Maps to criteria:** Measured Improvement (15), Hot Take (5), deliverable 01
 
@@ -80,6 +80,23 @@ becomes "we added a component because we could."
 
 Every iteration gets an **ablation**: the whole system minus this component. Without an ablation
 we can't claim the contribution is specifically its.
+
+### The prompt-vs-architecture ablation
+
+The first question a judge asks about any improvement number is whether the gain came from the
+architecture or from a better-written prompt. Answer it with a measurement, not an assertion, by
+reporting three points instead of two:
+
+| Point | What it is | What it isolates |
+| --- | --- | --- |
+| **B0** | Baseline, honest minimal prompt (ADR-11) | The floor |
+| **B1** | Same single-agent loop, a deliberately stronger task-level prompt, no architecture | How much is reachable by prompt engineering alone |
+| **AAE** | Full scaffolding | The architecture's own contribution, = AAE − B1 |
+
+If B1 ≈ B0 and AAE is well above both, the improvement is architectural and the claim survives
+scrutiny. If B1 captures most of the gap, that is worth knowing before the report is written, not
+after a judge points it out. Cost: one extra run set — the most convincing chart in the submission
+for the price of a third column.
 
 ---
 

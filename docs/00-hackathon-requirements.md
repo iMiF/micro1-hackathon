@@ -1,7 +1,7 @@
 # 00. Hackathon requirements and compliance matrix
 
 > **Status:** frozen (the rules are external and cannot be changed, only clarified)
-> **Updated:** 2026-08-29
+> **Updated:** 2026-08-30
 > **Source of truth:** `micro1 - First Hackathon97ce7c5.pdf` (micro1 Agentic Workflows Hackathon brief)
 
 This file is the single place where the rules live. Other documents link here instead of
@@ -150,9 +150,9 @@ Template — [`06-baseline-and-changelog.md`](06-baseline-and-changelog.md) §3.
 
 Recorded so we don't invent answers:
 
-- **The brief does not state a deadline date.** The plan in [`09`](09-status-and-roadmap.md) is
-  anchored to D-0 — the actual submission day. The real date needs to come from the organizers'
-  email/landing page (OQ-1).
+- **The brief itself states no deadline date**, but the organizers' schedule does: Aug 28 – Aug 31,
+  2026, closing 11:00 AM – 2:00 PM America/Toronto. Recorded 2026-08-30, OQ-1 resolved; the plan in
+  [`09`](09-status-and-roadmap.md) §4 is anchored to it.
 - No constraints on language, stack, model, or budget.
 - No requirement on video format or hosting platform.
 - No ban on using pre-written code — there is a requirement to **label** it (rule 02).

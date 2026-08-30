@@ -1,7 +1,7 @@
 # 04. Public benchmark contract
 
 > **Status:** active (cases and schema exist; runner and evaluator do not)
-> **Updated:** 2026-08-29
+> **Updated:** 2026-08-30
 > **Source of truth:** `miniCRM/benchmark/cases.json`, `miniCRM/benchmark/schemas/reconstruction-output.schema.json`, `miniCRM/benchmark/README.md`
 > **Maps to criteria:** Reproducibility (15), Measured Improvement (15)
 
@@ -181,7 +181,8 @@ A comparison is only meaningful under identical setup. Baseline and AAE receive 
 - target URL and target version (`application_commit`);
 - role and credentials;
 - tool surface (the same seven functions);
-- output schema;
+- output schema and canonical vocabulary;
+- **task prompt** — start URL, goal, output contract, epistemic rules, budgets (ADR-11);
 - action, wall-clock, and token budgets;
 - model — when comparing the workflow rather than the model.
 
@@ -192,6 +193,9 @@ A comparison is only meaningful under identical setup. Baseline and AAE receive 
 
 - [ ] Public output schema and canonical vocabulary are identical for both systems
 - [ ] Cases, seeds, target version, role, tools, and budgets match
+- [ ] The task prompt is identical; scaffolding prompts differ by design and both are published (ADR-11)
+- [ ] The baseline prompt is the honest minimal version, not a weakened one — the ADR-11 test applies
+- [ ] Neither system uses a shared component that interprets meaning; the shared layer is deterministic (ADR-12)
 - [ ] Ground truth and target source code are unavailable in the agent's context (mechanically checked)
 - [ ] The evaluator is deterministic: no LLM, embeddings, or hidden fuzzy matching
 - [ ] Cases ≥ 10; one primary hard case designated and analyzed

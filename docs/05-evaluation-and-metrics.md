@@ -1,7 +1,7 @@
 # 05. Evaluation and metrics
 
 > **Status:** draft (evaluator not implemented; weights need approval — ADR-2)
-> **Updated:** 2026-08-29
+> **Updated:** 2026-08-30
 > **Source of truth:** brief §"How to evaluate your solution"; `miniCRM/benchmark/schemas/reconstruction-output.schema.json`
 > **Maps to criteria:** Measured Improvement (15), Reproducibility (15)
 
@@ -53,6 +53,12 @@ score is computed from the facts.
 The price for this is that the evaluator does not recognize synonyms outside the public alias
 table. This is a deliberate constraint, declared up front
 ([`04`](04-benchmark-contract.md) §4).
+
+> ⚠️ The constraint is only fair where `value` is a token the agent can observe. About fifteen
+> ground-truth facts currently carry author-coined shorthand that appears nowhere in the traffic
+> (`name-or-email`, `non-archived`, `integer-cents`, …), which turns part of the score into a
+> guess at our notation. Measured and scoped in OQ-10
+> ([`11`](11-decisions-and-open-questions.md)); must be settled before the freeze.
 
 > **`id` is not the matching key.** The agent doesn't know ground truth's identifiers and assigns
 > its own. The evaluator matches by canonical key (`kind` + `subject` + `value`); `id` is only
@@ -148,6 +154,11 @@ Different things are judged in different ways. Mixing them up is a common mistak
 | **Qualitative product quality** | Human review of the finished OpenAPI/docs/workflows | End to End Quality criterion (20 points) |
 | **Evidence quality** | Share of supported claims, provenance validity | Checks that the agent isn't dressing up guesses as facts |
 
+A fourth level — an LLM judge scoring semantic agreement where the deterministic matcher is blind —
+is under consideration as a **separate column next to VARS, never mixed into it** (OQ-9). Blending
+it would break Reproducibility: a judge must be able to re-run the evaluation and get the same
+number.
+
 The second level is judged by a **human**, and it's what judges evaluate too. The artifact must
 look like something "a person would sign off on," not an obvious AI draft — the rubric's own
 wording.
@@ -178,10 +189,14 @@ The evaluator itself must be verified. Mandatory minimum:
 - an invalid schema → a zero case score with the reason recorded;
 - `miniCRM/benchmark/examples/perfect-reconstruction.json` → VARS = 100.
 
-The last test is the most important: it proves 100 is achievable and the metric isn't broken.
+The last test is the most important: it proves the metric isn't broken.
 `miniCRM/benchmark/examples/perfect-reconstruction.json` contains all 71 ground-truth facts with
 the same `kind` values, so matching by `kind + subject + value` must give zero FP and zero FN. A
 discrepancy here means the evaluator is broken or the benchmark artifacts have drifted.
+
+> **What this test does not prove.** The reference was written by the same author as ground truth,
+> with the same vocabulary. Passing it shows 100 is reachable *by us*; it says nothing about whether
+> 100 is reachable by an agent that never saw our wording. That is exactly the gap OQ-10 measures.
 
 ---
 

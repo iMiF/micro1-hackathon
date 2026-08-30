@@ -1,7 +1,7 @@
 # 02. Solution architecture
 
 > **Status:** draft (only the target side is implemented; the harness, agents, and verifier are not written)
-> **Updated:** 2026-08-29
+> **Updated:** 2026-08-30
 > **Source of truth:** design decision; actual state — [`09`](09-status-and-roadmap.md)
 > **Maps to criteria:** Agent Solution & Engineering (30), End to End Quality (20)
 
@@ -119,6 +119,22 @@ go_back() | get_network_events() | submit_reconstruction(reconstruction)
 - a risk classifier and an action-policy compiler;
 - a separate verifier and evidence-report generation.
 
+### Prompt layers
+
+The prompt above is the **task prompt** — start URL, goal, output contract, epistemic rules,
+budgets. It is benchmark input and is byte-identical for baseline and AAE: two systems given
+different task statements are solving different tasks, and the improvement number would mean
+nothing.
+
+Everything else — the planner, hypothesis, verifier and synthesis prompts, tool descriptions,
+inter-step memory — is **scaffolding**, and it is the implementation being measured. AAE is
+expected to have several such prompts; the baseline has one. That difference is the result, not a
+handicap.
+
+The baseline's system prompt is the *honest minimal* version: the strongest single prompt a
+competent engineer would write in an hour without any architecture. It is not weakened to widen the
+gap. ADR-11 in [`11`](11-decisions-and-open-questions.md) states the rule and the test for it.
+
 Rationale for choosing this particular baseline —
 [`06`](06-baseline-and-changelog.md) §1.
 
@@ -193,3 +209,41 @@ To keep roles from blurring during development:
 | Artifact generator | Turning verified JSON into OpenAPI/docs | Does not add facts |
 
 Violating any of these boundaries is a defect, not an optimization.
+
+---
+
+## 8. Repository layout
+
+The tree mirrors §7: one directory per responsibility, and the boundary between "mechanics" and
+"decisions" is visible in the file system rather than only in review comments (ADR-10).
+
+```
+micro1/
+├── docs/                  project documentation (author-only, English)
+├── miniCRM/               the target: apps/, db/, scripts/, tests/
+│   └── benchmark/         ground truth, cases, schemas, reference reconstruction
+├── agents/
+│   ├── baseline/          self-contained; readable end to end by a judge
+│   └── aae/               planning, hypothesis ledger, verification, synthesis
+├── tooling/               browser driver, evidence capture, deterministic serialization
+├── harness/               executes tool calls, normalizes observations, applies risk policy
+├── evaluator/             schema validation, normalization, matching, VARS
+├── runner/                Reset → Launch → Capture → Evaluate → Aggregate ([`04`](04-benchmark-contract.md) §6)
+└── results/               trajectories, evidence, submissions, scores, the experiment ledger
+```
+
+`benchmark/` stays inside `miniCRM/` on purpose: ground truth is generated from the target's own
+code by `miniCRM/benchmark/scripts/emit-ground-truth.mjs`, and separating them would let the two
+drift. Everything that is *not* the target — agents, harness, evaluator, runner — lives outside it
+(ADR-6).
+
+**Two rules that keep this from eroding:**
+
+1. `agents/baseline/` and `agents/aae/` never import each other. Shared code goes through
+   `tooling/`.
+2. `tooling/` executes and records; it never decides. Code that chooses the next action or
+   classifies what an observation means belongs in `agents/aae/`, even when it looks like
+   infrastructure — an adaptive retry policy is a strategy.
+
+Duplication between the two agent loops is accepted as the price of a baseline a judge can read in
+one sitting.
