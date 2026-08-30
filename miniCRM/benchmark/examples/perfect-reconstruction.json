@@ -5705,7 +5705,9 @@
     {
       "id": "sem-csrf-exempt-login",
       "subject": "POST /api/auth/login",
-      "value": "csrf-exempt",
+      "value": {
+        "csrf": false
+      },
       "meaning": "Login is the only mutating /api route that does not require a CSRF header.",
       "kind": "auth",
       "confidence": 1,
@@ -6209,7 +6211,14 @@
     {
       "id": "sem-tax-base",
       "subject": "quote.taxCents",
-      "value": "round((subtotalCents+shippingCents)*rate)",
+      "value": {
+        "base": [
+          "subtotalCents",
+          "shippingCents"
+        ],
+        "factor": "rate",
+        "rounding": "round"
+      },
       "meaning": "Tax is computed on subtotal plus shipping, not on subtotal alone. No taxRate field is returned.",
       "kind": "derived_value",
       "confidence": 1,
@@ -6372,7 +6381,10 @@
     {
       "id": "sem-money-cents",
       "subject": "*Cents",
-      "value": "integer-cents",
+      "value": {
+        "unit": "cents",
+        "type": "integer"
+      },
       "meaning": "All money fields are integer cents. The UI formats them as USD.",
       "kind": "identifier_meaning",
       "confidence": 1,
@@ -6387,7 +6399,9 @@
     {
       "id": "sem-quote-required",
       "subject": "POST /api/orders.quoteId",
-      "value": "required",
+      "value": {
+        "required": true
+      },
       "meaning": "Creating an order requires quoteId from POST /api/order-quotes. Client-computed totals are not accepted.",
       "kind": "business_constraint",
       "confidence": 1,
@@ -6432,7 +6446,10 @@
     {
       "id": "sem-order-number-format",
       "subject": "order.orderNumber",
-      "value": "ORD-2026-{id}",
+      "value": {
+        "prefix": "ORD-2026-",
+        "field": "id"
+      },
       "meaning": "New order numbers are ORD-2026- concatenated with the numeric id. The year is hardcoded, not taken from the clock.",
       "kind": "identifier_meaning",
       "confidence": 1,
@@ -6462,7 +6479,10 @@
     {
       "id": "sem-stock-on-create",
       "subject": "products.stockQty",
-      "value": "decrement",
+      "value": {
+        "field": "stockQty",
+        "effect": "decrease"
+      },
       "meaning": "Creating an order decrements product stock by each line quantity.",
       "kind": "business_constraint",
       "confidence": 1,
@@ -6477,7 +6497,10 @@
     {
       "id": "sem-stock-on-draft-delete",
       "subject": "products.stockQty",
-      "value": "restore",
+      "value": {
+        "field": "stockQty",
+        "effect": "restore"
+      },
       "meaning": "Deleting a draft order adds line quantities back to product stock.",
       "kind": "business_constraint",
       "confidence": 1,
@@ -6492,7 +6515,9 @@
     {
       "id": "sem-activity-separate",
       "subject": "GET /api/orders/{id}",
-      "value": "no-embedded-activity",
+      "value": {
+        "absent": "activity"
+      },
       "meaning": "Order GET does not include activity. Activity is GET /api/orders/{id}/activity.",
       "kind": "identifier_meaning",
       "confidence": 1,
@@ -6582,7 +6607,13 @@
     {
       "id": "sem-customer-q",
       "subject": "GET /api/customers?q",
-      "value": "name-or-email",
+      "value": {
+        "matches": [
+          "firstName",
+          "lastName",
+          "email"
+        ]
+      },
       "meaning": "q matches first_name, last_name, email, or first+last with ILIKE, % and _ escaped.",
       "kind": "query_semantics",
       "confidence": 1,
@@ -6597,7 +6628,13 @@
     {
       "id": "sem-customer-archived-filter",
       "subject": "GET /api/customers?archived",
-      "value": "true|false|omitted",
+      "value": {
+        "accepts": [
+          true,
+          false,
+          null
+        ]
+      },
       "meaning": "archived=false is Active, true is Archived, omitted is All. Invalid strings are ignored.",
       "kind": "query_semantics",
       "confidence": 1,
@@ -6612,7 +6649,11 @@
     {
       "id": "sem-customer-suggest-excludes-archived",
       "subject": "GET /api/customers/suggest",
-      "value": "archived=false",
+      "value": {
+        "forced": {
+          "archived": false
+        }
+      },
       "meaning": "Suggest returns only non-archived customers, unlike the collection endpoint.",
       "kind": "query_semantics",
       "confidence": 1,
@@ -6702,7 +6743,9 @@
     {
       "id": "sem-address-belongs-to-customer",
       "subject": "GET /api/customers/{customerId}/addresses",
-      "value": "nested",
+      "value": {
+        "scopedTo": "customer"
+      },
       "meaning": "Addresses are scoped to customerId. Quote creation also requires the address to belong to that customer.",
       "kind": "business_constraint",
       "confidence": 1,
@@ -6717,7 +6760,11 @@
     {
       "id": "sem-region-depends-on-country",
       "subject": "GET /api/regions?country",
-      "value": "country-code",
+      "value": {
+        "requires": [
+          "country"
+        ]
+      },
       "meaning": "Regions are loaded after country selection. Empty country returns []. regionId posted with an address must belong to countryCode.",
       "kind": "query_semantics",
       "confidence": 1,
@@ -6732,7 +6779,12 @@
     {
       "id": "sem-product-q",
       "subject": "GET /api/products?q",
-      "value": "name-or-sku",
+      "value": {
+        "matches": [
+          "name",
+          "sku"
+        ]
+      },
       "meaning": "q matches product name or sku ILIKE.",
       "kind": "query_semantics",
       "confidence": 1,
@@ -6747,7 +6799,13 @@
     {
       "id": "sem-product-active-filter",
       "subject": "GET /api/products?active",
-      "value": "true|false|omitted",
+      "value": {
+        "accepts": [
+          true,
+          false,
+          null
+        ]
+      },
       "meaning": "Availability filter. Omitted means all.",
       "kind": "query_semantics",
       "confidence": 1,
@@ -6762,7 +6820,11 @@
     {
       "id": "sem-product-suggest-active-only",
       "subject": "GET /api/products/suggest",
-      "value": "active=true",
+      "value": {
+        "forced": {
+          "active": true
+        }
+      },
       "meaning": "Suggest returns only active products. Inactive SKU-213 never appears in create-order autocomplete.",
       "kind": "query_semantics",
       "confidence": 1,
@@ -6903,7 +6965,11 @@
     {
       "id": "sem-dashboard-customer-count",
       "subject": "dashboard.customerCount",
-      "value": "non-archived",
+      "value": {
+        "filter": {
+          "archived": false
+        }
+      },
       "meaning": "customerCount is the number of non-archived customers, not limited to the period window.",
       "kind": "derived_value",
       "confidence": 1,
@@ -6918,7 +6984,10 @@
     {
       "id": "sem-dashboard-orders-by-status",
       "subject": "dashboard.ordersByStatus",
-      "value": "all-statuses-in-window",
+      "value": {
+        "groupBy": "statusId",
+        "excludedStatusIds": []
+      },
       "meaning": "ordersByStatus counts every order in the window grouped by statusId, including Draft and Cancelled.",
       "kind": "derived_value",
       "confidence": 1,

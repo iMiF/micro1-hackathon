@@ -40,34 +40,49 @@
     },
     "operations": {
       "type": "array",
-      "items": { "$ref": "#/definitions/operation" }
+      "items": {
+        "$ref": "#/definitions/operation"
+      }
     },
     "semantic_facts": {
       "type": "array",
-      "items": { "$ref": "#/definitions/semanticFact" }
+      "items": {
+        "$ref": "#/definitions/semanticFact"
+      }
     },
     "dependencies": {
       "type": "array",
-      "items": { "$ref": "#/definitions/dependency" }
+      "items": {
+        "$ref": "#/definitions/dependency"
+      }
     },
     "workflows": {
       "type": "array",
-      "items": { "$ref": "#/definitions/workflow" }
+      "items": {
+        "$ref": "#/definitions/workflow"
+      }
     },
     "actions": {
       "type": "array",
       "description": "Optional UI-action reconstruction. Agents may omit this if they only recover the API.",
-      "items": { "$ref": "#/definitions/action" }
+      "items": {
+        "$ref": "#/definitions/action"
+      }
     },
     "claims": {
       "type": "array",
-      "items": { "$ref": "#/definitions/claim" }
+      "items": {
+        "$ref": "#/definitions/claim"
+      }
     }
   },
   "definitions": {
     "jsonSchema": {
       "description": "A JSON Schema document or fragment describing a request or response body. Use null when there is no body.",
-      "type": ["object", "null"]
+      "type": [
+        "object",
+        "null"
+      ]
     },
     "confidenceValue": {
       "type": "number",
@@ -78,18 +93,34 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "overall": { "$ref": "#/definitions/confidenceValue" },
-        "operations": { "$ref": "#/definitions/confidenceValue" },
-        "parameters": { "$ref": "#/definitions/confidenceValue" },
-        "schemas": { "$ref": "#/definitions/confidenceValue" },
-        "semantics": { "$ref": "#/definitions/confidenceValue" },
-        "dependencies": { "$ref": "#/definitions/confidenceValue" },
-        "workflows": { "$ref": "#/definitions/confidenceValue" }
+        "overall": {
+          "$ref": "#/definitions/confidenceValue"
+        },
+        "operations": {
+          "$ref": "#/definitions/confidenceValue"
+        },
+        "parameters": {
+          "$ref": "#/definitions/confidenceValue"
+        },
+        "schemas": {
+          "$ref": "#/definitions/confidenceValue"
+        },
+        "semantics": {
+          "$ref": "#/definitions/confidenceValue"
+        },
+        "dependencies": {
+          "$ref": "#/definitions/confidenceValue"
+        },
+        "workflows": {
+          "$ref": "#/definitions/confidenceValue"
+        }
       }
     },
     "evidence": {
       "type": "object",
-      "required": ["kind"],
+      "required": [
+        "kind"
+      ],
       "additionalProperties": false,
       "properties": {
         "kind": {
@@ -108,110 +139,211 @@
           "type": "string",
           "description": "UI route where the observation was made, e.g. /orders/new"
         },
-        "method": { "type": "string" },
+        "method": {
+          "type": "string"
+        },
         "path": {
           "type": "string",
           "description": "Request path as observed, possibly with concrete IDs"
         },
-        "status": { "type": "integer" },
+        "status": {
+          "type": "integer"
+        },
         "json_paths": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "JSON Pointer or JSONPath into the observed body, e.g. $.statusId"
         },
-        "header": { "type": "string" },
-        "cookie_name": { "type": "string" },
-        "ui_text": { "type": "string" },
-        "note": { "type": "string" }
+        "header": {
+          "type": "string"
+        },
+        "cookie_name": {
+          "type": "string"
+        },
+        "ui_text": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        }
       }
     },
     "evidenceList": {
       "type": "array",
-      "items": { "$ref": "#/definitions/evidence" }
+      "items": {
+        "$ref": "#/definitions/evidence"
+      }
     },
     "parameter": {
       "type": "object",
-      "required": ["name", "location"],
+      "required": [
+        "name",
+        "location"
+      ],
       "additionalProperties": false,
       "properties": {
-        "name": { "type": "string" },
+        "name": {
+          "type": "string"
+        },
         "location": {
           "type": "string",
-          "enum": ["path", "query", "header", "cookie"]
+          "enum": [
+            "path",
+            "query",
+            "header",
+            "cookie"
+          ]
         },
-        "required": { "type": "boolean" },
+        "required": {
+          "type": "boolean"
+        },
         "type": {
           "type": "string",
-          "enum": ["string", "integer", "number", "boolean", "array", "object", "unknown"]
+          "enum": [
+            "string",
+            "integer",
+            "number",
+            "boolean",
+            "array",
+            "object",
+            "unknown"
+          ]
         },
-        "description": { "type": "string" },
+        "description": {
+          "type": "string"
+        },
         "enum": {
           "type": "array",
-          "items": { "type": ["string", "number", "boolean", "null"] }
+          "items": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          }
         },
         "default": {},
-        "confidence": { "$ref": "#/definitions/confidenceValue" },
-        "evidence": { "$ref": "#/definitions/evidenceList" }
+        "confidence": {
+          "$ref": "#/definitions/confidenceValue"
+        },
+        "evidence": {
+          "$ref": "#/definitions/evidenceList"
+        }
       }
     },
     "errorResponse": {
       "type": "object",
-      "required": ["status"],
+      "required": [
+        "status"
+      ],
       "additionalProperties": false,
       "properties": {
-        "status": { "type": "integer" },
-        "code": { "type": "string" },
-        "message": { "type": "string" },
-        "schema": { "$ref": "#/definitions/jsonSchema" },
-        "confidence": { "$ref": "#/definitions/confidenceValue" },
-        "evidence": { "$ref": "#/definitions/evidenceList" }
+        "status": {
+          "type": "integer"
+        },
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "schema": {
+          "$ref": "#/definitions/jsonSchema"
+        },
+        "confidence": {
+          "$ref": "#/definitions/confidenceValue"
+        },
+        "evidence": {
+          "$ref": "#/definitions/evidenceList"
+        }
       }
     },
     "operation": {
       "type": "object",
-      "required": ["method", "path"],
+      "required": [
+        "method",
+        "path"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string" },
+        "id": {
+          "type": "string"
+        },
         "method": {
           "type": "string",
-          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
+          "enum": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "HEAD",
+            "OPTIONS"
+          ]
         },
         "path": {
           "type": "string",
           "description": "Normalized path using {param} placeholders"
         },
-        "summary": { "type": "string" },
+        "summary": {
+          "type": "string"
+        },
         "parameters": {
           "type": "array",
-          "items": { "$ref": "#/definitions/parameter" }
+          "items": {
+            "$ref": "#/definitions/parameter"
+          }
         },
-        "request_schema": { "$ref": "#/definitions/jsonSchema" },
-        "response_schema": { "$ref": "#/definitions/jsonSchema" },
-        "success_status": { "type": "integer" },
+        "request_schema": {
+          "$ref": "#/definitions/jsonSchema"
+        },
+        "response_schema": {
+          "$ref": "#/definitions/jsonSchema"
+        },
+        "success_status": {
+          "type": "integer"
+        },
         "error_responses": {
           "type": "array",
-          "items": { "$ref": "#/definitions/errorResponse" }
+          "items": {
+            "$ref": "#/definitions/errorResponse"
+          }
         },
         "authentication": {
           "type": "string",
           "description": "e.g. session-cookie, none"
         },
-        "confidence": { "$ref": "#/definitions/confidenceValue" },
-        "evidence": { "$ref": "#/definitions/evidenceList" }
+        "confidence": {
+          "$ref": "#/definitions/confidenceValue"
+        },
+        "evidence": {
+          "$ref": "#/definitions/evidenceList"
+        }
       }
     },
     "semanticFact": {
       "type": "object",
-      "required": ["id", "meaning"],
+      "required": [
+        "id",
+        "meaning"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string" },
-        "subject": { "type": "string" },
-        "value": {
-          "type": ["string", "number", "boolean", "object", "array", "null"]
+        "id": {
+          "type": "string"
         },
-        "meaning": { "type": "string" },
+        "subject": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/definitions/semanticFactValue"
+        },
+        "meaning": {
+          "type": "string"
+        },
         "kind": {
           "type": "string",
           "enum": [
@@ -226,78 +358,145 @@
             "auth"
           ]
         },
-        "confidence": { "$ref": "#/definitions/confidenceValue" },
-        "evidence": { "$ref": "#/definitions/evidenceList" }
+        "confidence": {
+          "$ref": "#/definitions/confidenceValue"
+        },
+        "evidence": {
+          "$ref": "#/definitions/evidenceList"
+        }
       }
     },
     "dependency": {
       "type": "object",
-      "required": ["id", "source_operation", "target_operation"],
+      "required": [
+        "id",
+        "source_operation",
+        "target_operation"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string" },
+        "id": {
+          "type": "string"
+        },
         "source_operation": {
           "type": "string",
           "description": "METHOD /normalized/path, or * for any matching request"
         },
-        "source_field": { "type": "string" },
-        "target_operation": { "type": "string" },
-        "target_field": { "type": "string" },
+        "source_field": {
+          "type": "string"
+        },
+        "target_operation": {
+          "type": "string"
+        },
+        "target_field": {
+          "type": "string"
+        },
         "kind": {
           "type": "string",
-          "enum": ["auth", "lookup", "concurrency", "payload", "filter"]
+          "enum": [
+            "auth",
+            "lookup",
+            "concurrency",
+            "payload",
+            "filter"
+          ]
         },
-        "description": { "type": "string" },
-        "confidence": { "$ref": "#/definitions/confidenceValue" },
-        "evidence": { "$ref": "#/definitions/evidenceList" }
+        "description": {
+          "type": "string"
+        },
+        "confidence": {
+          "$ref": "#/definitions/confidenceValue"
+        },
+        "evidence": {
+          "$ref": "#/definitions/evidenceList"
+        }
       }
     },
     "workflowStep": {
       "type": "object",
-      "required": ["operation"],
+      "required": [
+        "operation"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string" },
+        "id": {
+          "type": "string"
+        },
         "operation": {
           "type": "string",
           "description": "METHOD /normalized/path"
         },
         "role": {
           "type": "string",
-          "enum": ["required_business", "auxiliary_lookup", "refresh", "auth"]
+          "enum": [
+            "required_business",
+            "auxiliary_lookup",
+            "refresh",
+            "auth"
+          ]
         },
         "depends_on": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
-        "condition": { "type": "string" },
-        "description": { "type": "string" }
+        "condition": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
       }
     },
     "workflow": {
       "type": "object",
-      "required": ["id", "user_goal", "steps"],
+      "required": [
+        "id",
+        "user_goal",
+        "steps"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string" },
-        "user_goal": { "type": "string" },
+        "id": {
+          "type": "string"
+        },
+        "user_goal": {
+          "type": "string"
+        },
         "steps": {
           "type": "array",
           "minItems": 1,
-          "items": { "$ref": "#/definitions/workflowStep" }
+          "items": {
+            "$ref": "#/definitions/workflowStep"
+          }
         },
-        "confidence": { "$ref": "#/definitions/confidenceValue" },
-        "evidence": { "$ref": "#/definitions/evidenceList" }
+        "confidence": {
+          "$ref": "#/definitions/confidenceValue"
+        },
+        "evidence": {
+          "$ref": "#/definitions/evidenceList"
+        }
       }
     },
     "action": {
       "type": "object",
-      "required": ["id", "label_or_description", "risk"],
+      "required": [
+        "id",
+        "label_or_description",
+        "risk"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string" },
-        "page": { "type": "string" },
-        "label_or_description": { "type": "string" },
+        "id": {
+          "type": "string"
+        },
+        "page": {
+          "type": "string"
+        },
+        "label_or_description": {
+          "type": "string"
+        },
         "risk": {
           "type": "string",
           "enum": [
@@ -311,27 +510,193 @@
         },
         "expected_operations": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
-        "confidence": { "$ref": "#/definitions/confidenceValue" },
-        "evidence": { "$ref": "#/definitions/evidenceList" }
+        "confidence": {
+          "$ref": "#/definitions/confidenceValue"
+        },
+        "evidence": {
+          "$ref": "#/definitions/evidenceList"
+        }
       }
     },
     "claim": {
       "type": "object",
-      "required": ["id", "statement"],
+      "required": [
+        "id",
+        "statement"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string" },
-        "statement": { "type": "string" },
+        "id": {
+          "type": "string"
+        },
+        "statement": {
+          "type": "string"
+        },
         "supports": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "IDs of operations, facts, dependencies, or workflows this claim supports or restates"
         },
-        "confidence": { "$ref": "#/definitions/confidenceValue" },
-        "evidence": { "$ref": "#/definitions/evidenceList" }
+        "confidence": {
+          "$ref": "#/definitions/confidenceValue"
+        },
+        "evidence": {
+          "$ref": "#/definitions/evidenceList"
+        }
       }
+    },
+    "semanticFactValue": {
+      "description": "Either an observable scalar (a token that literally appears in traffic or the UI) or an object whose keys come from the closed relation vocabulary below. No key or vocabulary word here has to be guessed: everything is declared in this schema.",
+      "oneOf": [
+        {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "matches": {
+              "description": "Field names a search parameter matches.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "accepts": {
+              "description": "Values a parameter accepts; null means the parameter may be omitted.",
+              "type": "array"
+            },
+            "forced": {
+              "description": "Parameter values the endpoint applies unconditionally.",
+              "type": "object"
+            },
+            "requires": {
+              "description": "Prerequisites without which the call returns nothing or fails.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "filter": {
+              "description": "Filter a computed value applies to its source set.",
+              "type": "object"
+            },
+            "groupBy": {
+              "description": "Field a computed value is grouped by.",
+              "type": "string"
+            },
+            "excludedStatusIds": {
+              "description": "Status ids excluded from a computed value; [] means none.",
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            "base": {
+              "description": "Fields a computed value is derived from.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "factor": {
+              "description": "Field or rate the base is multiplied by.",
+              "type": "string"
+            },
+            "rounding": {
+              "description": "Rounding applied to a computed value.",
+              "type": "string",
+              "enum": [
+                "round",
+                "floor",
+                "ceil",
+                "none"
+              ]
+            },
+            "unit": {
+              "description": "Unit a field is expressed in.",
+              "type": "string"
+            },
+            "type": {
+              "description": "Primitive type of a field.",
+              "type": "string"
+            },
+            "prefix": {
+              "description": "Literal prefix of a generated identifier.",
+              "type": "string"
+            },
+            "field": {
+              "description": "Field the fact is about, when the subject is broader.",
+              "type": "string"
+            },
+            "absent": {
+              "description": "What is deliberately not present in a response.",
+              "type": "string"
+            },
+            "required": {
+              "description": "Whether the subject is mandatory.",
+              "type": "boolean"
+            },
+            "effect": {
+              "description": "Effect of an operation on the named field.",
+              "type": "string",
+              "enum": [
+                "decrease",
+                "increase",
+                "restore",
+                "none"
+              ]
+            },
+            "scopedTo": {
+              "description": "Parent resource the subject is scoped to.",
+              "type": "string"
+            },
+            "csrf": {
+              "description": "Whether the route requires a CSRF header.",
+              "type": "boolean"
+            },
+            "from": {
+              "description": "Source state of a transition.",
+              "type": [
+                "integer",
+                "string"
+              ]
+            },
+            "to": {
+              "description": "Reachable states; [] means terminal.",
+              "type": "array"
+            },
+            "country": {
+              "description": "Country code a rule applies to; * means any.",
+              "type": "string"
+            },
+            "region": {
+              "description": "Region code a rule applies to; * means any.",
+              "type": "string"
+            },
+            "rate": {
+              "description": "Numeric rate a rule yields.",
+              "type": "number"
+            },
+            "paymentStatus": {
+              "description": "Payment status a computed value is filtered by.",
+              "type": "string"
+            }
+          }
+        }
+      ]
     }
   }
 }

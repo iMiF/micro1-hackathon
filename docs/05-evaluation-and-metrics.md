@@ -54,11 +54,12 @@ The price for this is that the evaluator does not recognize synonyms outside the
 table. This is a deliberate constraint, declared up front
 ([`04`](04-benchmark-contract.md) §4).
 
-> ⚠️ The constraint is only fair where `value` is a token the agent can observe. About fifteen
-> ground-truth facts currently carry author-coined shorthand that appears nowhere in the traffic
-> (`name-or-email`, `non-archived`, `integer-cents`, …), which turns part of the score into a
-> guess at our notation. Measured and scoped in OQ-10
-> ([`11`](11-decisions-and-open-questions.md)); must be settled before the freeze.
+> The constraint is only fair where `value` is a token the agent can observe. Eighteen facts once
+> carried author-coined shorthand that appears nowhere in the traffic (`name-or-email`,
+> `non-archived`, `integer-cents`, …); those became objects built from a closed vocabulary declared
+> in the schema (ADR-14). The rule now: **a scalar `value` is a token that literally appears in
+> traffic or the UI; anything else is an object whose keys the schema declares.** Of 71 facts, 22
+> are still string-valued and all 22 are observable tokens.
 
 > **`id` is not the matching key.** The agent doesn't know ground truth's identifiers and assigns
 > its own. The evaluator matches by canonical key (`kind` + `subject` + `value`); `id` is only
@@ -75,27 +76,28 @@ weights reflecting user value. Only verifiable matches between `schema ↔ groun
 VARS = 100 × Σ (weight_category × F1_category)
 ```
 
-### Proposed weights
+### Weights — frozen 2026-08-30 (ADR-13)
 
 Categories correspond to the sections of the output schema — matching uses the same units listed
 in [`04`](04-benchmark-contract.md) §3.
 
 | Category | Matching unit | Weight | Rationale |
 | --- | --- | ---: | --- |
-| Operations and paths | method + normalized path | 0.25 | Without an operations list, nothing else has anywhere to attach |
-| Parameters and schemas | operation + location + name + type + required | 0.20 | Without this you can't call the operation |
-| Semantic facts | `kind` + `subject` + `value` | 0.25 | The core value: what a HAR file doesn't give you |
-| Dependencies and rules | `dependencies` + `business_constraint` | 0.15 | The hidden links that break integrations |
+| Operations and paths | method + normalized path | 0.15 | A proxy capture already gives you this |
+| Parameters and schemas | operation + location + name + type + required | 0.15 | Necessary, but also recoverable from a capture |
+| Semantic facts | `kind` + `subject` + `value` | 0.35 | The core value: what a HAR file doesn't give you |
+| Dependencies and rules | `dependencies` + `business_constraint` | 0.20 | The hidden links that break integrations |
 | Workflows | sequence of steps | 0.15 | Whole user scenarios |
 
-> ⚠️ **Weights are not approved.** They need to be fixed **before** the first scored run and never
-> changed afterward — otherwise there's a temptation to fit the metric to the result. ADR-2 in
-> [`11`](11-decisions-and-open-questions.md).
+> **Frozen before any scored run** (ADR-13, 2026-08-30) and not revisited afterward. Sub-weights
+> inside `semantic_facts` were considered and rejected: nine `kind` values with individual weights
+> read as tuning and add no signal, since fact counts already weight the category implicitly.
 >
-> Open question: the "Semantic facts" category lumps together different `kind` values with very
-> different user value (`enum_mapping` matters more than `identifier_meaning`). A version with
-> sub-weights inside the category is being considered — but only if it doesn't make the metric
-> opaque to a judge.
+> Two obligations come with the weights. **The per-category F1 vector is published next to every
+> VARS figure**, so a reader can recompute the aggregate under their own weights. And **every
+> comparison is also computed under the two rejected weightings** — the original 0.25 / 0.20 / 0.25
+> / 0.15 / 0.15 and a flat 0.20 × 5. If the baseline↔AAE ranking holds under all three, the
+> conclusion does not depend on the weights at all; if it doesn't hold, that is reported.
 
 ### What F1 means here
 

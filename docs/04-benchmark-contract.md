@@ -162,6 +162,11 @@ normalization rules are public and the agent is aware of them:
 3. **Canonical labels** for enums: the exact label **visible in the UI**, converted to
    `lower_snake_case`.
 4. **Aliases**, if needed, are declared up front in the public evaluation config.
+5. **`semantic_facts[].value`** is either a token that literally appears in traffic or the UI, or an
+   object whose keys come from `definitions.semanticFactValue` in the output schema — a closed,
+   published list (ADR-14). No key or vocabulary word in the matching key has to be invented.
+6. **Field references in `dependencies`** use declared prefixes: `header:`, `cookie:`,
+   `Set-Cookie:`, and JSONPath (`$.field`) for body fields.
 
 **Hard boundary:** the evaluator does not accept `sent` as equivalent to `shipped` unless that
 alias is in the public table. This is deliberate. The benchmark measures the ability to recover

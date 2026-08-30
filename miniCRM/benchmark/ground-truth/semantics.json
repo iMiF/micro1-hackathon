@@ -26,7 +26,9 @@
       "id": "sem-csrf-exempt-login",
       "kind": "auth",
       "subject": "POST /api/auth/login",
-      "value": "csrf-exempt",
+      "value": {
+        "csrf": false
+      },
       "meaning": "Login is the only mutating /api route that does not require a CSRF header.",
       "provenance": [
         "apps/api/src/hooks.ts CSRF_EXEMPT"
@@ -324,7 +326,14 @@
       "id": "sem-tax-base",
       "kind": "derived_value",
       "subject": "quote.taxCents",
-      "value": "round((subtotalCents+shippingCents)*rate)",
+      "value": {
+        "base": [
+          "subtotalCents",
+          "shippingCents"
+        ],
+        "factor": "rate",
+        "rounding": "round"
+      },
       "meaning": "Tax is computed on subtotal plus shipping, not on subtotal alone. No taxRate field is returned.",
       "provenance": [
         "apps/api/src/routes/quotes.ts calculateTaxCents(subtotal+shipping)"
@@ -403,7 +412,10 @@
       "id": "sem-money-cents",
       "kind": "identifier_meaning",
       "subject": "*Cents",
-      "value": "integer-cents",
+      "value": {
+        "unit": "cents",
+        "type": "integer"
+      },
       "meaning": "All money fields are integer cents. The UI formats them as USD.",
       "provenance": [
         "mappers.ts",
@@ -414,7 +426,9 @@
       "id": "sem-quote-required",
       "kind": "business_constraint",
       "subject": "POST /api/orders.quoteId",
-      "value": "required",
+      "value": {
+        "required": true
+      },
       "meaning": "Creating an order requires quoteId from POST /api/order-quotes. Client-computed totals are not accepted.",
       "provenance": [
         "apps/api/src/routes/orders.ts quoteId is required"
@@ -444,7 +458,10 @@
       "id": "sem-order-number-format",
       "kind": "identifier_meaning",
       "subject": "order.orderNumber",
-      "value": "ORD-2026-{id}",
+      "value": {
+        "prefix": "ORD-2026-",
+        "field": "id"
+      },
       "meaning": "New order numbers are ORD-2026- concatenated with the numeric id. The year is hardcoded, not taken from the clock.",
       "provenance": [
         "apps/api/src/routes/orders.ts"
@@ -465,7 +482,10 @@
       "id": "sem-stock-on-create",
       "kind": "business_constraint",
       "subject": "products.stockQty",
-      "value": "decrement",
+      "value": {
+        "field": "stockQty",
+        "effect": "decrease"
+      },
       "meaning": "Creating an order decrements product stock by each line quantity.",
       "provenance": [
         "apps/api/src/routes/orders.ts"
@@ -475,7 +495,10 @@
       "id": "sem-stock-on-draft-delete",
       "kind": "business_constraint",
       "subject": "products.stockQty",
-      "value": "restore",
+      "value": {
+        "field": "stockQty",
+        "effect": "restore"
+      },
       "meaning": "Deleting a draft order adds line quantities back to product stock.",
       "provenance": [
         "apps/api/src/routes/orders.ts DELETE"
@@ -485,7 +508,9 @@
       "id": "sem-activity-separate",
       "kind": "identifier_meaning",
       "subject": "GET /api/orders/{id}",
-      "value": "no-embedded-activity",
+      "value": {
+        "absent": "activity"
+      },
       "meaning": "Order GET does not include activity. Activity is GET /api/orders/{id}/activity.",
       "provenance": [
         "apps/api/src/mappers.ts mapOrderDetail",
@@ -547,7 +572,13 @@
       "id": "sem-customer-q",
       "kind": "query_semantics",
       "subject": "GET /api/customers?q",
-      "value": "name-or-email",
+      "value": {
+        "matches": [
+          "firstName",
+          "lastName",
+          "email"
+        ]
+      },
       "meaning": "q matches first_name, last_name, email, or first+last with ILIKE, % and _ escaped.",
       "provenance": [
         "apps/api/src/routes/customers.ts",
@@ -558,7 +589,13 @@
       "id": "sem-customer-archived-filter",
       "kind": "query_semantics",
       "subject": "GET /api/customers?archived",
-      "value": "true|false|omitted",
+      "value": {
+        "accepts": [
+          true,
+          false,
+          null
+        ]
+      },
       "meaning": "archived=false is Active, true is Archived, omitted is All. Invalid strings are ignored.",
       "provenance": [
         "apps/web/src/pages/CustomersPage.vue",
@@ -569,7 +606,11 @@
       "id": "sem-customer-suggest-excludes-archived",
       "kind": "query_semantics",
       "subject": "GET /api/customers/suggest",
-      "value": "archived=false",
+      "value": {
+        "forced": {
+          "archived": false
+        }
+      },
       "meaning": "Suggest returns only non-archived customers, unlike the collection endpoint.",
       "provenance": [
         "apps/api/src/routes/customers.ts"
@@ -633,7 +674,9 @@
       "id": "sem-address-belongs-to-customer",
       "kind": "business_constraint",
       "subject": "GET /api/customers/{customerId}/addresses",
-      "value": "nested",
+      "value": {
+        "scopedTo": "customer"
+      },
       "meaning": "Addresses are scoped to customerId. Quote creation also requires the address to belong to that customer.",
       "provenance": [
         "apps/api/src/routes/customers.ts",
@@ -644,7 +687,11 @@
       "id": "sem-region-depends-on-country",
       "kind": "query_semantics",
       "subject": "GET /api/regions?country",
-      "value": "country-code",
+      "value": {
+        "requires": [
+          "country"
+        ]
+      },
       "meaning": "Regions are loaded after country selection. Empty country returns []. regionId posted with an address must belong to countryCode.",
       "provenance": [
         "apps/api/src/routes/geo.ts",
@@ -655,7 +702,12 @@
       "id": "sem-product-q",
       "kind": "query_semantics",
       "subject": "GET /api/products?q",
-      "value": "name-or-sku",
+      "value": {
+        "matches": [
+          "name",
+          "sku"
+        ]
+      },
       "meaning": "q matches product name or sku ILIKE.",
       "provenance": [
         "apps/api/src/routes/products.ts"
@@ -665,7 +717,13 @@
       "id": "sem-product-active-filter",
       "kind": "query_semantics",
       "subject": "GET /api/products?active",
-      "value": "true|false|omitted",
+      "value": {
+        "accepts": [
+          true,
+          false,
+          null
+        ]
+      },
       "meaning": "Availability filter. Omitted means all.",
       "provenance": [
         "apps/web/src/pages/ProductsPage.vue"
@@ -675,7 +733,11 @@
       "id": "sem-product-suggest-active-only",
       "kind": "query_semantics",
       "subject": "GET /api/products/suggest",
-      "value": "active=true",
+      "value": {
+        "forced": {
+          "active": true
+        }
+      },
       "meaning": "Suggest returns only active products. Inactive SKU-213 never appears in create-order autocomplete.",
       "provenance": [
         "apps/api/src/routes/products.ts"
@@ -776,7 +838,11 @@
       "id": "sem-dashboard-customer-count",
       "kind": "derived_value",
       "subject": "dashboard.customerCount",
-      "value": "non-archived",
+      "value": {
+        "filter": {
+          "archived": false
+        }
+      },
       "meaning": "customerCount is the number of non-archived customers, not limited to the period window.",
       "provenance": [
         "apps/api/src/routes/dashboard.ts"
@@ -786,7 +852,10 @@
       "id": "sem-dashboard-orders-by-status",
       "kind": "derived_value",
       "subject": "dashboard.ordersByStatus",
-      "value": "all-statuses-in-window",
+      "value": {
+        "groupBy": "statusId",
+        "excludedStatusIds": []
+      },
       "meaning": "ordersByStatus counts every order in the window grouped by statusId, including Draft and Cancelled.",
       "provenance": [
         "apps/api/src/routes/dashboard.ts"

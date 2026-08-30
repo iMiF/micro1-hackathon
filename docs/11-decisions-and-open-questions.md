@@ -31,7 +31,7 @@ hand-edited.
 
 ### ADR-2 — The primary metric is our own (VARS), but the brief's standard table is filled in too
 
-**Date:** 2026-08-29 · **Status:** ⚠️ partially accepted — **weights not approved**
+**Date:** 2026-08-29 · **Status:** accepted · **Completed by:** ADR-13
 
 **Context.** The brief asks for a single primary metric and allows proposing our own rubric. The
 standard table (`Primary outcome`, `Human time per task`, `Cost per task`) poorly describes API
@@ -40,12 +40,9 @@ reconstruction quality, but can't be dropped.
 **Decision.** VARS as the primary metric ([`05`](05-evaluation-and-metrics.md)) **plus** the
 brief's standard table in full.
 
-**Not yet decided.** The category weights (0.25 / 0.20 / 0.25 / 0.15 / 0.15) are a proposal, not a
-decision. They need to be approved **before** the first scored run and then frozen, otherwise
-there's a risk of fitting the metric to the result. Whether to add sub-weights inside
-`semantic_facts` is still open.
-
-**Deadline:** D-12…D-10.
+**Weights — ✅ settled by ADR-13 (2026-08-30), before any scored run.** The 0.25 / 0.20 / 0.25 /
+0.15 / 0.15 proposal recorded here was superseded; sub-weights inside `semantic_facts` were
+rejected.
 
 ---
 
@@ -255,6 +252,98 @@ fair error.
 
 ---
 
+### ADR-13 — VARS weights, frozen
+
+**Date:** 2026-08-30 · **Status:** accepted · **Completes:** ADR-2
+
+**Context.** ADR-2 left the weights open and required them to be fixed before the first scored run.
+No run has happened yet, which is the only moment at which this choice can be made honestly. Three
+candidates were considered: the original balanced proposal, an equal 0.20 × 5, and a
+value-weighted split.
+
+**Decision.**
+
+| Category | Weight | Was |
+| --- | ---: | ---: |
+| Operations and paths | **0.15** | 0.25 |
+| Parameters and schemas | **0.15** | 0.20 |
+| Semantic facts | **0.35** | 0.25 |
+| Dependencies and rules | **0.20** | 0.15 |
+| Workflows | **0.15** | 0.15 |
+
+**Rationale — the project's own thesis, stated before any result.** Routes and parameters are what
+a proxy capture or a HAR file already yields; the product value this project claims is the part no
+capture tool provides ([`01`](01-problem-and-value.md)). A metric that spends 0.45 on the part both
+systems can do well also saturates in that half, compressing the very difference it exists to
+measure.
+
+**Sub-weights inside `semantic_facts`: rejected.** Nine `kind` values with individual weights are
+opaque to a judge and easy to read as tuning. Frequency already weights implicitly — fifteen
+`enum_mapping` facts against one `concurrency` fact. The per-`kind` breakdown goes in the report as
+information, not as score.
+
+**Two obligations that come with this decision:**
+
+1. The per-category F1 vector is published next to every VARS figure, so any reader can recompute
+   the aggregate under their own weights.
+2. Every reported comparison is also computed under the two rejected weightings. If the
+   baseline↔AAE ranking is stable across all three, the conclusion does not depend on the weights,
+   and that sentence is worth more than the weights themselves. If it is not stable, that is
+   reported too.
+
+**Consequences.** The weights are frozen as of 2026-08-30 and are not revisited after the first
+scored run, whatever it shows.
+
+---
+
+### ADR-14 — `semantic_facts[].value` uses a closed, published vocabulary
+
+**Date:** 2026-08-30 · **Status:** accepted · **Closes:** OQ-10
+
+**Context.** OQ-10 measured that about eighteen ground-truth facts carried author-coined shorthand
+in `value` — `name-or-email`, `non-archived`, `integer-cents`, `csrf-exempt` — words that appear
+nowhere in the traffic. Since the matching key is `kind` + `subject` + `value`, an agent could
+understand the behaviour completely and still score FN + FP for not guessing our wording.
+
+**Decision.** Every such value became an object whose keys come from a closed vocabulary declared in
+`miniCRM/benchmark/schemas/reconstruction-output.schema.json` as `definitions.semanticFactValue`
+(`additionalProperties: false`, with `rounding` and `effect` as enums). The rule the schema now
+encodes:
+
+> A scalar `value` must be a token that literally appears in traffic or the UI. Anything else is an
+> object, and every key it uses is declared in the schema.
+
+Examples: `name-or-email` → `{"matches": ["firstName", "lastName", "email"]}`; `csrf-exempt` →
+`{"csrf": false}`; `decrement` → `{"field": "stockQty", "effect": "decrease"}`; the tax formula →
+`{"base": ["subtotalCents", "shippingCents"], "factor": "rate", "rounding": "round"}`.
+
+**Deviation from the OQ-10 sketch, stated plainly.** OQ-10 proposed nine value shapes, one per
+`kind`. What was built is one closed vocabulary shared by all kinds. It is weaker — the schema does
+not say which keys belong to which `kind` — and it was chosen for cost: it is a single definition
+instead of nine conditional branches, on the last day before the deadline. The property that
+matters is preserved: nothing in the matching key is a word the agent has to invent.
+
+**This is still a hint, and that is the point.** There is no zero-hint option. Publishing the
+vocabulary tells the agent what language to answer in, exactly as the `kind` enum does (ADR-12); it
+does not say which endpoint has which values. The alternative — leaving coined slugs in place — does
+not measure understanding, it measures telepathy.
+
+**Verified by execution, not by reading** (the standing rule after ADR-7/ADR-8): ground truth
+regenerated with `emit-ground-truth.mjs`, counts unchanged (71 facts, 22 dependencies, 18 workflows,
+32 actions, 15 cases); `validate-ground-truth.mjs` passes; every ground-truth value validates
+against `semanticFactValue`; `perfect-reconstruction.json` validates against the full schema and
+still matches ground truth on `kind` + `subject` + `value` with 0 FP and 0 FN. String-valued facts
+fell from 40 of 71 to 22, and all 22 are observable tokens (error codes, `sid`, `X-CSRF-Token`,
+`paid` / `refunded`, `30d`).
+
+**Residual, not fixed.** `dependencies.json` matches on field references written in a notation the
+agent must also reproduce — `header:X-CSRF-Token`, `cookie:sid`, `$.csrfToken`. Smaller than the
+`value` problem and fixable by publishing the prefix convention in
+[`04`](04-benchmark-contract.md) §4 rather than by restructuring. `workflows.json` matches on
+operation sequences and is unaffected.
+
+---
+
 ## Open questions
 
 ### OQ-1 — Actual deadline date — ✅ **resolved 2026-08-30**
@@ -372,9 +461,9 @@ remove it.
 
 ---
 
-### OQ-10 — Author-coined values in ground truth make part of the metric unreachable
+### OQ-10 — Author-coined values in ground truth make part of the metric unreachable — ✅ **closed by ADR-14**
 
-**Priority:** ~~high~~ deferred (see the decision at the end) · **Measured:** 2026-08-30
+**Measured:** 2026-08-30 · **Implemented:** 2026-08-30 (the deferral below was overridden — the author chose to do the work)
 
 Measured on 2026-08-30 against `miniCRM/benchmark/ground-truth/semantics.json`: 40 of 71 facts have
 a string `value`. Most are tokens the agent literally observes and will copy verbatim —
