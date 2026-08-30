@@ -203,10 +203,40 @@ A comparison is only meaningful under identical setup. Baseline and AAE receive 
 **Any deviation is recorded in the report with an explanation** (a direct brief requirement:
 *"Explain any meaningful difference in the resources available to each one"*).
 
+### 5.1 Run configuration and the shared task prompt
+
+The list above says these must be identical. This section says where they live, so that
+"identical" is a property of the files rather than of anyone's memory.
+
+| File | Holds | Read by |
+| --- | --- | --- |
+| `config/run.default.json` | target URL, credentials and role, budgets, policy profile, model and temperature | both agents, the harness, the runner |
+| `config/task-prompt.md` | the task prompt: start URL, goal, output contract, epistemic rules, credentials, budget | both agents |
+| `config/run.local.json` | optional gitignored overlay; environment variables `MINICRM_URL`, `AAE_EMAIL`, `AAE_PASSWORD` override both | — |
+
+Both agents render the one task-prompt file through `tooling/config/run.ts`, which is the
+mechanism ADR-11 needs: the task statement cannot silently diverge between the two systems,
+because there is only one of it. Neither agent may edit, wrap, or prepend to it. Each agent's own
+system and scaffolding prompts stay in its own directory and are expected to differ — that
+difference is the result being measured.
+
+**Credentials.** They reach the agent as part of the task prompt (ADR-15), never as a special
+tool. MiniCRM's seeded demo credentials are committed on purpose: the target is fully synthetic
+(`miniCRM/apps/api/src/seed.ts`) and a judge has to be able to reproduce a run. For any target
+that is not this sandbox, use `config/run.local.json` or the environment variables, and commit
+neither. Credentials are redacted out of run artifacts by `tooling/browser/network.ts` and are
+excluded from the ledger entry — the presence of an auth header is an observation, the token is
+not.
+
+A run configuration that is missing a value fails at load, and a task prompt that would render an
+empty credential throws rather than telling the agent to sign in as nobody.
+
+---
+
 ### Fairness checklist
 
 - [ ] Public output schema and canonical vocabulary are identical for both systems
-- [ ] Cases, seeds, target version, role, tools, and budgets match
+- [ ] Cases, seeds, target version, role, tools, and budgets match — all from `config/run.default.json` (§5.1)
 - [ ] The task prompt is identical; scaffolding prompts differ by design and both are published (ADR-11)
 - [ ] The baseline prompt is the honest minimal version, not a weakened one — the ADR-11 test applies
 - [ ] Neither system uses a shared component that interprets meaning; the shared layer is deterministic (ADR-12)

@@ -1,0 +1,33 @@
+{
+  "$comment": "Run configuration (docs/07 §3, docs/04 §5.1). Everything here is identical for baseline and AAE by construction: both read this same file. A field that differs between the two systems is a fairness violation and must be recorded in the report (docs/04 §5).",
+
+  "target": {
+    "baseUrl": "http://localhost:5173",
+    "$comment": "The target version actually scored is recorded per run as application_commit."
+  },
+
+  "credentials": {
+    "$comment": "MiniCRM is fully synthetic and these are its seeded demo credentials (miniCRM/apps/api/src/seed.ts), which is why they are committed: a judge must be able to reproduce a run. Override with AAE_EMAIL / AAE_PASSWORD, or with config/run.local.json (gitignored), when pointing the harness at anything that is not this sandbox. They are rendered into the shared task prompt (ADR-15) and redacted out of run artifacts by tooling/browser/network.ts.",
+    "email": "admin@minicrm.local",
+    "password": "demo123",
+    "role": "staff"
+  },
+
+  "budgets": {
+    "$comment": "Identical for both systems (ADR-11). maxSteps is enforced by the harness, not by the prompt.",
+    "maxSteps": 120,
+    "wallClockMs": 900000
+  },
+
+  "policy": {
+    "$comment": "docs/07 §2. 'strict' blocks UNKNOWN as the document specifies; 'sandbox' allows and logs it. See the open decision on this in docs/11.",
+    "profile": "sandbox",
+    "allowlist": []
+  },
+
+  "model": {
+    "$comment": "The model must match when comparing workflows rather than models (docs/04 §5). Recorded into every run's ledger entry.",
+    "id": "claude-opus-4-6",
+    "temperature": 0
+  }
+}

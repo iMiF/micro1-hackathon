@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { normalizePath, operationKey } from '../tooling/browser/paths.js'
 import { classify, decide } from './policy.js'
 import { SubmissionValidator } from '../tooling/reconstruction/validate.js'
+import { loadRunConfig, renderTaskPrompt, ledgerEntry } from '../tooling/config/run.js'
 import type { ObservedElement } from '../tooling/browser/observe.js'
 
 /**
@@ -145,6 +146,46 @@ test('duplicate facts collapse, ids are assigned, meaning is untouched', () => {
   assert.equal(facts[0]?.id, 'fact-1')
   assert.equal(facts[0]?.meaning, 'session cookie')
   assert.equal(facts[0]?.value, 'sid')
+})
+
+console.log('run configuration and the shared task prompt (ADR-11, ADR-15)')
+
+test('config loads and the task prompt renders with no leftover placeholders', () => {
+  const config = loadRunConfig()
+  const prompt = renderTaskPrompt(config)
+  assert.ok(!/\{\{\w+\}\}/.test(prompt), 'unrendered placeholder left in the task prompt')
+  assert.ok(prompt.includes(config.target.baseUrl))
+  assert.ok(prompt.includes(config.credentials.email))
+  assert.ok(prompt.includes(config.credentials.password))
+  assert.ok(prompt.includes(String(config.budgets.maxSteps)))
+})
+
+test('the authoring comment never reaches the agent', () => {
+  const prompt = renderTaskPrompt(loadRunConfig())
+  assert.ok(!prompt.includes('<!--'))
+  assert.ok(!prompt.includes('ADR-11'))
+})
+
+test('both systems render the identical task prompt', () => {
+  const config = loadRunConfig()
+  assert.equal(renderTaskPrompt(config), renderTaskPrompt(config))
+})
+
+test('the ledger records the setup but never the password', () => {
+  const config = loadRunConfig()
+  const entry = JSON.stringify(ledgerEntry(config))
+  assert.ok(!entry.includes(config.credentials.password))
+  assert.ok(entry.includes(config.model.id))
+})
+
+test('a missing credential fails loudly rather than silently', () => {
+  assert.throws(() => renderTaskPrompt({
+    target: { baseUrl: 'http://x' },
+    credentials: { email: '', password: '', role: '' },
+    budgets: { maxSteps: 0, wallClockMs: 0 },
+    policy: { profile: 'sandbox', allowlist: [] },
+    model: { id: 'm', temperature: 0 },
+  } as never), /no value for|still contains|unknown placeholder/)
 })
 
 console.log(failures === 0 ? '\nall harness self-tests passed' : `\n${failures} failing`)
