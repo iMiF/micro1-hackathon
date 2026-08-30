@@ -344,6 +344,44 @@ operation sequences and is unaffected.
 
 ---
 
+### ADR-15 — Credentials are given to both agents; the login pre-fill stays
+
+**Date:** 2026-08-30 · **Status:** accepted · **Closes:** OQ-3
+
+**Context.** `miniCRM/apps/web/src/pages/LoginPage.vue` pre-fills `admin@minicrm.local` /
+`demo123`. OQ-3 asked whether this weakens the benchmark and whether credentials should instead be
+passed through the run configuration.
+
+**Decision.** Credentials are part of the task prompt, identical for both systems (ADR-11), and are
+recorded in the run configuration alongside role and seed as [`04`](04-benchmark-contract.md) §5
+already requires. The pre-fill in the target stays.
+
+**Why giving credentials costs nothing.** The product framing has always been an operator handing
+the tool a staging URL and credentials ([`02`](02-architecture.md) §1) — guessing a password is not
+a capability anyone wants documented. And none of the facts `case-01-auth-session-csrf` scores
+depends on it: `sem-session-cookie`, `sem-csrf-header`, `sem-csrf-exempt-login`,
+`sem-invalid-credentials`, `sem-unauthenticated` and the three `dep-*` links are all recovered by
+observing traffic around login. `sem-invalid-credentials` in fact requires the agent to send a
+deliberately wrong password, which it can only do once it understands the field exists.
+
+**Why the pre-fill stays.** Removing it is cheap — two lines, and `tests/e2e/smoke.spec.ts` fills
+the fields itself, so nothing breaks. It simply buys nothing measurable: request parameters for
+`POST /api/auth/login` are visible in the network events regardless of who typed them, and typing
+into fields is exercised by every other case anyway. Login is also the gate to all fifteen cases,
+so the cheaper that step is, the less of the benchmark a harness glitch can take down.
+
+**Consequence — disclosure, not silence.** The report states in one line that the login form is
+pre-filled, that this eases the sign-in step, and that no scored fact depends on it, with the
+case-01 fact list as backing. A declared simplification reads as rigour; an undeclared one reads as
+sloppiness.
+
+**Rejected alternative, kept on the shelf.** The harness could clear the two fields after page load
+— target untouched, identical for both systems, revertible in one line — if a reason ever appears to
+require the agent to actually use the credentials it was given. It would have to be recorded as a
+deviation under [`04`](04-benchmark-contract.md) §5.
+
+---
+
 ## Open questions
 
 ### OQ-1 — Actual deadline date — ✅ **resolved 2026-08-30**
@@ -361,9 +399,9 @@ option plus an honest disclosure in the report — see OQ-10.
 
 ---
 
-### OQ-3 — Pre-filled login weakens the benchmark
+### OQ-3 — Pre-filled login weakens the benchmark — ✅ **closed by ADR-15** (it does not; credentials are supplied to both agents and the pre-fill stays)
 
-**Priority:** medium · **Affects:** `case-01-auth-session-csrf`
+**Priority:** ~~medium~~ closed · **Affects:** `case-01-auth-session-csrf`
 
 `miniCRM/apps/web/src/pages/LoginPage.vue` pre-fills `admin@minicrm.local` / `demo123`. This
 doesn't violate ground rule 08 (the data is synthetic), but it simplifies auth discovery more than

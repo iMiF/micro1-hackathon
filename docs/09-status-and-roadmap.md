@@ -99,13 +99,22 @@ never the quality gates, and never a number that wasn't measured.
 | 7 | Video under 5 minutes | Understandable without narration | required deliverable |
 | 8 | Hot take, main failure mode | Written from what the runs showed | 5 |
 
-**What is cut, explicitly:** the OQ-10 ground-truth rework (deferred — it costs hours and changes
-no ranking), sub-weights inside `semantic_facts` (ADR-2 — adds opacity, not signal), the OQ-9 LLM
-judge, multi-agent orchestration (OQ-6), and the OQ-11 repository split.
+**Nothing is cut by the clock.** The ordering above is by rubric value per hour, not a list of
+survivors: a deadline reorders priorities, it does not decide what gets dropped. That decision is
+the author's, and until he makes it every open item stays open. Two things follow. Effort is
+estimated for a model doing the implementation, not a person — work that reads as "half a day" in
+human hours is often one pass, and scoping it out on human-speed assumptions loses real value for
+nothing. And an item that has not been started is recorded as *not started*, never as *cut*.
 
-**The honest fallback.** Two systems, one case, one measured number, and a reproduction guide that
-works beats five agent components and an unmeasured claim. Deliverables 5–8 are worth more than
-line 4 — if the day runs short, ship the measurement, not the architecture.
+Still open and unstarted, in no particular order: the OQ-9 semantic-agreement layer, multi-agent
+orchestration (OQ-6), the OQ-11 repository split, and the `dependencies` field-reference notation
+noted in ADR-14. Sub-weights inside `semantic_facts` are the one genuine rejection, decided on
+merit rather than on time (ADR-13).
+
+**The honest fallback, if the clock does win.** Two systems, one case, one measured number, and a
+reproduction guide that works beats five agent components and an unmeasured claim. If time runs out
+mid-flight, deliverables 5–8 are protected before line 4 — but that is a fallback to invoke
+deliberately, not a plan to drift into.
 
 ---
 
