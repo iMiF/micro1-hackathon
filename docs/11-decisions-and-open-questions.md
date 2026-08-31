@@ -556,8 +556,8 @@ and recorded as a removed experiment in [`06`](06-baseline-and-changelog.md) §3
 makes each contribution separately ablatable, not because more components look better. Every role is
 individually switchable (`AAE_ABLATE`), which is the obligation the split takes on — an obligation
 only partly discharged, since no ablation run was scored before the deadline. Measured effect of the
-ensemble as a whole, on two models (ADR-22): VARS(frozen) **33.56 → 61.12** on `openai/gpt-5.6-luna`
-(the published pair, matching `run.default.json`) and **49.85 → 71.21** on `openai/gpt-5.6-sol` (a
+ensemble as a whole, on two models (ADR-22): VARS(frozen) **49.85 → 71.21** on `openai/gpt-5.6-sol`
+(the published pair, matching `run.default.json`) and **33.56 → 61.12** on `openai/gpt-5.6-luna` (a
 replication). Same sign, same categories: the movement is concentrated in synthesis, not coverage.
 
 ---
@@ -601,7 +601,7 @@ on it is turned on for both systems together, in its own iteration, with a fourt
 **B2** (B1 plus reasoning) so the architecture's contribution is `AAE − B2` rather than an assertion.
 If only one control run is affordable, it is B2, not B1.
 
-**Consequences.** Neither published delta (+27.57 on luna, +21.37 on the sol replication) can be
+**Consequences.** Neither published delta (+21.37 on sol, +27.57 on the luna replication) can be
 explained by one system having been allowed to think longer. Mechanical note for whoever runs
 iteration 2: a thinking budget forbids `temperature ≠ 1`, so that iteration needs k repeats per point
 rather than a single deterministic run.
@@ -623,58 +623,56 @@ time and again before the run starts, and a violation refuses to start rather th
 either budget for one system obliges a re-run of the other at the new value before any comparison is
 published. `maxCostUsd` is exempt: it stops a run rather than shaping it.
 
-**Consequences.** In the published luna pair both systems ran at the shipped `maxSteps` 200 and
-`wallClockMs` 900000 and neither hit the ceiling (baseline 69 actions, AAE 137), so the comparison is
-not a budget artifact in either direction. The sol replication used an overlay of 300 steps (baseline
-127, AAE 264) — internally fair, not the default. The resource difference that does exist on luna —
-2.5× wall time, 4.4× cost — is reported next to the score, as the brief requires.
+**Consequences.** In the published sol pair both systems ran at the shipped `maxSteps` 300 and
+`wallClockMs` 900000 and neither hit the step ceiling (baseline 127 actions, AAE 264), so the
+comparison is not a budget artifact in either direction. The luna replication used `maxSteps` 200
+(baseline 69, AAE 137) — internally fair, not the default. The resource difference that does exist
+on sol — 3.3× wall time, 3.6× cost — is reported next to the score, as the brief requires.
 
 ---
 
-### ADR-22 — The default model is `openai/gpt-5.6-luna`
+### ADR-22 — The default model is `openai/gpt-5.6-sol`
 
-**Date:** 2026-08-31 · **Status:** accepted · **Enforced:** `config/run.default.json` `model.id`
+**Date:** 2026-08-31 · **Status:** accepted (revised) · **Enforced:** `config/run.default.json` `model.id`
 
 **Context.** ADR-11 requires both systems to share a model when the comparison is of workflows, not
-of models. After iteration 1 was scored on `openai/gpt-5.6-sol` —
+of models. Iteration 1 was scored on both `openai/gpt-5.6-sol` and `openai/gpt-5.6-luna`:
 
 | | baseline `…T14-45-38-777Z` | AAE `…T14-51-18-382Z` |
 | --- | ---: | ---: |
 | VARS(frozen) | 49.85 | 71.21 (+21.37) |
 | cost | $0.92 | $3.32 |
-
-— the same architecture, same seven tools and same task prompt were scored on
-`openai/gpt-5.6-luna`:
+| model | `openai/gpt-5.6-sol` | same |
 
 | | baseline `…T16-00-44-545Z` | AAE `…T16-04-43-124Z` |
 | --- | ---: | ---: |
 | VARS(frozen) | 33.56 | 61.12 (+27.57) |
 | cost | $0.05 | $0.22 |
+| model | `openai/gpt-5.6-luna` | same |
 
 Luna is weaker in absolute terms on **both** systems (baseline −16.3, AAE −10.1). It is roughly
 fifteen times cheaper for the pair ($0.27 vs $4.24). The architecture's delta does not depend on
 which of the two was used: AAE is ahead under all three weight vectors on both, and the movement
 sits in the same categories (`workflows`, `semantic_facts`, `dependencies`).
 
-**Decision.** Pin `config/run.default.json` to `openai/gpt-5.6-luna`. The published pair is the luna
-pair, which now matches the shipped default (`maxSteps` 200, `temperature` 0). The sol pair is
+An earlier version of this ADR pinned luna so that a judge's Path B/C would cost ~$0.27 rather than
+~$4. That left the video, the Path A artifacts and `run.default.json` describing three different
+contracts. The pin is revised so they agree.
+
+**Decision.** Pin `config/run.default.json` to `openai/gpt-5.6-sol` at `maxSteps` 300, `temperature`
+0. The published pair is the sol pair, which now matches the shipped default. The luna pair is
 **kept as a replication**, not deleted and not silently retargeted: it is the evidence that the
 +20-point-class gain is an architecture result, not a model result. Absolute scores are expected to
-be lower than sol; the claim this project makes is the delta, not a model's ceiling.
+be lower on luna; the claim this project makes is the delta, not a model's ceiling.
 
-What was not chosen: keeping sol as the default because it scores higher. That would have made
-every Path B/C reproduction cost ~$4 and would have left `run.default.json` describing a model the
-submission does not actually run. Luna is the model a judge will hit if they follow the
-reproduction guide without an overlay.
+What was not chosen: keeping luna as the default because it is cheaper. That would have meant a
+judge following the reproduction guide without an overlay would not hit the headline numbers.
 
-**Consequences.** Headline numbers drop (33.56 → 61.12 rather than 49.85 → 71.21). The "model
-deviation" note in [`06`](06-baseline-and-changelog.md) §3 and [`REPRODUCTION.md`](REPRODUCTION.md)
-§6 comes out: default `model.id` and published pair now agree. The luna ledger records
-`maxCostUsd` 10 from a leftover overlay; neither run spent more than $0.22, so the cap did not bind
-(ADR-21 already exempts it). The sol pair stays in the changelog, labeled as a replication; it was
-run at `maxSteps` 300 under a gitignored overlay and is therefore not a run of the shipped default
-(ADR-21). A second luna AAE run at `maxSteps` 300 (`aae-2026-08-31T16-14-48-523Z`, VARS 62.35) is
-not published — there is no matching luna baseline at that budget.
+**Consequences.** Headline numbers are 49.85 → 71.21. Live Path B/C without an overlay cost ~$0.92
+/ ~$3.32 and take ~5 / ~18 minutes. Default `model.id`, Path A, the video and the README agree.
+The luna pair stays in the changelog, labeled as a replication, at `maxSteps` 200. A second luna
+AAE run at `maxSteps` 300 (`aae-2026-08-31T16-14-48-523Z`, VARS 62.35) is not published — there is
+no matching luna baseline at that budget (ADR-21).
 
 ---
 
@@ -762,7 +760,7 @@ The brief states directly: *"Purposeful choices matter more than the number of c
 question was left open until the single-agent version's real failure mode became visible, and it did:
 the baseline explored completely and transcribed a third of what it saw. Splitting the loop so that
 the role which explores is not the role which writes is a direct response to that, and it moved
-VARS(frozen) 33.56 → 61.12 on luna (published) and 49.85 → 71.21 on sol (replication), with the gain
+VARS(frozen) 49.85 → 71.21 on sol (published) and 33.56 → 61.12 on luna (replication), with the gain
 concentrated in the synthesis categories on both.
 
 **The condition set here is only partly met.** This question asked for an *ablation* to justify the

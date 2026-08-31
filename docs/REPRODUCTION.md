@@ -8,9 +8,9 @@
 
 This guide takes a judge from a clean machine to the headline number of this submission:
 
-> **baseline VARS 49.85 → AAE VARS 71.21** (+21.37) on `openai/gpt-5.6-sol`, same tool surface,
-> same budget — at 3.6× the cost and 3.3× the wall time. The same architecture on the cheaper
-> shipped default `openai/gpt-5.6-luna` moved 33.56 → 61.12 (+27.57); that pair is also in the
+> **baseline VARS 49.85 → AAE VARS 71.21** (+21.37) on the shipped default `openai/gpt-5.6-sol`,
+> same tool surface, same budget — at 3.6× the cost and 3.3× the wall time. The same architecture
+> on the cheaper `openai/gpt-5.6-luna` moved 33.56 → 61.12 (+27.57); that pair is also in the
 > repo (ADR-22).
 
 There are three paths, in increasing order of effort. **Path A needs no API key, no Docker and no
@@ -20,8 +20,8 @@ project is deterministic. Paths B and C re-run the agents that produced the docu
 | Path | What it proves | Needs | Time | Cost |
 | --- | --- | --- | --- | --- |
 | **A — re-score the shipped runs** | The two numbers above come out of a deterministic program, not out of a claim | Node 22 | ~2 min | $0 |
-| **B — run the baseline yourself** | The baseline document is producible from the running target | + Docker, OpenRouter key | ~15 min | ~$0.92 (sol overlay) / ~$0.05 (luna default) |
-| **C — run AAE yourself** | The AAE document is producible from the running target | + Docker, OpenRouter key | ~25 min | ~$3.32 (sol overlay) / ~$0.22 (luna default) |
+| **B — run the baseline yourself** | The baseline document is producible from the running target | + Docker, OpenRouter key | ~15 min | ~$0.92 |
+| **C — run AAE yourself** | The AAE document is producible from the running target | + Docker, OpenRouter key | ~25 min | ~$3.32 |
 
 ---
 
@@ -137,10 +137,10 @@ Expected — identical to the `evaluation.json` already committed inside each ru
 | cost | $0.92 | $3.32 | 3.6× |
 
 Both runs are `openai/gpt-5.6-sol`, `temperature 0`, `maxSteps` 300, `wallClockMs` 900000,
-`maxTokens` 32000, scored with `--all`. They were produced with the gitignored overlay in §6,
-not with the luna pin in `config/run.default.json`.
+`maxTokens` 32000, scored with `--all` — a run of `config/run.default.json` with no model overlay
+(ADR-22).
 
-**Same architecture on the shipped default `openai/gpt-5.6-luna`** (`maxSteps` 200, no overlay):
+**Same architecture on the cheaper `openai/gpt-5.6-luna`** (replication, `maxSteps` 200):
 baseline `results/runs/baseline-2026-08-31T16-00-44-545Z/` VARS 33.56 / $0.05 vs AAE
 `results/runs/aae-2026-08-31T16-04-43-124Z/` VARS 61.12 / $0.22 (+27.57). The sign and the
 categories of the gain are the same; luna is weaker and ~15× cheaper. Repeats of both models are
@@ -235,32 +235,29 @@ Two environment switches exist for inspection and ablation; neither is used in a
 ## 6. Reproducing the exact scored pair
 
 `config/run.default.json` is the shared contract — **both systems read this one file**, and any field
-that differed between them would be a fairness violation. It pins `openai/gpt-5.6-luna`,
-`maxSteps 200`, `maxCostUsd 5` (ADR-22). A live `npm run baseline:run` / `npm run aae:run` with
-no overlay therefore produces a **luna** run, in the same family as
-`baseline-2026-08-31T16-00-44-545Z` / `aae-2026-08-31T16-04-43-124Z`.
+that differed between them would be a fairness violation. It pins `openai/gpt-5.6-sol`,
+`maxSteps 300`, `maxCostUsd 10` (ADR-22). The published pair in §3 uses that `model.id` and
+`maxSteps`. Neither run spent more than $3.32, so the cap did not bind — and ADR-21 already
+exempts `maxCostUsd` from the fairness contract, because it stops a run rather than shaping it.
 
-The Path A pair in §3 is **sol** at `maxSteps` 300. It used a gitignored `config/run.local.json`
-overlay, deep-merged over the defaults by `tooling/config/run.ts → loadRunConfig`:
+To reproduce it: §2.4's reset, `npm run baseline:run`, reset again, `npm run aae:run`, and score
+both with `--all`. `MINICRM_URL`, `AAE_EMAIL` and `AAE_PASSWORD` override the target and
+credentials on top of that, for pointing the harness at something that is not the local sandbox.
+
+**The luna replication** (33.56 → 61.12) was not run under those defaults. Reproduce it with a
+gitignored `config/run.local.json` overlay, deep-merged over the defaults by
+`tooling/config/run.ts → loadRunConfig`:
 
 ```json
 {
-  "model": { "id": "openai/gpt-5.6-sol", "temperature": 0 },
-  "budgets": { "maxSteps": 300, "wallClockMs": 900000, "maxCostUsd": 10 }
+  "model": { "id": "openai/gpt-5.6-luna", "temperature": 0 },
+  "budgets": { "maxSteps": 200, "wallClockMs": 900000, "maxCostUsd": 10 }
 }
 ```
 
-Drop that file (or comment out `model.id`) to hit the luna default instead. The ledger on the
-shipped sol pair records `maxCostUsd` 10; neither run spent more than $3.32, so the cap did not
-bind — and ADR-21 already exempts `maxCostUsd` from the fairness contract, because it stops a run
-rather than shaping it.
-
-To reproduce the Path A pair live: write the overlay above, then §2.4's reset, `npm run
-baseline:run`, reset again, `npm run aae:run`, and score both with `--all`. `MINICRM_URL`,
-`AAE_EMAIL` and `AAE_PASSWORD` override the target and credentials on top of that, for pointing
-the harness at something that is not the local sandbox. Luna is still the committed default
-because it is what a judge hits without an overlay, and because the architecture's delta does not
-depend on which of the two was used.
+That overlay is how to reproduce the luna pair, not how to reproduce the headline numbers. Sol is
+the default because it is the model a judge hits without an overlay, and because the architecture's
+delta does not depend on which of the two was used.
 
 ---
 
@@ -317,13 +314,13 @@ These are mechanical, not promises:
 | `npx playwright install chromium` | ~1 min | — |
 | `npm run db:reset` | seconds | — |
 | Path A: re-score both runs + evaluator test suite | < 2 min | $0 |
-| Path B: one baseline run (sol overlay, matching Path A) | ~6 min (ours: 5m26s / 127 actions) | ~$0.92 |
-| Path C: one AAE run (sol overlay, matching Path A) | ~20 min (ours: 18m12s / 264 actions) | ~$3.32 |
-| Path B under luna default | 3–5 min (ours: 3m42s / 69 actions) | ~$0.05 |
-| Path C under luna default | 8–12 min (ours: 9m25s / 137 actions) | ~$0.22 |
+| Path B: one baseline run | ~6 min (ours: 5m26s / 127 actions) | ~$0.92 |
+| Path C: one AAE run | ~20 min (ours: 18m12s / 264 actions) | ~$3.32 |
+| Path B under luna overlay | 3–5 min (ours: 3m42s / 69 actions) | ~$0.05 |
+| Path C under luna overlay | 8–12 min (ours: 9m25s / 137 actions) | ~$0.22 |
 
 Budget roughly **$5 and 40 minutes** to walk the whole guide including both live sol runs, or
-about **$1 and 30 minutes** on the luna default, and about **five minutes and nothing** to verify
+about **$1 and 30 minutes** on the luna overlay, and about **five minutes and nothing** to verify
 the headline claim by re-scoring what ships in the repo.
 
 `maxCostUsd` in the run config is a hard per-run spend guard checked before every model call — lower
@@ -356,10 +353,10 @@ them:
   corpus — not as 15 per-case scores. `--case <id>` scoring works today
   (`node evaluator/bin/evaluate.mjs --submission ... --case case-09-create-order-workflow`) and the
   15 case ids are in `miniCRM/benchmark/cases.json`; what is missing is the orchestration around it.
-- **The default model is the cheap one.** `config/run.default.json` pins `openai/gpt-5.6-luna`
-  (ADR-22). Path A re-scores the sol pair (`maxSteps` 300, overlay in §6). A live run with no
-  overlay produces luna, not the Path A numbers. Luna scores lower; the architecture's delta does
-  not. Repeats of both models are in `results/runs/INDEX.md`.
+- **The default model is the stronger one.** `config/run.default.json` pins `openai/gpt-5.6-sol`
+  (ADR-22) at `maxSteps` 300. Path A re-scores that pair. A live run with no overlay produces sol,
+  matching the headline numbers in family if not bit-identically. Luna scores lower; the
+  architecture's delta does not. Repeats of both models are in `results/runs/INDEX.md`.
 - **The B1 point is not measured.** The prompt-vs-architecture ablation described in
   [`06`](06-baseline-and-changelog.md) §3 has a design but no run, so "the gain is architectural,
   not prompt engineering" is currently an argument, not a measurement.

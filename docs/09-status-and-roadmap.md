@@ -48,22 +48,21 @@ Honest picture as of 2026-08-31, ~12:15 PM Toronto — inside the closing window
 | Reference reconstruction | ✅ done | `miniCRM/benchmark/examples/perfect-reconstruction.json` | All 71 facts with the same `kind` values as ground truth: golden test for VARS = 100 |
 | **Deterministic evaluator** | ✅ done | `evaluator/` | node/ajv, no LLM/embeddings/fuzzy-matching; all 7 required golden tests (docs/05 §7) + regression tests green; `perfect-reconstruction.json` → VARS 100 on all three weight vectors |
 | **Browser harness** | ✅ done | `harness/` | seven tools, risk gate, evidence, path normalization (placeholder-name fix landed 2026-08-30, see project memory) |
-| **Baseline agent** | ✅ done, scored | `agents/baseline/` | The published comparison pair runs on the shipped default `openai/gpt-5.6-luna` (ADR-22): `results/runs/baseline-2026-08-31T16-00-44-545Z` → **VARS(frozen) = 33.56** (balanced 41.68, flat 39.11), 69 tool actions of 200, 3m42s, $0.05. A sol replication (`…T14-45-38-777Z` → 49.85 at `maxSteps` 300) and the earlier `anthropic/claude-sonnet-5` run (46.72) stay in [`06`](06-baseline-and-changelog.md) as history / model-independence evidence, not as the comparison point |
-| **AAE agent** | ✅ done — iteration 1 landed and scored | `agents/aae/` (commit `5977bd1`) | The ADR-18 asymmetric ensemble: Explorer that never submits, deterministic TrafficMiner and DomainSweeper, Inquisitor, per-section Extractors, deterministic Assembler. Scored on the same luna contract as the baseline: `results/runs/aae-2026-08-31T16-04-43-124Z` → **VARS(frozen) = 61.12** (balanced 67.49, flat 68.33), 137 actions of 200, 9m25s, $0.22. Sol replication: `…T14-51-18-382Z` → 71.21 vs 49.85. The planned coverage planner was **dropped before implementation** (`operations` F1 already 1.00 on the sonnet baseline) and is recorded as a removed experiment in [`06`](06-baseline-and-changelog.md) §3. Ablation switches exist (`AAE_ABLATE=...`); **no ablation run is scored yet** |
+| **Baseline agent** | ✅ done, scored | `agents/baseline/` | The published comparison pair runs on the shipped default `openai/gpt-5.6-sol` (ADR-22): `results/runs/baseline-2026-08-31T14-45-38-777Z` → **VARS(frozen) = 49.85** (balanced 59.70, flat 59.14), 127 tool actions of 300, 5m26s, $0.92. A luna replication (`…T16-00-44-545Z` → 33.56 at `maxSteps` 200) and the earlier `anthropic/claude-sonnet-5` run (46.72) stay in [`06`](06-baseline-and-changelog.md) as history / model-independence evidence, not as the comparison point |
+| **AAE agent** | ✅ done — iteration 1 landed and scored | `agents/aae/` (commit `5977bd1`) | The ADR-18 asymmetric ensemble: Explorer that never submits, deterministic TrafficMiner and DomainSweeper, Inquisitor, per-section Extractors, deterministic Assembler. Scored on the same sol contract as the baseline: `results/runs/aae-2026-08-31T14-51-18-382Z` → **VARS(frozen) = 71.21** (balanced 78.18, flat 79.00), 264 actions of 300, 18m12s, $3.32. Luna replication: `…T16-04-43-124Z` → 61.12 vs 33.56. The planned coverage planner was **dropped before implementation** (`operations` F1 already 1.00 on the sonnet baseline) and is recorded as a removed experiment in [`06`](06-baseline-and-changelog.md) §3. Ablation switches exist (`AAE_ABLATE=...`); **no ablation run is scored yet** |
 | **Benchmark runner** | ❌ missing | — | Runs are launched one at a time; there is no sweep of 15 cases × both systems. Consequence: the published pair is scored with `--all` against the full corpus, not as 15 per-case scores. Per-case scoring itself works (`evaluate.mjs --case <id>`) |
 | Submission README | ❌ missing | `README.md` at the repo root | deliverable 01 requires it explicitly: the user and their bottleneck, the value, the before/after boundary of §1 above, and a link to the Improvement Changelog |
 | Artifact generator (OpenAPI/docs) | ❌ missing | — | End to End Quality criterion (20 points) |
-| **Reproduction guide** | ✅ done | [`docs/REPRODUCTION.md`](REPRODUCTION.md) | deliverable 02. Three paths: re-score the shipped luna runs with no API key (deterministic, verified to return 33.56 and 61.12 exactly), run the baseline, run AAE. Versions, expected output, measured time and cost, and the known limits of the guide are all in it |
+| **Reproduction guide** | ✅ done | [`docs/REPRODUCTION.md`](REPRODUCTION.md) | deliverable 02. Three paths: re-score the shipped sol Path A pair with no API key (deterministic, verified to return 49.85 and 71.21 exactly), run the baseline, run AAE. The luna pair is also in `results/runs/INDEX.md`. Versions, expected output, measured time and cost, and the known limits of the guide are all in it |
 | Video | ⚠️ scripted, not recorded | [`VIDEO-SCRIPT.md`](../VIDEO-SCRIPT.md) | deliverable 03. 7 segments, ~736 words ≈ 4:50, with a claim-to-file table for every on-screen assertion. Recording and upload remain |
-| Run trajectories | ⚠️ recorded, not yet publishable | `results/runs/` | Both published runs carry `trajectory.jsonl`, `evidence/evidence.jsonl`, `meta.json` and `summary.json`; AAE additionally carries `claims.jsonl`, `gaps.jsonl`, `pages.jsonl`, `digest.json`, `assemble-log.json` and `prompts/`. **`results/runs` is in `.gitignore`** — the two published runs must be force-added before submission, or deliverable 04 and Path A of the reproduction guide arrive empty |
+| Run trajectories | ✅ done | `results/runs/INDEX.md` | Path A sol pair plus luna replication pair and repeats are tracked via `.gitignore` exceptions. Each run carries `trajectory.jsonl`, `evidence/evidence.jsonl`, `meta.json` and `summary.json`; AAE additionally carries `claims.jsonl`, `gaps.jsonl`, `pages.jsonl`, `digest.json`, `assemble-log.json` and `prompts/` |
 
 **Summary:** the comparison exists. Target, evaluator, harness, baseline and AAE iteration 1 are all built, and both systems have
-been run on the shipped default (`openai/gpt-5.6-luna`, ADR-22), producing **33.56 → 61.12 VARS(frozen)** — a result that keeps its ordering under all
-three weight vectors (ADR-13 obligation #2). A sol replication (49.85 → 71.21) shows the same sign and the same categories, so the delta is not a cheap-model artifact. What is still missing is breadth rather than substance: no runner, so the pair is scored
+been run on the shipped default (`openai/gpt-5.6-sol`, ADR-22), producing **49.85 → 71.21 VARS(frozen)** — a result that keeps its ordering under all
+three weight vectors (ADR-13 obligation #2). A luna replication (33.56 → 61.12) shows the same sign and the same categories, so the delta is not a strong-model artifact. What is still missing is breadth rather than substance: no runner, so the pair is scored
 against the full corpus instead of 15 per-case scores; no scored ablation, so each AAE component's individual contribution is argued from
 design rather than measured; no B1 control point, so "architecture, not prompt engineering" remains an argument; and one pair rather than a
-distribution. The remaining hard blockers for the submission itself are the recorded video, and force-adding the two
-published runs past `.gitignore`.
+distribution. The remaining hard blocker for the submission itself is the recorded video.
 
 ---
 
@@ -97,7 +96,7 @@ never the quality gates, and never a number that wasn't measured.
 | 1 | Freeze the VARS weights (ADR-2) — a 10-minute decision that blocks nothing downstream | Written down before any scored run | Measured Improvement | ✅ done (ADR-13) |
 | 2 | Deterministic evaluator | Golden tests of §7 in [`05`](05-evaluation-and-metrics.md) pass; `perfect-reconstruction.json` → VARS = 100 | Measured Improvement 15 | ✅ done |
 | 3 | Harness + baseline; one full run end to end | A valid `submit_reconstruction` and a real VARS number on ≥1 case | the floor for everything else | ✅ done — VARS(frozen) 46.72 (pre-ADR-16 44.70), see [`06`](06-baseline-and-changelog.md) |
-| 4 | AAE iteration 1: per-section extractors + deterministic assembler (ADR-18) | Each component has an ablation, or it isn't claimed | Agent Solution 30 | ✅ done — landed `5977bd1`, scored **VARS(frozen) 61.12** vs the luna baseline's 33.56 on the shipped default; sol replication 71.21 vs 49.85. Ablation switches exist; **no ablation run is scored**, so per-component contribution is still argued, not measured |
+| 4 | AAE iteration 1: per-section extractors + deterministic assembler (ADR-18) | Each component has an ablation, or it isn't claimed | Agent Solution 30 | ✅ done — landed `5977bd1`, scored **VARS(frozen) 71.21** vs the sol baseline's 49.85 on the shipped default; luna replication 61.12 vs 33.56. Ablation switches exist; **no ablation run is scored**, so per-component contribution is still argued, not measured |
 | 5 | Runs on the full case set, both systems, fixed seeds | Full ledger, no cherry-picking | Measured Improvement | ❌ not started — no runner. The published pair is scored with `--all` against the whole corpus, which is not cherry-picking but is also not the 15-case ledger this line asks for |
 | 6 | Reproduction guide + submission README | A clean environment reproduces one run | Reproducibility 15 | ⚠️ half done — [`REPRODUCTION.md`](REPRODUCTION.md) is written and its no-API-key path is verified; the root `README.md` (deliverable 01) is **not written** |
 | 7 | Video under 5 minutes | Understandable without narration | required deliverable | ⚠️ scripted — `VIDEO-SCRIPT.md`, 7 segments ≈ 4:50, not recorded |
@@ -105,19 +104,19 @@ never the quality gates, and never a number that wasn't measured.
 
 **Line 4 is done, and it is what the submission is built on.** The named failure mode was measured rather than guessed
 (`06` §4): the baseline explored the target and then submitted a fraction of what it had
-seen. Iteration 1 therefore attacked synthesis, not exploration, and the categories it moved on luna are exactly the synthesis ones:
-`workflows` F1 0.10 → 0.61, `semantic_facts` 0.12 → 0.29, `dependencies` 0.36 → 0.81. The sol replication moved the same categories
-(`workflows` 0.43 → 0.91, `semantic_facts` 0.14 → 0.43). What is left on this line is the ablation set —
+seen. Iteration 1 therefore attacked synthesis, not exploration, and the categories it moved on sol are exactly the synthesis ones:
+`workflows` F1 0.43 → 0.91, `semantic_facts` 0.14 → 0.43, `dependencies` 0.53 → 0.68. The luna replication moved the same categories
+(`workflows` 0.10 → 0.61, `semantic_facts` 0.12 → 0.29). What is left on this line is the ablation set —
 the switches are implemented (`AAE_ABLATE`), the runs are not.
 
 **Reasoning is deliberately out of iteration 1** (ADR-20): a thinking budget is model configuration
 of the same class as `temperature`, so it is switched on for both systems together in a later
 iteration, with **B2** added as a control point so the gain can be attributed instead of asserted.
 
-**Budgets are frozen across systems** (ADR-21), and the published luna pair honors it: both systems ran at the shipped `maxSteps` 200 and
-`wallClockMs` 900000, and neither hit the ceiling — baseline 69 actions, AAE 137. Raising either value for one system means re-running the
+**Budgets are frozen across systems** (ADR-21), and the published sol pair honors it: both systems ran at the shipped `maxSteps` 300 and
+`wallClockMs` 900000, and neither hit the step ceiling — baseline 127 actions, AAE 264. Raising either value for one system means re-running the
 other at the new value before any comparison is published. `maxCostUsd` is exempt — it stops a run rather than shaping it. The resource
-difference the brief asks to be named is time and money, not budget: AAE spent 2.5× the wall time and 4.4× the cost for its 27.6 points.
+difference the brief asks to be named is time and money, not budget: AAE spent 3.3× the wall time and 3.6× the cost for its 21.4 points.
 
 **Nothing is cut by the clock.** The ordering above is by rubric value per hour, not a list of
 survivors: a deadline reorders priorities, it does not decide what gets dropped. That decision is

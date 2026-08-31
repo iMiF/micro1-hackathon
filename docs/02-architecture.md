@@ -163,9 +163,9 @@ is exactly what happened to the coverage planner this section used to open with.
 
 ### 4.1 What shipped: the ADR-18 asymmetric ensemble
 
-Iteration 1, implemented in `agents/aae/` and scored at VARS(frozen) 61.12 against the baseline's
-33.56 on the default model `openai/gpt-5.6-luna` (ADR-22); the same architecture on
-`openai/gpt-5.6-sol` scored 71.21 against 49.85 ([`06`](06-baseline-and-changelog.md) §3). The
+Iteration 1, implemented in `agents/aae/` and scored at VARS(frozen) 71.21 against the baseline's
+49.85 on the default model `openai/gpt-5.6-sol` (ADR-22); the same architecture on
+`openai/gpt-5.6-luna` scored 61.12 against 33.56 ([`06`](06-baseline-and-changelog.md) §3). The
 organizing decision is asymmetry: the roles are deliberately unequal, most of them are
 deterministic, and **the role that explores is not the role that writes**.
 

@@ -15,9 +15,9 @@
 
   "budgets": {
     "$comment": "Identical for both systems (ADR-11). maxSteps is enforced by the harness, not by the prompt. maxCostUsd is a per-run safety cap checked by the agent loop (agents/baseline/agent.ts) before every LLM call -- it is a spend guard, not itself part of the frozen fairness contract the way maxSteps/wallClockMs are; edit the number freely.",
-    "maxSteps": 200,
+    "maxSteps": 300,
     "wallClockMs": 900000,
-    "maxCostUsd": 5
+    "maxCostUsd": 10
   },
 
   "policy": {
@@ -27,8 +27,8 @@
   },
 
   "model": {
-    "$comment": "The model must match when comparing workflows rather than models (docs/04 §5). Pinned to gpt-5.6-luna (ADR-22): weaker in absolute VARS than gpt-5.6-sol, ~15× cheaper for the pair, and the architecture's delta holds on both. Recorded into every run's ledger entry. maxTokens is the per-call output ceiling: the whole reconstruction leaves the model as one tool argument (~9k tokens for a full MiniCRM document), and a generation cut off mid-JSON reaches the harness as an unreadable argument, so the ceiling is part of the fairness contract and lives here rather than in a client default (ADR-17).",
-    "id": "openai/gpt-5.6-luna",
+    "$comment": "The model must match when comparing workflows rather than models (docs/04 §5). Pinned to gpt-5.6-sol (ADR-22), which is also the Path A / video pair. Luna is kept as a cheaper replication of the same architecture, not as the default. Recorded into every run's ledger entry. maxTokens is the per-call output ceiling: the whole reconstruction leaves the model as one tool argument (~9k tokens for a full MiniCRM document), and a generation cut off mid-JSON reaches the harness as an unreadable argument, so the ceiling is part of the fairness contract and lives here rather than in a client default (ADR-17).",
+    "id": "openai/gpt-5.6-sol",
     "temperature": 0,
     "maxTokens": 32000
   },

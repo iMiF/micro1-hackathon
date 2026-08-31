@@ -164,7 +164,7 @@ Full trajectories of every run are too large. We submit:
 
 | # | Status |
 | --- | --- |
-| 1 | ✅ Path A pair: `results/runs/baseline-2026-08-31T14-45-38-777Z/` and `results/runs/aae-2026-08-31T14-51-18-382Z/` — `openai/gpt-5.6-sol`, same budget, same task prompt, scored the same way. Both carry `trajectory.jsonl`, `evidence/evidence.jsonl`, `meta.json`, `summary.json`, `reconstruction.json`, `evaluation.json`, `diff.json`. Luna default-config dirs `…T16-00-44-545Z` / `…T16-04-43-124Z` (and repeats) are also shipped; see `results/runs/INDEX.md` |
+| 1 | ✅ Path A pair: `results/runs/baseline-2026-08-31T14-45-38-777Z/` and `results/runs/aae-2026-08-31T14-51-18-382Z/` — `openai/gpt-5.6-sol`, same budget, same task prompt, scored the same way. Both carry `trajectory.jsonl`, `evidence/evidence.jsonl`, `meta.json`, `summary.json`, `reconstruction.json`, `evaluation.json`, `diff.json`. Luna replication dirs `…T16-00-44-545Z` / `…T16-04-43-124Z` (and repeats) are also shipped; see `results/runs/INDEX.md` |
 | 2 | ⚠️ no per-case runs exist (no runner), so there is no hard-case trajectory as such — the AAE run above covers the full corpus including that case's surface |
 | 3 | ✅ per role, inside the AAE run directory: Explorer in `trajectory.jsonl`, Extractors in `prompts/` and `claims.jsonl`, Inquisitor in `gaps.jsonl`, Assembler in `assemble-log.json`, plus `pages.jsonl` and `digest.json` |
 | 4 | ✅ `results/runs/INDEX.md` lists every shipped run; those directories are tracked via `.gitignore` exceptions |

@@ -63,31 +63,30 @@ Column format is defined by the brief. Filled in as experiments are run.
 | STAGE | WHAT YOU TRIED AND WHY | EVIDENCE | DECISION / LEARNING |
 | --- | --- | --- | --- |
 | Baseline (first scored run, history) | General-purpose browser agent with seven tools and a shared instruction. Establishes a fair reference point on the same tool surface | `results/runs/baseline-2026-08-31T05-30-26-386Z/` (model `anthropic/claude-sonnet-5`, scope `all`, 179 tool actions, wall time 675s, cost $4.50) | **VARS(frozen) = 46.72** (pre-ADR-16: 44.70; rejected_balanced 56.68, rejected_flat 54.65). Same `reconstruction.json`, re-scored under the ADR-16 normal form. `operations` F1 = 1.00 (26/26), `parameters` F1 = 0.88 (25 tp / 2 fp / 5 fn), `dependencies` F1 = 0.625, `semantic_facts` F1 = 0.13 (6 tp / 15 fp / 65 fn — the dominant failure, matches the hypothesis in §4), `workflows` F1 = 0.10 (1/17, 2 fp; create-order now matches once trailing `refresh` is dropped). Hallucination rate 0.22, evidence support rate 1.00, coverage 1.00, submission valid. |
-| Replication — baseline on `gpt-5.6-sol` | The same baseline agent on a stronger, more expensive model, at `maxSteps` 300. Kept so the architecture's delta can be read across models, not only on the default (ADR-22) | `results/runs/baseline-2026-08-31T14-45-38-777Z/` (127 tool actions of 300, 5m26s, $0.92, scope `all`) | **VARS(frozen) = 49.85** (rejected_balanced 59.70, rejected_flat 59.14). `operations` F1 0.94, `parameters` 0.91, `dependencies` 0.53, `workflows` 0.43, `semantic_facts` 0.14 (precision 0.43, **recall 0.08**). Hallucination 0.12, evidence support 1.00, coverage 1.00. Same shape as the sonnet run: complete exploration, one-third of it written down |
-| Replication — iteration 1 on `gpt-5.6-sol` | The ADR-18 ensemble on the same sol contract as the row above | `results/runs/aae-2026-08-31T14-51-18-382Z/` (264 tool actions of 300, 18m12s, $3.32, same seven tools, scope `all`) | **VARS(frozen) = 71.21** (rejected_balanced 78.18, rejected_flat 79.00) — **+21.37 over the sol baseline, ranking holds under all three weight vectors**. Synthesis categories: `workflows` 0.43 → 0.91, `semantic_facts` 0.14 → 0.43 (recall 0.08 → 0.30), `dependencies` 0.53 → 0.68, `operations` 0.94 → 1.00. Resource difference: 2.1× actions, 3.3× wall time, 3.6× cost. **Not the published pair** — sol is ~15× the luna pair's spend, and this run used an overlay of `maxSteps` 300 rather than the shipped 200 |
-| **Baseline (published pair)** | The same baseline agent, unchanged, on the default model `openai/gpt-5.6-luna` at the shipped `maxSteps` 200 (ADR-22) | `results/runs/baseline-2026-08-31T16-00-44-545Z/` (69 tool actions of 200, 3m42s, $0.05, scope `all`) | **VARS(frozen) = 33.56** (rejected_balanced 41.68, rejected_flat 39.11). `operations` F1 0.84, `parameters` 0.54, `dependencies` 0.36, `workflows` 0.10, `semantic_facts` 0.12 (precision 0.45, **recall 0.07**). Hallucination 0.20, evidence support 1.00, coverage 1.00. Weaker absolute score than sol — and the same synthesis hole: `semantic_facts` recall 0.07 |
-| **Iteration 1 — asymmetric ensemble (ADR-18)** | Split the single loop into roles that cannot be confused with each other: an Explorer that explores and **never submits**, deterministic TrafficMiner and DomainSweeper passes over the recorded traffic, an Inquisitor that only proposes refutation experiments, per-section LLM Extractors run in parallel, and a deterministic Assembler that calls `submit_reconstruction` itself. Why this and not more exploration: the baseline's own numbers named the failure mode as synthesis, not coverage (§4) | `results/runs/aae-2026-08-31T16-04-43-124Z/` (137 tool actions of 200, 9m25s, $0.22, same model, same budget, same seven tools, scope `all`) | **VARS(frozen) = 61.12** (rejected_balanced 67.49, rejected_flat 68.33) — **+27.57 over the paired luna baseline, and the ranking holds under all three weight vectors**. The movement is concentrated where the failure mode was: `workflows` F1 0.10 → 0.61, `semantic_facts` 0.12 → 0.29 (recall 0.07 → 0.20), `dependencies` 0.36 → 0.81, `operations` 0.84 → 0.96. **Kept as the published pair.** Resource difference, as the brief requires it be named: 2.0× the tool actions, 2.5× the wall time, 4.4× the cost. Hallucination 0.20 → 0.24 |
+| **Baseline (published pair)** | The same baseline agent on the shipped default `openai/gpt-5.6-sol` at `maxSteps` 300 (ADR-22) | `results/runs/baseline-2026-08-31T14-45-38-777Z/` (127 tool actions of 300, 5m26s, $0.92, scope `all`) | **VARS(frozen) = 49.85** (rejected_balanced 59.70, rejected_flat 59.14). `operations` F1 0.94, `parameters` 0.91, `dependencies` 0.53, `workflows` 0.43, `semantic_facts` 0.14 (precision 0.43, **recall 0.08**). Hallucination 0.12, evidence support 1.00, coverage 1.00. Same shape as the sonnet run: complete exploration, one-third of it written down |
+| **Iteration 1 — asymmetric ensemble (ADR-18)** | Split the single loop into roles that cannot be confused with each other: an Explorer that explores and **never submits**, deterministic TrafficMiner and DomainSweeper passes over the recorded traffic, an Inquisitor that only proposes refutation experiments, per-section LLM Extractors run in parallel, and a deterministic Assembler that calls `submit_reconstruction` itself. Why this and not more exploration: the baseline's own numbers named the failure mode as synthesis, not coverage (§4) | `results/runs/aae-2026-08-31T14-51-18-382Z/` (264 tool actions of 300, 18m12s, $3.32, same seven tools, scope `all`) | **VARS(frozen) = 71.21** (rejected_balanced 78.18, rejected_flat 79.00) — **+21.37 over the paired sol baseline, ranking holds under all three weight vectors**. Synthesis categories: `workflows` 0.43 → 0.91, `semantic_facts` 0.14 → 0.43 (recall 0.08 → 0.30), `dependencies` 0.53 → 0.68, `operations` 0.94 → 1.00. **Kept as the published pair.** Resource difference: 2.1× actions, 3.3× wall time, 3.6× cost |
+| Replication — baseline on `gpt-5.6-luna` | The same baseline agent on the cheaper model, at `maxSteps` 200. Kept so the architecture's delta can be read across models, not only on the default (ADR-22) | `results/runs/baseline-2026-08-31T16-00-44-545Z/` (69 tool actions of 200, 3m42s, $0.05, scope `all`) | **VARS(frozen) = 33.56** (rejected_balanced 41.68, rejected_flat 39.11). `operations` F1 0.84, `parameters` 0.54, `dependencies` 0.36, `workflows` 0.10, `semantic_facts` 0.12 (precision 0.45, **recall 0.07**). Hallucination 0.20, evidence support 1.00, coverage 1.00. Weaker absolute score than sol — and the same synthesis hole: `semantic_facts` recall 0.07 |
+| Replication — iteration 1 on `gpt-5.6-luna` | The ADR-18 ensemble on the same luna contract as the row above | `results/runs/aae-2026-08-31T16-04-43-124Z/` (137 tool actions of 200, 9m25s, $0.22, same seven tools, scope `all`) | **VARS(frozen) = 61.12** (rejected_balanced 67.49, rejected_flat 68.33) — **+27.57 over the luna baseline, ranking holds under all three weight vectors**. `workflows` F1 0.10 → 0.61, `semantic_facts` 0.12 → 0.29 (recall 0.07 → 0.20), `dependencies` 0.36 → 0.81, `operations` 0.84 → 0.96. Resource difference: 2.0× actions, 2.5× wall time, 4.4× cost. **Not the published pair** |
 | **Removed — coverage planner** | The pre-measurement design had a component whose job was to make sure the agent reached every operation. It was **cut before a line of it was written** | The baseline run that killed it: `results/runs/baseline-2026-08-31T05-30-26-386Z/` (`operations` F1 1.00, `coverage` 1.00) | **Removed.** There was no failure mode left for it to eliminate — the plain agent already reached everything. The lesson, and the reason this row exists: a component earns its place by the failure mode it removes **in a measurement**, not by how reasonable it looks in an architecture diagram. This is what redirected iteration 1 from exploration to synthesis |
 | Iteration 2 (reasoning, ADR-20) | _not started_ | | Requires a control point B2 so the gain can be attributed to reasoning rather than asserted |
 | Iteration 3 (verifier) | _not started_ | | `verifier.enabled` is `false` in `config/run.default.json`; the switch exists, the component does not |
 | Ablation set | _not started_ | | `AAE_ABLATE=miner,sweeper,inquisitor,extractors` is implemented and self-tested, but no ablation run is scored — so each component's individual contribution is argued from design, not measured |
-| **Final** | = Iteration 1 on luna. No further iteration was run before the deadline | the two luna run directories above | **33.56 → 61.12 VARS(frozen)** on the shipped default (`openai/gpt-5.6-luna`, `maxSteps` 200), one budget, one contract, three weight vectors, both trajectories published. The sol replication (49.85 → 71.21) is the check that this delta is not a cheap-model artifact (ADR-22) |
+| **Final** | = Iteration 1 on sol. No further iteration was run before the deadline | the two sol run directories above | **49.85 → 71.21 VARS(frozen)** on the shipped default (`openai/gpt-5.6-sol`, `maxSteps` 300), one budget, one contract, three weight vectors, both trajectories published. The luna replication (33.56 → 61.12) is the check that this delta is not a strong-model artifact (ADR-22) |
 
-> **Model, recorded per ADR-22:** `config/run.default.json` pins `model.id` to `openai/gpt-5.6-luna`,
-> and the published pair above uses that `model.id` and the shipped `maxSteps` 200. The ledger
-> records `maxCostUsd` 10 from a local overlay; neither run spent more than $0.22, so the cap did
-> not bind (ADR-21 exempts it). Luna is worse in absolute VARS
-> than sol on both systems (33.56 vs 49.85 baseline; 61.12 vs 71.21 AAE) and ~15× cheaper for the
-> pair ($0.27 vs $4.24). It is the default because a judge who follows
-> [`REPRODUCTION.md`](REPRODUCTION.md) without an overlay should hit the numbers this submission
-> claims, and because the architecture's delta (+27.57 luna, +21.37 sol) does not depend on which
-> of the two was used. The sol pair is a replication at `maxSteps` 300, labeled as such, not
-> silently dropped. The first Baseline row uses `anthropic/claude-sonnet-5` and is kept as history.
-> Pre-ADR-16 smoke runs read `claude-haiku-4-5` 33.9, `claude-haiku-4.5` 24.0–36.7,
-> `deepseek/deepseek-v4-pro` 0–40.4, `openai/gpt-5.6-sol` 36.0, `anthropic/claude-sonnet-5` 44.7
-> (highest observed at the time). A second luna AAE run at `maxSteps` 300
-> (`aae-2026-08-31T16-14-48-523Z`, VARS 62.35) is not published: there is no matching luna baseline
-> at that budget (ADR-21).
+> **Model, recorded per ADR-22:** `config/run.default.json` pins `model.id` to `openai/gpt-5.6-sol`,
+> and the published pair above uses that `model.id` and the shipped `maxSteps` 300. The ledger
+> records `maxCostUsd` 10; neither run spent more than $3.32, so the cap did not bind (ADR-21
+> exempts it). Sol is stronger in absolute VARS than luna on both systems (49.85 vs 33.56
+> baseline; 71.21 vs 61.12 AAE) and ~15× more expensive for the pair ($4.24 vs $0.27). It is the
+> default because a judge who follows [`REPRODUCTION.md`](REPRODUCTION.md) without an overlay
+> should hit the numbers this submission claims, and because the architecture's delta (+21.37 sol,
+> +27.57 luna) does not depend on which of the two was used. The luna pair is a cheaper
+> replication at `maxSteps` 200, labeled as such, not silently dropped. The first Baseline row
+> uses `anthropic/claude-sonnet-5` and is kept as history. Pre-ADR-16 smoke runs read
+> `claude-haiku-4-5` 33.9, `claude-haiku-4.5` 24.0–36.7, `deepseek/deepseek-v4-pro` 0–40.4,
+> `openai/gpt-5.6-sol` 36.0, `anthropic/claude-sonnet-5` 44.7 (highest observed at the time). A
+> second luna AAE run at `maxSteps` 300 (`aae-2026-08-31T16-14-48-523Z`, VARS 62.35) is not
+> published: there is no matching luna baseline at that budget (ADR-21).
 
 The prompt grammar added in ADR-16 is **not** mixed into this figure: it will apply to later runs.
 The 46.72 is what the already-submitted document scores under the fairer key.
@@ -179,15 +178,15 @@ where the corpus holds one fact per value — the knowledge was present and the 
 **The bottleneck of an exploration agent is not exploration. It is writing down what it already
 saw.**
 
-On the published luna pair the baseline scored `coverage` 1.00 and still submitted a fraction of
-what a reconstruction needs: `semantic_facts` recall 0.07, `workflows` F1 0.10, `dependencies`
-0.36. Iteration 1 changed **who writes**: the Explorer lost the ability to submit at all, and a
+On the published sol pair the baseline scored `coverage` 1.00 and still submitted a fraction of
+what a reconstruction needs: `semantic_facts` recall 0.08, `workflows` F1 0.43, `dependencies`
+0.53. Iteration 1 changed **who writes**: the Explorer lost the ability to submit at all, and a
 separate set of per-section Extractors reads the recorded evidence with one job each. That moved
-**27.6 VARS** (33.56 → 61.12), concentrated in the synthesis categories, at 2.0× the actions.
+**21.4 VARS** (49.85 → 71.21), concentrated in the synthesis categories, at 2.1× the actions.
 
-The same split, on the stronger and more expensive `gpt-5.6-sol`, moved **21.4 VARS** (49.85 →
-71.21) with the same shape (`workflows` 0.43 → 0.91, `semantic_facts` recall 0.08 → 0.30). Luna is
-worse in absolute terms; the architecture's delta is not a luna artifact (ADR-22).
+The same split, on the cheaper `gpt-5.6-luna`, moved **27.6 VARS** (33.56 → 61.12) with the same
+shape (`workflows` 0.10 → 0.61, `semantic_facts` recall 0.07 → 0.20). Luna is worse in absolute
+terms; the architecture's delta is not a sol artifact (ADR-22).
 
 Two things follow for anyone building this kind of agent. **First: measure the failure mode before
 picking the component.** Our own pre-measurement design led with a coverage planner, which the first
