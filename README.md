@@ -9,8 +9,10 @@ Submission to the **micro1 Agentic Workflows Hackathon** (Aug 28–31, 2026).
 >
 > On the same target, the same seven tools, the same task prompt, the same model and the same
 > budget, replacing one general-purpose browser agent with an asymmetric ensemble moved the
-> primary metric from **VARS 49.85 → 71.21 (+21.37)** — and the ranking holds under all three
-> weight vectors, at 3.6× the cost and 3.3× the wall time.
+> primary metric from **VARS 33.56 → 61.12 (+27.57)** on the shipped default
+> (`openai/gpt-5.6-luna`) — and the ranking holds under all three weight vectors, at 4.4× the
+> cost and 2.5× the wall time. The same architecture on the stronger `openai/gpt-5.6-sol` moved
+> **49.85 → 71.21 (+21.37)**: the delta is not a cheap-model artifact (ADR-22).
 >
 > Reproduce that number in about two minutes, with no API key, no Docker and no network:
 > [Quickstart](#quickstart-2-minutes-no-api-key) · full guide in
@@ -71,10 +73,10 @@ LLM, no embeddings and no fuzzy matching. Definition and weights:
 
 | METRIC | SIMPLE BASELINE | AGENT SOLUTION | CHANGE |
 | --- | --- | --- | --- |
-| **Primary outcome — VARS (frozen weights)** | **49.85** | **71.21** | **+21.37** |
+| **Primary outcome — VARS (frozen weights)** | **33.56** | **61.12** | **+27.57** |
 | Human time per task | one command, then unattended | one command, then unattended | not separating (see note) |
-| Cost per task | $0.92 | $3.32 | 3.6× |
-| Wall time per task | 5m26s | 18m12s | 3.3× |
+| Cost per task | $0.05 | $0.22 | 4.4× |
+| Wall time per task | 3m42s | 9m25s | 2.5× |
 
 > **On human time.** Both systems run unattended after a single command, so operator time is
 > identical and does not distinguish them; the human time of the *manual* process is not measured
@@ -85,22 +87,30 @@ Under the hood, the movement is concentrated exactly where the measured failure 
 
 | | baseline | AAE | |
 | --- | --- | --- | --- |
-| VARS (frozen) | 49.85 | 71.21 | +21.37 |
-| VARS (rejected_balanced) | 59.70 | 78.18 | +18.48 |
-| VARS (rejected_flat) | 59.14 | 79.00 | +19.86 |
-| operations F1 | 0.94 | 1.00 | |
-| parameters F1 | 0.91 | 0.93 | |
-| **semantic_facts F1** | **0.14** (recall 0.08) | **0.43** (recall 0.30) | the core value |
-| **workflows F1** | **0.43** | **0.91** | |
-| dependencies F1 | 0.53 | 0.68 | |
-| hallucination rate | 0.12 | 0.18 | rose — stated, not hidden |
+| VARS (frozen) | 33.56 | 61.12 | +27.57 |
+| VARS (rejected_balanced) | 41.68 | 67.49 | +25.81 |
+| VARS (rejected_flat) | 39.11 | 68.33 | +29.22 |
+| operations F1 | 0.84 | 0.96 | |
+| parameters F1 | 0.54 | 0.75 | |
+| **semantic_facts F1** | **0.12** (recall 0.07) | **0.29** (recall 0.20) | the core value |
+| **workflows F1** | **0.10** | **0.61** | |
+| dependencies F1 | 0.36 | 0.81 | |
+| hallucination rate | 0.20 | 0.24 | rose — stated, not hidden |
 | evidence support rate | 1.00 | 1.00 | |
 | coverage | 1.00 | 1.00 | |
-| tool actions | 127 / 300 | 264 / 300 | 2.1× |
+| tool actions | 69 / 200 | 137 / 200 | 2.0× |
 
-Evidence: `results/runs/baseline-2026-08-31T14-45-38-777Z/` and
-`results/runs/aae-2026-08-31T14-51-18-382Z/`. Both `openai/gpt-5.6-sol`, `temperature 0`,
-`maxSteps 300`, `wallClockMs 900000`, scored `--all` against the full ground-truth corpus.
+Evidence: `results/runs/baseline-2026-08-31T16-00-44-545Z/` and
+`results/runs/aae-2026-08-31T16-04-43-124Z/`. Both `openai/gpt-5.6-luna`, `temperature 0`,
+`maxSteps` 200 (the shipped default), `wallClockMs` 900000, scored `--all` against the full
+ground-truth corpus.
+
+**Same architecture, stronger model.** On `openai/gpt-5.6-sol` at `maxSteps` 300 the identical
+split moved **49.85 → 71.21 (+21.37)** — `workflows` 0.43 → 0.91, `semantic_facts` recall 0.08 →
+0.30 — at $0.92 / $3.32. Luna is worse in absolute VARS and ~15× cheaper for the pair; the sign
+and the categories of the gain do not depend on which of the two was used (ADR-22). The sol
+artifacts are `results/runs/baseline-2026-08-31T14-45-38-777Z/` and
+`results/runs/aae-2026-08-31T14-51-18-382Z/`.
 
 **Why three weight vectors.** The weights were frozen before the first scored run (ADR-13), and
 every evaluator invocation also prints the score under two rejected vectors. The ordering is the
@@ -118,14 +128,14 @@ npm install
 cd evaluator && npm install && cd ..
 
 node evaluator/bin/evaluate.mjs \
-  --submission results/runs/baseline-2026-08-31T14-45-38-777Z/reconstruction.json \
-  --meta       results/runs/baseline-2026-08-31T14-45-38-777Z/meta.json \
-  --all --out /tmp/score-baseline     # → VARS 49.85
+  --submission results/runs/baseline-2026-08-31T16-00-44-545Z/reconstruction.json \
+  --meta       results/runs/baseline-2026-08-31T16-00-44-545Z/meta.json \
+  --all --out /tmp/score-baseline     # → VARS 33.56
 
 node evaluator/bin/evaluate.mjs \
-  --submission results/runs/aae-2026-08-31T14-51-18-382Z/reconstruction.json \
-  --meta       results/runs/aae-2026-08-31T14-51-18-382Z/meta.json \
-  --all --out /tmp/score-aae          # → VARS 71.21
+  --submission results/runs/aae-2026-08-31T16-04-43-124Z/reconstruction.json \
+  --meta       results/runs/aae-2026-08-31T16-04-43-124Z/meta.json \
+  --all --out /tmp/score-aae          # → VARS 61.12
 ```
 
 Requires Node ≥ 22 (the repo reads `.env` with the built-in `process.loadEnvFile`, so there is no
@@ -133,8 +143,8 @@ Requires Node ≥ 22 (the repo reads `.env` with the built-in `process.loadEnvFi
 
 Running the agents yourself — target setup, credentials, browser, the exact commands, expected
 output, measured time and cost, and the guide's own known limits — is
-**[`docs/REPRODUCTION.md`](docs/REPRODUCTION.md)** (three paths: A re-score, ~$0; B baseline, ~$1;
-C AAE, ~$3.50).
+**[`docs/REPRODUCTION.md`](docs/REPRODUCTION.md)** (three paths: A re-score, ~$0; B baseline, ~$0.05;
+C AAE, ~$0.22).
 
 ---
 
@@ -151,7 +161,6 @@ C AAE, ~$3.50).
 | `config/` | Run configuration and the shared task prompt |
 | `results/runs/<run-id>/` | Trajectories, evidence, submissions and scores — deliverable 04 |
 | `docs/` | Project documentation, 14 files, indexed in [`docs/README.md`](docs/README.md) |
-| `VIDEO-SCRIPT.md` | The script for deliverable 03 |
 
 `agents/baseline/` and `agents/aae/` are separate trees that never import each other, and neither
 `docs/` nor `miniCRM/benchmark/` is ever reachable from an evaluated agent's context — the agent
@@ -216,13 +225,14 @@ a run directory rather than a description.
 | STAGE | WHAT YOU TRIED AND WHY | EVIDENCE | DECISION / LEARNING |
 | --- | --- | --- | --- |
 | **Baseline** (history) | General-purpose browser agent, seven tools, one shared instruction — a fair reference point on the same tool surface | `results/runs/baseline-2026-08-31T05-30-26-386Z/` — `anthropic/claude-sonnet-5`, 179 actions, 675s, $4.50 | **VARS 46.72.** `operations` F1 1.00, `coverage` 1.00 — and `semantic_facts` F1 0.13, `workflows` 0.10. Named the failure mode as synthesis, not coverage |
-| **Baseline** (published pair) | The same agent, unchanged, re-run on `openai/gpt-5.6-sol` at `maxSteps` 300, because a comparison is only honest inside one model and one budget | `results/runs/baseline-2026-08-31T14-45-38-777Z/` — 127 actions, 5m26s, $0.92 | **VARS 49.85.** Same shape on a different model: complete exploration, one-third of it written down (`semantic_facts` recall 0.08) |
-| **Iteration 1 — asymmetric ensemble (ADR-18)** | Split the single loop into roles that cannot be confused: an Explorer that never submits, deterministic miner/sweeper passes, an Inquisitor that only refutes, parallel per-section Extractors, a deterministic Assembler. Chosen because the baseline's numbers named synthesis — not coverage — as the failure | `results/runs/aae-2026-08-31T14-51-18-382Z/` — same model, budget and tools; 264 actions, 18m12s, $3.32 | **VARS 71.21 (+21.37), ranking stable under all three weight vectors. Kept.** Movement concentrated in synthesis: `workflows` 0.43 → 0.91, `semantic_facts` 0.14 → 0.43, `dependencies` 0.53 → 0.68. Resource difference, as the brief requires it be named: 2.1× actions, 3.3× time, 3.6× cost. Hallucination rose 0.12 → 0.18 — writing down three times as much means being wrong out loud more often |
+| Replication — `gpt-5.6-sol` | The same two systems on a stronger, more expensive model (`maxSteps` 300), kept so the delta can be read across models (ADR-22) | `results/runs/baseline-2026-08-31T14-45-38-777Z/` and `…/aae-2026-08-31T14-51-18-382Z/` — 127 / 264 actions, $0.92 / $3.32 | **49.85 → 71.21 (+21.37).** Same categories: `workflows` 0.43 → 0.91, `semantic_facts` recall 0.08 → 0.30. Not the published pair |
+| **Baseline** (published pair) | The same agent, unchanged, on the shipped default `openai/gpt-5.6-luna` at `maxSteps` 200 | `results/runs/baseline-2026-08-31T16-00-44-545Z/` — 69 actions, 3m42s, $0.05 | **VARS 33.56.** Weaker absolute score than sol, same synthesis hole (`semantic_facts` recall 0.07) |
+| **Iteration 1 — asymmetric ensemble (ADR-18)** | Split the single loop into roles that cannot be confused: an Explorer that never submits, deterministic miner/sweeper passes, an Inquisitor that only refutes, parallel per-section Extractors, a deterministic Assembler. Chosen because the baseline's numbers named synthesis — not coverage — as the failure | `results/runs/aae-2026-08-31T16-04-43-124Z/` — same luna model, budget and tools; 137 actions, 9m25s, $0.22 | **VARS 61.12 (+27.57), ranking stable under all three weight vectors. Kept.** Movement concentrated in synthesis: `workflows` 0.10 → 0.61, `semantic_facts` 0.12 → 0.29, `dependencies` 0.36 → 0.81. Resource difference, as the brief requires it be named: 2.0× actions, 2.5× time, 4.4× cost |
 | **Removed — coverage planner** | The pre-measurement design led with a component whose job was to make sure every operation got reached. It was cut **before a line of it was written** | `results/runs/baseline-2026-08-31T05-30-26-386Z/` — `operations` F1 1.00, `coverage` 1.00 | **Removed.** There was no failure mode left for it to eliminate. The lesson: a component earns its place by the failure mode it removes *in a measurement*, not by how reasonable it looks in an architecture diagram. This is what redirected iteration 1 from exploration to synthesis |
 | Iteration 2 — reasoning budget (ADR-20) | *not started* | — | Deliberately deferred: a thinking budget is model configuration of the same class as `temperature`, so it gets switched on for both systems together, with a control point, or the gain is asserted rather than attributed |
 | Iteration 3 — verifier | *not started* | — | `verifier.enabled` is `false` in `config/run.default.json`; the switch exists, the component does not |
 | Ablation set | *not started* | — | `AAE_ABLATE=miner,sweeper,inquisitor,extractors` is implemented and self-tested, but no ablation run is scored — so each component's individual contribution is argued from design, not measured |
-| **Final** | = Iteration 1. No further iteration was run before the deadline | the two run directories above | **49.85 → 71.21 VARS**, one model, one budget, one contract, three weight vectors, both trajectories published |
+| **Final** | = Iteration 1 on luna. No further iteration was run before the deadline | the two luna run directories above | **33.56 → 61.12 VARS**, shipped default, one budget, one contract, three weight vectors, both trajectories published. Sol replication 49.85 → 71.21 is the check that the delta is not a model artifact |
 
 ---
 
@@ -254,14 +264,16 @@ value. The knowledge was present; the accounting was not.
 **The bottleneck of an exploration agent is not exploration. It is writing down what it already
 saw.**
 
-The baseline reached every corner of the target and then submitted a fraction of it. The single
+The baseline reached the target and then submitted a fraction of it. The single
 loop had to explore *and* account for what it explored in the same breath, and accounting lost
 every time, because one more click always looks more productive than one more line of bookkeeping.
 
 Iteration 1 changed nothing about how the target is explored. It changed **who writes**: the
 Explorer lost the ability to submit at all, and a separate set of per-section Extractors reads the
-recorded evidence with one job each. That moved 21.4 VARS, concentrated exactly in the synthesis
-categories, at 2.1× the actions.
+recorded evidence with one job each. On the shipped default that moved **27.6 VARS** (33.56 →
+61.12), concentrated in the synthesis categories, at 2.0× the actions. On the stronger sol model
+the same split moved **21.4 VARS** (49.85 → 71.21). Luna is cheaper and weaker; the architecture's
+delta is not a luna artifact.
 
 Two things follow for anyone building this kind of agent. **First: measure the failure mode before
 you pick the component.** Our own pre-measurement design led with a coverage planner that the first
@@ -324,10 +336,13 @@ Stated here rather than left for a judge to find. Longer list in
   run was scored — each component's individual contribution is argued from design, not measured.
 - **No B1 control point.** "The gain is architectural, not prompt engineering" is an argument
   (both systems share `config/task-prompt.md` byte for byte), not a measurement.
-- **One pair, not a distribution.** Two runs, not repeated runs with variance.
-- **Model deviation.** `config/run.default.json` pins `anthropic/claude-opus-4.6`, which has not
-  been run by either system. The published pair both ran `openai/gpt-5.6-sol` under a local overlay;
-  [`docs/REPRODUCTION.md`](docs/REPRODUCTION.md) §6 gives the exact overlay.
+- **One pair, not a distribution.** Two runs, not repeated runs with variance. A sol replication
+  of the same architecture is published as model-independence evidence (ADR-22), not as a third
+  system.
+- **Default model is the cheap one.** `config/run.default.json` pins `openai/gpt-5.6-luna`. It
+  scores lower than `gpt-5.6-sol` on both systems (33.56 vs 49.85 baseline; 61.12 vs 71.21 AAE)
+  and ~15× cheaper for the pair. The published pair is a run of that default; the sol pair is a
+  replication at `maxSteps` 300, documented in [`docs/06`](docs/06-baseline-and-changelog.md) §3.
 - **Not built:** the artifact generator (reconstruction JSON is not yet rendered into OpenAPI and
   prose) and the standalone Verifier role.
 
@@ -339,7 +354,7 @@ Stated here rather than left for a judge to find. Longer list in
 | --- | --- | --- |
 | 01 | Complete solution code + Improvement Changelog | this repository · this README §6 · [`docs/06`](docs/06-baseline-and-changelog.md) |
 | 02 | Reproduction guide | [`docs/REPRODUCTION.md`](docs/REPRODUCTION.md) |
-| 03 | Solution video (≤ 5 min) | [`VIDEO-SCRIPT.md`](VIDEO-SCRIPT.md) |
+| 03 | Solution video (≤ 5 min) | to be recorded — the shot list is local working material, not in this repository |
 | 04 | Agent trajectories | `results/runs/<run-id>/` — `trajectory.jsonl`, `evidence/`, `meta.json`, `summary.json`; AAE additionally `claims.jsonl`, `gaps.jsonl`, `pages.jsonl`, `assemble-log.json`, `prompts/` |
 
 Rules-to-implementation matrix, including all ten ground rules:

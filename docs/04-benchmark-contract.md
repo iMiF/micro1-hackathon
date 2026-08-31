@@ -328,7 +328,7 @@ results/runs/<run-id>/
 An AAE run additionally carries its internal ledger: `claims.jsonl`, `gaps.jsonl`, `pages.jsonl`,
 `digest.json`, `assemble-log.json` and `prompts/`.
 
-`<run-id>` is `<system>-<utc-timestamp>`, e.g. `aae-2026-08-31T14-51-18-382Z`. The
+`<run-id>` is `<system>-<utc-timestamp>`, e.g. `aae-2026-08-31T16-04-43-124Z`. The
 `<system>-<case>-<seed>` form this section originally specified belongs to the runner, which was
 never built; runs are launched individually and scoped with `--all` rather than per case. The
 per-run `report.md` in the original list is likewise not produced — see

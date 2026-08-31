@@ -8,8 +8,10 @@
 
 This guide takes a judge from a clean machine to the headline number of this submission:
 
-> **baseline VARS 49.85 → AAE VARS 71.21** (+21.37) on the same model, same tool surface, same
-> budget — at 3.6× the cost and 3.3× the wall time.
+> **baseline VARS 33.56 → AAE VARS 61.12** (+27.57) on the shipped default `openai/gpt-5.6-luna`,
+> same tool surface, same budget — at 4.4× the cost and 2.5× the wall time. The same architecture
+> on `openai/gpt-5.6-sol` moved 49.85 → 71.21 (+21.37); that pair is a replication, not the default
+> (ADR-22).
 
 There are three paths, in increasing order of effort. **Path A needs no API key, no Docker and no
 network** and reproduces the headline number itself in about a minute, because scoring in this
@@ -18,8 +20,8 @@ project is deterministic. Paths B and C re-run the agents that produced the docu
 | Path | What it proves | Needs | Time | Cost |
 | --- | --- | --- | --- | --- |
 | **A — re-score the shipped runs** | The two numbers above come out of a deterministic program, not out of a claim | Node 22 | ~2 min | $0 |
-| **B — run the baseline yourself** | The baseline document is producible from the running target | + Docker, OpenRouter key | ~20 min | ~$1 |
-| **C — run AAE yourself** | The AAE document is producible from the running target | + Docker, OpenRouter key | ~35 min | ~$3.50 |
+| **B — run the baseline yourself** | The baseline document is producible from the running target | + Docker, OpenRouter key | ~15 min | ~$0.05 |
+| **C — run AAE yourself** | The AAE document is producible from the running target | + Docker, OpenRouter key | ~20 min | ~$0.22 |
 
 ---
 
@@ -104,14 +106,14 @@ the comparison itself can be re-derived from the shipped artifacts:
 ```bash
 # baseline
 node evaluator/bin/evaluate.mjs \
-  --submission results/runs/baseline-2026-08-31T14-45-38-777Z/reconstruction.json \
-  --meta       results/runs/baseline-2026-08-31T14-45-38-777Z/meta.json \
+  --submission results/runs/baseline-2026-08-31T16-00-44-545Z/reconstruction.json \
+  --meta       results/runs/baseline-2026-08-31T16-00-44-545Z/meta.json \
   --all --out /tmp/score-baseline
 
 # AAE
 node evaluator/bin/evaluate.mjs \
-  --submission results/runs/aae-2026-08-31T14-51-18-382Z/reconstruction.json \
-  --meta       results/runs/aae-2026-08-31T14-51-18-382Z/meta.json \
+  --submission results/runs/aae-2026-08-31T16-04-43-124Z/reconstruction.json \
+  --meta       results/runs/aae-2026-08-31T16-04-43-124Z/meta.json \
   --all --out /tmp/score-aae
 ```
 
@@ -119,23 +121,28 @@ Expected — identical to the `evaluation.json` already committed inside each ru
 
 | | baseline | AAE | Δ |
 | --- | --- | --- | --- |
-| **VARS (frozen)** | **49.85** | **71.21** | **+21.37** |
-| VARS (rejected_balanced) | 59.70 | 78.18 | +18.48 |
-| VARS (rejected_flat) | 59.14 | 79.00 | +19.86 |
-| operations F1 | 0.94 | 1.00 | |
-| parameters F1 | 0.91 | 0.93 | |
-| semantic_facts F1 | 0.14 (recall 0.08) | 0.43 (recall 0.30) | |
-| dependencies F1 | 0.53 | 0.68 | |
-| workflows F1 | 0.43 | 0.91 | |
-| hallucination rate | 0.12 | 0.18 | |
+| **VARS (frozen)** | **33.56** | **61.12** | **+27.57** |
+| VARS (rejected_balanced) | 41.68 | 67.49 | +25.81 |
+| VARS (rejected_flat) | 39.11 | 68.33 | +29.22 |
+| operations F1 | 0.84 | 0.96 | |
+| parameters F1 | 0.54 | 0.75 | |
+| semantic_facts F1 | 0.12 (recall 0.07) | 0.29 (recall 0.20) | |
+| dependencies F1 | 0.36 | 0.81 | |
+| workflows F1 | 0.10 | 0.61 | |
+| hallucination rate | 0.20 | 0.24 | |
 | evidence support rate | 1.00 | 1.00 | |
 | coverage | 1.00 | 1.00 | |
-| tool actions | 127 | 264 | 2.1× |
-| wall time | 5m26s | 18m12s | 3.3× |
-| cost | $0.92 | $3.32 | 3.6× |
+| tool actions | 69 | 137 | 2.0× |
+| wall time | 3m42s | 9m25s | 2.5× |
+| cost | $0.05 | $0.22 | 4.4× |
 
-Both runs are `openai/gpt-5.6-sol`, `temperature 0`, `maxSteps 300`, `wallClockMs 900000`,
-`maxTokens 32000`, scored with `--all`.
+Both runs are `openai/gpt-5.6-luna`, `temperature 0`, `maxSteps` 200, `wallClockMs` 900000,
+`maxTokens` 32000, scored with `--all` — a run of `config/run.default.json` with no model overlay
+(ADR-22).
+
+**Same architecture on `openai/gpt-5.6-sol`** (replication, `maxSteps` 300, not the default):
+baseline `…T14-45-38-777Z` VARS 49.85 / $0.92 vs AAE `…T14-51-18-382Z` VARS 71.21 / $3.32
+(+21.37). The sign and the categories of the gain are the same; luna is weaker and ~15× cheaper.
 
 **The ranking is the same under all three weight vectors.** Every invocation of the evaluator prints
 all three side by side, whichever one is active — this is the standing obligation from ADR-13, and it
@@ -226,14 +233,18 @@ Two environment switches exist for inspection and ablation; neither is used in a
 ## 6. Reproducing the exact scored pair
 
 `config/run.default.json` is the shared contract — **both systems read this one file**, and any field
-that differed between them would be a fairness violation. It currently pins
-`anthropic/claude-opus-4.6`, `maxSteps 200`, `maxCostUsd 5`.
+that differed between them would be a fairness violation. It pins `openai/gpt-5.6-luna`,
+`maxSteps 200`, `maxCostUsd 5` (ADR-22). The published pair in §3 uses that `model.id` and
+`maxSteps`. The ledger records `maxCostUsd` 10 (a local overlay); neither run spent more than
+$0.22, so the cap did not bind — and ADR-21 already exempts `maxCostUsd` from the fairness
+contract, because it stops a run rather than shaping it.
 
-**The scored pair in §3 was not run under those defaults.** It was run under a local overlay:
-`openai/gpt-5.6-sol`, `maxSteps 300`, `maxCostUsd 10` — chosen because a comparison is only honest
-inside one model and one budget, and that pair was the one that fit the remaining time and spend.
-The deviation is recorded here rather than smoothed over. To reproduce it, create the gitignored
-overlay `config/run.local.json`, which is deep-merged over the defaults by
+To reproduce it: §2.4's reset, `npm run baseline:run`, reset again, `npm run aae:run`, and score
+both with `--all`. `MINICRM_URL`, `AAE_EMAIL` and `AAE_PASSWORD` override the target and
+credentials on top of that, for pointing the harness at something that is not the local sandbox.
+
+**The sol replication** (49.85 → 71.21) was not run under those defaults. It used a gitignored
+`config/run.local.json` overlay, deep-merged over the defaults by
 `tooling/config/run.ts → loadRunConfig`:
 
 ```json
@@ -243,11 +254,9 @@ overlay `config/run.local.json`, which is deep-merged over the defaults by
 }
 ```
 
-Then run §2.4's reset, `npm run baseline:run`, reset again, `npm run aae:run`, and score both with
-`--all`.
-
-`MINICRM_URL`, `AAE_EMAIL` and `AAE_PASSWORD` override the target and credentials on top of that,
-for pointing the harness at something that is not the local sandbox.
+That overlay is how to reproduce the sol pair, not how to reproduce the headline numbers. Luna is
+the default because it is the model a judge hits without an overlay, and because the architecture's
+delta does not depend on which of the two was used.
 
 ---
 
@@ -304,10 +313,10 @@ These are mechanical, not promises:
 | `npx playwright install chromium` | ~1 min | — |
 | `npm run db:reset` | seconds | — |
 | Path A: re-score both runs + evaluator test suite | < 2 min | $0 |
-| Path B: one baseline run | 5–6 min (ours: 5m26s / 127 actions) | ~$0.92 |
-| Path C: one AAE run | 15–20 min (ours: 18m12s / 264 actions) | ~$3.32 |
+| Path B: one baseline run | 3–5 min (ours: 3m42s / 69 actions) | ~$0.05 |
+| Path C: one AAE run | 8–12 min (ours: 9m25s / 137 actions) | ~$0.22 |
 
-Budget roughly **$5 and 45 minutes** to walk the whole guide including both live runs, and about
+Budget roughly **$1 and 30 minutes** to walk the whole guide including both live runs, and about
 **five minutes and nothing** to verify the headline claim by re-scoring what ships in the repo.
 
 `maxCostUsd` in the run config is a hard per-run spend guard checked before every model call — lower
@@ -338,13 +347,15 @@ them:
   corpus — not as 15 per-case scores. `--case <id>` scoring works today
   (`node evaluator/bin/evaluate.mjs --submission ... --case case-09-create-order-workflow`) and the
   15 case ids are in `miniCRM/benchmark/cases.json`; what is missing is the orchestration around it.
-- **The default model has never been scored.** `config/run.default.json` pins
-  `anthropic/claude-opus-4.6` and no run against it exists. §6 is the honest route to our numbers.
+- **The default model is the cheap one.** `config/run.default.json` pins `openai/gpt-5.6-luna`
+  (ADR-22). It scores lower than sol on both systems; the architecture's delta does not. The sol
+  pair in [`06`](06-baseline-and-changelog.md) §3 is a replication at `maxSteps` 300, reproduced
+  via the overlay in §6, not via the defaults.
 - **The B1 point is not measured.** The prompt-vs-architecture ablation described in
   [`06`](06-baseline-and-changelog.md) §3 has a design but no run, so "the gain is architectural,
   not prompt engineering" is currently an argument, not a measurement.
-- **Single pair, not a distribution.** One baseline run and one AAE run. Variance across repeats is
-  unmeasured.
+- **Single pair, not a distribution.** One baseline run and one AAE run on the default. Variance
+  across repeats is unmeasured.
 
 ---
 
