@@ -94,14 +94,34 @@ Anything else is an object whose keys come from the published
 `semanticFactValue` vocabulary in the schema (for example `matches`,
 `accepts`, `csrf`, `effect`, `rounding`).
 
-Dependency field references use the published prefixes: `header:`,
-`cookie:`, `Set-Cookie:`, `query.` for query-string parameters (e.g. a
-dependency whose target is `GET /api/regions?country=US` should reference
-`query.country`, not a bare `country`), and `$.` JSONPath for body fields
-(e.g. `$.quoteId`, not a bare `quoteId`). A bare `{id}`-style value with no
-prefix is also allowed when the dependency is "this path parameter came
-from that field" — its placeholder name does not affect scoring either, see
-above.
+## How matching keys are built
+
+The evaluator compares canonical keys, not prose. Write keys in this grammar
+— it is the language of the answer, not a list of answers.
+
+**JSONPath.** Body fields: `$.field`. Arrays: `$.items[].productId` (not a
+bare `quoteId`). A captured `[0]` or `[*]` is the same field; write `[]`.
+
+**Dependencies.** Prefixes: `header:`, `cookie:`, `Set-Cookie:`, `query.`
+for query-string parameters (a call to `GET /api/regions?country=US`
+references `query.country`, not a bare `country`), and `$.` JSONPath for
+bodies. A bare `{id}` means "this path parameter came from that field" —
+the placeholder name does not affect scoring. Use `*` as
+`target_operation` when the artifact is sent on every subsequent matching
+request (session cookie, CSRF), not when you observed one consumer.
+
+**Subjects.** One of: `METHOD /path`, `METHOD /path?param`, a dotted JSON
+path taken from a body you saw (`order.statusId`), `header:Name`,
+`cookie:name`, `Set-Cookie:name`, `query.param`. A `*` suffix on a field
+path means every field sharing that suffix (`*Cents`). `ui.` is only for
+client-only timing with no HTTP token.
+
+**Workflows.** One `user_goal` per workflow. Do not include post-success
+navigation (`role: refresh`). `auth` and `required_business` are the same
+slot for login/logout.
+
+**Parameters.** A query parameter the UI always sends is not therefore
+`required`.
 
 Look at status codes, error `code` fields, cookies that appear after login,
 CSRF headers, query parameters, and request/response bodies. Record

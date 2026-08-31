@@ -96,16 +96,49 @@ export function normalizeOperationRef(ref) {
  * ("POST /api/auth/login", "PATCH /api/orders/{id}/status", ...). Where a
  * subject looks like one, apply the same operation normalization so an agent
  * that writes an equivalent but differently-formatted operation string still
- * matches. Anything else (e.g. "auth.cookie", "order snapshots") is only
- * whitespace-trimmed -- no case-folding, because subjects like "*Cents" and
- * "order.paymentStatus" are case-sensitive field-path-shaped tokens.
+ * matches.
+ *
+ * Rule 8 (docs/04 §4, ADR-16): when the subject is an operation plus a query
+ * parameter written in one of the three observationally equivalent forms
+ * (`METHOD /path?param`, `METHOD /path param`, `METHOD /path query.param`),
+ * canonicalize to `METHOD /normalizedPath?param`. `GET /api/customers/suggest`
+ * is not rewritten -- `suggest` is a path segment, not a trailing query name.
+ *
+ * Anything else (e.g. "cookie:sid", "order.paymentStatus", "*Cents") is only
+ * whitespace-trimmed -- no case-folding, because field-path-shaped tokens are
+ * case-sensitive.
  */
 export function normalizeSubject(subject) {
   if (typeof subject !== 'string') return subject;
   const trimmed = subject.trim();
   const looksLikeOperation = /^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+\S/i.test(trimmed);
-  if (looksLikeOperation) return normalizeOperationRef(trimmed);
-  return trimmed;
+  if (!looksLikeOperation) return trimmed;
+  const m = trimmed.match(/^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+(.+)$/i);
+  if (!m) return normalizeOperationRef(trimmed);
+  const method = m[1].toUpperCase();
+  let rest = m[2].trim();
+  let param = null;
+  const queryDot = rest.match(/^(\/\S+)\s+query\.(\w+)$/i);
+  if (queryDot) {
+    rest = queryDot[1];
+    param = queryDot[2];
+  } else {
+    const spaceParam = rest.match(/^(\/[^\s?]+)\s+(\w+)$/);
+    if (spaceParam) {
+      rest = spaceParam[1];
+      param = spaceParam[2];
+    }
+  }
+  const qIdx = rest.indexOf('?');
+  let pathPart = rest;
+  if (qIdx >= 0) {
+    const qs = rest.slice(qIdx + 1);
+    pathPart = rest.slice(0, qIdx);
+    if (!param) param = qs.split('&')[0].split('=')[0];
+  }
+  const path = normalizePath(pathPart);
+  if (param) return `${method} ${path}?${param}`;
+  return `${method} ${path}`;
 }
 
 /**
@@ -127,6 +160,16 @@ export function normalizeSubject(subject) {
  * Same ambiguity as Rule 1 (an agent cannot always recover which of the
  * published placeholder names ground truth chose for a given route), so it
  * gets the same treatment: collapsed to a bare `{}` for matching.
+ *
+ * Rule 7 (docs/04 §4, ADR-16): JSONPath array indexes are wildcarded. An
+ * agent that copies `$.id` off a selected object, `$[].id` off an array
+ * body, `$[*].id` (standard JSONPath), or `$.items[0].productId` off one
+ * captured request is naming the same field. Concrete indexes, empty
+ * brackets, and `*` all collapse to `[]`; a root `$[]` / `$[*]` prefix
+ * (ground truth's `$[].id`) collapses to `$.` so it matches `$.id`.
+ * Applied only to `$`-prefixed refs -- `query.`, `header:`, `cookie:` are
+ * untouched here. `*` as a *target operation* is a different slot and is
+ * not unified with a concrete endpoint.
  */
 export function normalizeFieldRef(ref) {
   if (typeof ref !== 'string') return ref;
@@ -144,7 +187,18 @@ export function normalizeFieldRef(ref) {
   if (/^\{.*\}$/.test(trimmed)) {
     return '{}';
   }
+  if (trimmed.startsWith('$')) {
+    return normalizeJsonPath(trimmed);
+  }
   return trimmed;
+}
+
+/** Collapse JSONPath array indexes to `[]` and a root `$[]` prefix to `$.`. */
+export function normalizeJsonPath(path) {
+  let s = path.replace(/\[(\d+|\*)?\]/g, '[]');
+  s = s.replace(/^\$\[\]\.?/, '$.');
+  if (s === '$.') return '$';
+  return s;
 }
 
 const UNORDERED_VALUE_KEYS = new Set(['to', 'accepts', 'matches', 'requires', 'base', 'excludedStatusIds']);
@@ -167,12 +221,24 @@ export function normalizeValue(value) {
   const out = {};
   for (const [k, v] of Object.entries(value)) {
     if (Array.isArray(v) && UNORDERED_VALUE_KEYS.has(k)) {
-      out[k] = v.map(normalizeValue).slice().sort((a, b) => stableStringify(a).localeCompare(stableStringify(b)));
+      const items = k === 'accepts' ? v.map(coerceAcceptsItem) : v.map(normalizeValue);
+      out[k] = items.slice().sort((a, b) => stableStringify(a).localeCompare(stableStringify(b)));
     } else {
       out[k] = normalizeValue(v);
     }
   }
   return out;
+}
+
+/**
+ * Rule 8 (docs/04 §4, ADR-16): query strings on the wire are `"true"` / `"false"`
+ * while JSON and ground truth use booleans. Only applied inside `accepts`,
+ * never to free-text enum values like `"unpaid"`.
+ */
+function coerceAcceptsItem(v) {
+  if (v === 'true') return true;
+  if (v === 'false') return false;
+  return normalizeValue(v);
 }
 
 /** Deterministic JSON stringification with sorted object keys, used to build

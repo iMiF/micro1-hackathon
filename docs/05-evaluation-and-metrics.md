@@ -1,7 +1,7 @@
 # 05. Evaluation and metrics
 
-> **Status:** draft (evaluator not implemented; weights need approval — ADR-2)
-> **Updated:** 2026-08-30
+> **Status:** active — evaluator implemented; weights frozen (ADR-13); matching normal form ADR-16
+> **Updated:** 2026-08-31
 > **Source of truth:** brief §"How to evaluate your solution"; `miniCRM/benchmark/schemas/reconstruction-output.schema.json`
 > **Maps to criteria:** Measured Improvement (15), Reproducibility (15)
 
@@ -30,7 +30,7 @@ order as shipped." Instead, the agent submits a **machine-readable fact**:
   "semantic_facts": [{
     "id": "fact-order-status-40",
     "kind": "enum_mapping",
-    "subject": "order.status_id",
+    "subject": "order.statusId",
     "value": 40,
     "meaning": "Order is shipped.",
     "confidence": 0.96,
@@ -84,10 +84,10 @@ in [`04`](04-benchmark-contract.md) §3.
 | Category | Matching unit | Weight | Rationale |
 | --- | --- | ---: | --- |
 | Operations and paths | method + normalized path | 0.15 | A proxy capture already gives you this |
-| Parameters and schemas | operation + location + name + type + required | 0.15 | Necessary, but also recoverable from a capture |
+| Parameters and schemas | operation + location + name + type | 0.15 | Necessary, but also recoverable from a capture |
 | Semantic facts | `kind` + `subject` + `value` | 0.35 | The core value: what a HAR file doesn't give you |
 | Dependencies and rules | `dependencies` + `business_constraint` | 0.20 | The hidden links that break integrations |
-| Workflows | sequence of steps | 0.15 | Whole user scenarios |
+| Workflows | ordered steps; `refresh` dropped (ADR-16) | 0.15 | Whole user scenarios |
 
 > **Frozen before any scored run** (ADR-13, 2026-08-30) and not revisited afterward. Sub-weights
 > inside `semantic_facts` were considered and rejected: nine `kind` values with individual weights

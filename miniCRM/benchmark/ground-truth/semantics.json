@@ -3,7 +3,7 @@
     {
       "id": "sem-session-cookie",
       "kind": "auth",
-      "subject": "auth.cookie",
+      "subject": "cookie:sid",
       "value": "sid",
       "meaning": "POST /api/auth/login sets an HttpOnly sid cookie (Path=/, SameSite=Lax) used as the session identifier.",
       "provenance": [
@@ -14,7 +14,7 @@
     {
       "id": "sem-csrf-header",
       "kind": "auth",
-      "subject": "auth.csrf",
+      "subject": "header:X-CSRF-Token",
       "value": "X-CSRF-Token",
       "meaning": "POST, PATCH, PUT, and DELETE under /api require header X-CSRF-Token equal to csrfToken from login or GET /api/auth/session. GET does not send it.",
       "provenance": [
@@ -57,7 +57,7 @@
     {
       "id": "sem-csrf-invalid",
       "kind": "auth",
-      "subject": "mutating /api",
+      "subject": "header:X-CSRF-Token",
       "value": "CSRF_TOKEN_INVALID",
       "meaning": "Mutating requests with a missing or mismatched CSRF header return 403 CSRF_TOKEN_INVALID.",
       "provenance": [
@@ -470,7 +470,7 @@
     {
       "id": "sem-snapshots",
       "kind": "business_constraint",
-      "subject": "order snapshots",
+      "subject": "order.customerNameSnapshot",
       "value": true,
       "meaning": "Orders store customerNameSnapshot, customerEmailSnapshot, addressSnapshot, and per-item sku/name/price snapshots that do not change if the live customer or product is later edited.",
       "provenance": [
@@ -483,7 +483,6 @@
       "kind": "business_constraint",
       "subject": "products.stockQty",
       "value": {
-        "field": "stockQty",
         "effect": "decrease"
       },
       "meaning": "Creating an order decrements product stock by each line quantity.",
@@ -496,7 +495,6 @@
       "kind": "business_constraint",
       "subject": "products.stockQty",
       "value": {
-        "field": "stockQty",
         "effect": "restore"
       },
       "meaning": "Deleting a draft order adds line quantities back to product stock.",
@@ -767,7 +765,7 @@
     {
       "id": "sem-pagination-page",
       "kind": "query_semantics",
-      "subject": "page",
+      "subject": "query.page",
       "value": 1,
       "meaning": "page is 1-based. Invalid values fall back to 1. List UIs reset page to 1 when search text changes.",
       "provenance": [
@@ -778,7 +776,7 @@
     {
       "id": "sem-pagination-page-size",
       "kind": "query_semantics",
-      "subject": "pageSize",
+      "subject": "query.pageSize",
       "value": 20,
       "meaning": "Default and UI list size is 20, max 100. Dashboard recent orders uses pageSize=5.",
       "provenance": [
@@ -789,7 +787,7 @@
     {
       "id": "sem-suggest-limit",
       "kind": "query_semantics",
-      "subject": "suggest",
+      "subject": "GET /api/customers/suggest",
       "value": 10,
       "meaning": "Customer and product suggest endpoints cap results at 10.",
       "provenance": [

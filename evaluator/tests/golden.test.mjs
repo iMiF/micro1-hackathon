@@ -321,6 +321,161 @@ test('bare {param} dependency field references are also wildcarded, same rule as
   assert.equal(c.fn, 0);
 });
 
+test('ADR-16: JSONPath array indexes and root $[] collapse -- grok/sol near-miss (docs/04 §4 rule 7)', () => {
+  const scope = { operations: [], facts: [], dependencies: [
+    { id: 'dep-customer-suggest-to-addresses', source_operation: 'GET /api/customers/suggest', source_field: '$[].id', target_operation: 'GET /api/customers/{customerId}/addresses', target_field: '{customerId}' },
+    { id: 'dep-product-suggest-to-shipping', source_operation: 'GET /api/products/suggest', source_field: '$[].id', target_operation: 'POST /api/shipping/options', target_field: '$.items[].productId' },
+    { id: 'dep-shipping-method-to-quote', source_operation: 'POST /api/shipping/options', source_field: '$.options[].methodId', target_operation: 'POST /api/order-quotes', target_field: '$.shippingMethodId' },
+    { id: 'dep-csrf-from-session', source_operation: 'GET /api/auth/session', source_field: '$.csrfToken', target_operation: '*', target_field: 'header:X-CSRF-Token' },
+  ], workflows: [], unknownIds: [], scope: 'test' };
+  const doc = emptyDoc({
+    dependencies: [
+      { id: 'q1', source_operation: 'GET /api/customers/suggest', source_field: '$.id', target_operation: 'GET /api/customers/{customerId}/addresses', target_field: '{customerId}', evidence: ev('network_request') },
+      { id: 'q2', source_operation: 'GET /api/products/suggest', source_field: '$.id', target_operation: 'POST /api/shipping/options', target_field: '$.items[0].productId', evidence: ev('network_request') },
+      { id: 'q3', source_operation: 'POST /api/shipping/options', source_field: '$.options[*].methodId', target_operation: 'POST /api/order-quotes', target_field: '$.shippingMethodId', evidence: ev('network_request') },
+      { id: 'q4', source_operation: 'GET /api/auth/session', source_field: '$.csrfToken', target_operation: 'PATCH /api/orders/{id}/status', target_field: 'header:x-csrf-token', evidence: ev('header') },
+    ],
+  });
+  const { evaluation } = run(doc, scope);
+  const c = evaluation.categories.dependencies;
+  assert.equal(c.tp, 3, '$.id / $[].id / [0] / [*] must unify; got tp=' + c.tp);
+  assert.equal(c.fp, 1, 'a concrete CSRF consumer must NOT match target *');
+  assert.equal(c.fn, 1);
+});
+
+test('ADR-16: query-parameter subjects canonicalize; accepts "true"/"false" coerce; incomplete matches stay FN (docs/04 §4 rule 8)', () => {
+  const scope = scopeWithFacts([
+    { id: 'sem-customer-q', kind: 'query_semantics', subject: 'GET /api/customers?q', value: { matches: ['firstName', 'lastName', 'email'] }, meaning: 'm' },
+    { id: 'sem-customer-archived-filter', kind: 'query_semantics', subject: 'GET /api/customers?archived', value: { accepts: [true, false, null] }, meaning: 'm' },
+    { id: 'sem-suggest', kind: 'query_semantics', subject: 'GET /api/customers/suggest', value: { forced: { archived: false } }, meaning: 'm' },
+  ]);
+  const docMatch = emptyDoc({
+    semantic_facts: [
+      { id: 'p1', kind: 'query_semantics', subject: 'GET /api/customers q', value: { matches: ['firstName', 'lastName', 'email'] }, meaning: 'm', evidence: ev('network_request') },
+      { id: 'p2', kind: 'query_semantics', subject: 'GET /api/customers query.archived', value: { accepts: ['false', 'true', null] }, meaning: 'm', evidence: ev('network_request') },
+      { id: 'p3', kind: 'query_semantics', subject: 'GET /api/customers/suggest', value: { forced: { archived: false } }, meaning: 'm', evidence: ev('network_request') },
+    ],
+  });
+  const { evaluation: evMatch } = run(docMatch, scope);
+  assert.equal(evMatch.categories.semantic_facts.tp, 3);
+  assert.equal(evMatch.categories.semantic_facts.fp, 0);
+  assert.equal(evMatch.categories.semantic_facts.fn, 0);
+
+  const docIncomplete = emptyDoc({
+    semantic_facts: [
+      { id: 'p1', kind: 'query_semantics', subject: 'GET /api/customers q', value: { matches: ['firstName'] }, meaning: 'm', evidence: ev('network_request') },
+    ],
+  });
+  const { evaluation: evInc } = run(docIncomplete, scope);
+  assert.equal(evInc.categories.semantic_facts.tp, 0, 'a shorter matches list is different content, not notation');
+  assert.equal(evInc.categories.semantic_facts.fp, 1);
+  assert.equal(evInc.categories.semantic_facts.fn, 3);
+});
+
+test('ADR-16: parameter required is not in the matching key (docs/04 §4 rule 9) -- sol near-miss', () => {
+  const scope = {
+    operations: [{
+      id: 'op-customers-list',
+      method: 'GET',
+      path: '/api/customers',
+      parameters: [
+        { name: 'page', location: 'query', type: 'integer', required: false },
+        { name: 'q', location: 'query', type: 'string', required: false },
+      ],
+    }],
+    facts: [], dependencies: [], workflows: [], unknownIds: [], scope: 'test',
+  };
+  const doc = emptyDoc({
+    operations: [{
+      method: 'GET',
+      path: '/api/customers',
+      parameters: [
+        { name: 'page', location: 'query', type: 'integer', required: true },
+        { name: 'q', location: 'query', type: 'string', required: true },
+        { name: 'invented', location: 'query', type: 'string', required: false },
+      ],
+      evidence: ev('network_request'),
+    }],
+  });
+  const { evaluation } = run(doc, scope);
+  const c = evaluation.categories.parameters;
+  assert.equal(c.tp, 2, 'required true vs false must not split a real parameter');
+  assert.equal(c.fp, 1, 'an invented parameter is still FP');
+  assert.equal(c.fn, 0);
+});
+
+test('ADR-16: workflow refresh steps dropped; auth role maps to required_business; extra PATCH lifecycle stays FN (docs/04 §4 rule 10)', () => {
+  const scope = {
+    operations: [], facts: [], dependencies: [],
+    workflows: [
+      {
+        id: 'wf-create-order',
+        user_goal: 'Create an order for an existing customer',
+        steps: [
+          { id: 's1', operation: 'GET /api/customers/suggest', role: 'auxiliary_lookup' },
+          { id: 's2', operation: 'GET /api/customers/{customerId}/addresses', role: 'auxiliary_lookup' },
+          { id: 's3', operation: 'GET /api/products/suggest', role: 'auxiliary_lookup' },
+          { id: 's4', operation: 'POST /api/shipping/options', role: 'auxiliary_lookup' },
+          { id: 's5', operation: 'POST /api/order-quotes', role: 'required_business' },
+          { id: 's6', operation: 'POST /api/orders', role: 'required_business' },
+        ],
+      },
+      {
+        id: 'wf-login',
+        user_goal: 'Sign in as staff',
+        steps: [{ id: 's1', operation: 'POST /api/auth/login', role: 'required_business' }],
+      },
+    ],
+    unknownIds: [], scope: 'test',
+  };
+  const doc = emptyDoc({
+    workflows: [
+      {
+        id: 'w1',
+        user_goal: 'Create a priced draft order',
+        steps: [
+          { operation: 'GET /api/customers/suggest', role: 'auxiliary_lookup' },
+          { operation: 'GET /api/customers/{customerId}/addresses', role: 'auxiliary_lookup' },
+          { operation: 'GET /api/products/suggest', role: 'auxiliary_lookup' },
+          { operation: 'POST /api/shipping/options', role: 'auxiliary_lookup' },
+          { operation: 'POST /api/order-quotes', role: 'required_business' },
+          { operation: 'POST /api/orders', role: 'required_business' },
+          { operation: 'GET /api/orders/{id}', role: 'refresh' },
+          { operation: 'GET /api/orders/{id}/activity', role: 'refresh' },
+        ],
+        evidence: ev('network_request'),
+      },
+      {
+        id: 'w2',
+        user_goal: 'Sign in and view dashboard',
+        steps: [
+          { operation: 'POST /api/auth/login', role: 'auth' },
+          { operation: 'GET /api/auth/session', role: 'auth' },
+          { operation: 'GET /api/dashboard/summary', role: 'required_business' },
+          { operation: 'GET /api/orders', role: 'refresh' },
+        ],
+        evidence: ev('network_request'),
+      },
+      {
+        id: 'w3',
+        user_goal: 'Advance a draft order to shipped',
+        steps: [
+          { operation: 'PATCH /api/orders/{id}/status', role: 'required_business' },
+          { operation: 'PATCH /api/orders/{id}/status', role: 'required_business' },
+          { operation: 'PATCH /api/orders/{id}/status', role: 'required_business' },
+        ],
+        evidence: ev('network_request'),
+      },
+    ],
+  });
+  const { evaluation, diff } = run(doc, scope);
+  const c = evaluation.categories.workflows;
+  assert.equal(c.tp, 1, 'create-order plus trailing refresh must match; login+dashboard must not collapse to login-only');
+  assert.equal(diff.categories.workflows.matched[0].ground_truth_id, 'wf-create-order');
+  assert.equal(c.fp, 2, 'bundled login+dashboard and three-PATCH lifecycle stay spurious');
+  assert.equal(c.fn, 1, 'wf-login remains unmatched');
+});
+
 test('dependency field references: query. is a declared prefix (docs/04 §4 rule 6, added 2026-08-30), case-sensitive like $.', () => {
   // Ground truth's dep-country-to-regions uses target_field "query.country",
   // sourced from the live route (miniCRM/apps/api/src/routes/geo.ts reads

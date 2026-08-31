@@ -1,7 +1,7 @@
 # 11. Decision log and open questions
 
 > **Status:** active — updated as the project proceeds
-> **Updated:** 2026-08-30
+> **Updated:** 2026-08-31
 
 Two lists: accepted decisions (ADR) and open questions (OQ). A decision is never deleted or
 rewritten — it gets a `superseded` status and a link to the new one. That way it stays visible why
@@ -336,11 +336,13 @@ still matches ground truth on `kind` + `subject` + `value` with 0 FP and 0 FN. S
 fell from 40 of 71 to 22, and all 22 are observable tokens (error codes, `sid`, `X-CSRF-Token`,
 `paid` / `refunded`, `30d`).
 
-**Residual, not fixed.** `dependencies.json` matches on field references written in a notation the
-agent must also reproduce — `header:X-CSRF-Token`, `cookie:sid`, `$.csrfToken`. Smaller than the
-`value` problem and fixable by publishing the prefix convention in
-[`04`](04-benchmark-contract.md) §4 rather than by restructuring. `workflows.json` matches on
-operation sequences and is unaffected.
+**Residual, closed by ADR-16 (2026-08-31).** The leftover was not fuzzy matching: it was the same
+class of problem ADR-14 named — two careful observers of one capture writing different strings for
+the same field (`$[].id` vs `$.id` vs `$.items[0].productId`), plus author-coined *subjects*
+(`auth.cookie`, bare `page`) that no amount of prefix documentation would have made guessable.
+ADR-16 gives those strings a unique published normal form and rewrites the remaining coined
+subjects onto the same grammar. The prefix convention in [`04`](04-benchmark-contract.md) §4 rule 6
+stays; it was never enough on its own.
 
 ---
 
@@ -379,6 +381,89 @@ sloppiness.
 — target untouched, identical for both systems, revertible in one line — if a reason ever appears to
 require the agent to actually use the credentials it was given. It would have to be recorded as a
 deviation under [`04`](04-benchmark-contract.md) §5.
+
+---
+
+### ADR-16 — Matching keys have a unique published normal form for observationally equivalent notation
+
+**Date:** 2026-08-31 · **Status:** accepted · **Closes residual of:** ADR-14
+
+**Context.** Scored baseline reconstructions (grok-4.6 `…T05-55-35-991Z`, gpt-5.6-sol
+`…T05-43-17-477Z` / `…T06-13-01-592Z`, sonnet-5 `…T05-30-26-386Z`) recovered the right *edges and
+sequences* and still scored FN+FP because the matching key demanded the author's spelling. Concrete
+near-misses, verified from `diff.json`, not inferred:
+
+- dependencies: `$[].id` (ground truth) vs `$.id` / `$.items[0].productId` / `$.items[*].productId`
+  (the last is standard JSONPath; Sol wrote it and still lost);
+- workflows: create-order submitted as ground truth's six steps plus the two GETs the UI actually
+  fires after success — the extra `refresh` steps zeroed the whole workflow;
+- parameters: `page` / `q` / `country` always sent by the UI, marked `required: true` by the agent
+  and `required: false` by ground truth;
+- semantic_facts: `GET /api/customers q` vs `GET /api/customers?q`; `"true"` vs `true` in `accepts`.
+
+ADR-14 already named this "measuring telepathy." It closed coined *values*. The leftover was
+notation that a careful observer of one capture can write several ways, and a handful of coined
+*subjects* (`auth.cookie`, `mutating /api`, `order snapshots`, bare `page`).
+
+Filling `canonical-vocabulary.json` aliases with those near-miss strings would be an answer key.
+Prompting the 71 facts would be an answer key. An LLM judge mixed into VARS would break
+Reproducibility. Subsequence matching of workflows would let one mega-workflow of the session
+collect every one-step ground-truth row. Unifying `*` with a concrete CSRF consumer would credit a
+weaker claim as the universal one.
+
+**Decision.** A matching key may contain only (a) a token observable in traffic or the UI, (b) a
+closed published vocabulary (`kind`, role enum, `semanticFactValue` keys), or (c) a structural
+relation with **one** published normal form. If two careful agents, looking at the same capture,
+can honestly write different strings, those strings reduce to one key. If they assert different
+*content* (incomplete `to: [20]`, incomplete `matches`, CSRF on one route instead of `*`), that
+stays FN/FP.
+
+Four normalizers, all in `evaluator/src/normalize.mjs` / `match.mjs`, declared as
+[`04`](04-benchmark-contract.md) §4 rules 7–10:
+
+1. JSONPath array indexes collapse to `[]`; a root `$[]` / `$[*]` prefix collapses to `$.`.
+2. Query-parameter subjects canonicalize to `METHOD /path?param`; `accepts` `"true"`/`"false"`
+   coerce to booleans.
+3. Parameter matching drops `required`.
+4. Workflow matching drops `role: refresh` steps and maps `auth` → `required_business`.
+
+Ground-truth subjects that were still author-coined and not a structural variant (`auth.cookie` →
+`cookie:sid`, `auth.csrf` → `header:X-CSRF-Token`, `mutating /api` → `header:X-CSRF-Token` with the
+error-code value, `order snapshots` → `order.customerNameSnapshot`, `page` / `pageSize` →
+`query.page` / `query.pageSize`, `suggest` → `GET /api/customers/suggest` with value `10`) are
+rewritten onto that grammar. Redundant `value.field` copies of the subject (`stockQty` on
+`products.stockQty`) are dropped. `*Cents` and `ui.search` stay: the first is a published suffix
+wildcard for every JSON field sharing that suffix; the second is a client-only timing fact with no
+HTTP token, and `ui.` is a declared prefix for that case only. No per-fact aliases.
+
+The agent-facing prompt gets the **grammar** of a key (how to write JSONPath, `*`, subjects,
+one-goal workflows, always-sent ≠ required). It does not get the 71 facts.
+
+**Weights are not revisited (ADR-13).** This is the same class of fix as erasing `{id}` vs
+`{customerId}`: the unit does not change, only the normal form of the string inside it. Existing
+`reconstruction.json` files are re-scored; the pre-ADR-16 VARS is kept in [`06`](06-baseline-and-changelog.md)
+in parentheses.
+
+**Rejected, with the reason kept.**
+
+- Per-fact aliases of model phrasing (`mutating API routes` → `header:X-CSRF-Token`) — an answer
+  key, and it would grow with every new wording.
+- Workflow subsequence / "contains GT" — gameable by dumping the session as one workflow.
+- `*` = a concrete target operation — over-credits a weaker claim.
+- Subset matching of `value` objects — an empty object would match everything.
+- Prompt-only dialect instructions — Sol already wrote correct `[*]` JSONPath and still lost;
+  old runs could not be re-scored.
+
+**Verified by execution.** Golden tests in `evaluator/tests/golden.test.mjs` lock each rule to a
+near-miss taken from the scored diffs (not a synthetic that could only pass the new code).
+`perfect-reconstruction.json` still scores VARS = 100 on all three weight vectors. Incomplete
+content (`matches: ["firstName"]` vs the three-field ground truth; `to: [20]` vs `[20, 50]`; CSRF
+to one PATCH vs `*`) still scores FP+FN.
+
+**Consequences.** AAE iterations must win on facts the baseline did not *find* (error codes, tax
+table, quote TTL), not on guessing `$[]`. The next baseline run uses the same grammar in the
+prompt; the official scored number is the re-score of reconstructions already submitted, so the
+prompt change is not mixed into that figure.
 
 ---
 

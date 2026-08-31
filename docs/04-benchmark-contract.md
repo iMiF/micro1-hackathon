@@ -1,7 +1,7 @@
 # 04. Public benchmark contract
 
-> **Status:** active (cases and schema exist; runner and evaluator do not)
-> **Updated:** 2026-08-30
+> **Status:** active (cases, schema, and evaluator exist)
+> **Updated:** 2026-08-31
 > **Source of truth:** `miniCRM/benchmark/cases.json`, `miniCRM/benchmark/schemas/reconstruction-output.schema.json`, `miniCRM/benchmark/README.md`
 > **Maps to criteria:** Reproducibility (15), Measured Improvement (15)
 
@@ -104,10 +104,10 @@ Optional: `benchmark_name`, `reconstructed_at`, `notes`, `components`, `confiden
 | Section | Unit | Example |
 | --- | --- | --- |
 | `operations` | method + normalized path | `PATCH /api/orders/{id}/status` |
-| `operations[].parameters` | operation + location + name + type + required | `query.status: integer` |
-| `semantic_facts` | `kind` + `subject` + `value` | `enum_mapping / order.status_id / 40` |
+| `operations[].parameters` | operation + location + name + type | `query.status: integer` |
+| `semantic_facts` | `kind` + `subject` + `value` | `enum_mapping / order.statusId / 40` |
 | `dependencies` | source → artifact → consumer | `POST /api/order-quotes → quoteId → POST /api/orders` |
-| `workflows` | sequence of steps with roles | order creation |
+| `workflows` | ordered `(operation, role)` sequence, `refresh` steps dropped | order creation |
 | `claims` | statement + confidence + nested `evidence` | see [`08`](08-evidence-and-trajectories.md) |
 
 ### Evidence model
@@ -192,10 +192,38 @@ normalization rules are public and the agent is aware of them:
    (`request.query.country` in `miniCRM/apps/api/src/routes/geo.ts`), it just was never added to
    this list or to the agent-facing prompt. A bare `{param}` value (no prefix) is also allowed, and
    is normalized the same way as path-parameter names in rule 1 below -- same reasoning, same fix.
+7. **JSONPath array indexes in dependency field references are wildcarded (ADR-16).** `$[].id`,
+   `$.id`, `$[*].id`, `$.items[0].productId` and `$.items[*].productId` all reduce to the same
+   form (`$.id` / `$.items[].productId`). An agent that copies a concrete index from one captured
+   body, or writes standard JSONPath `[*]`, or copies ground truth's `$[]`, is describing the same
+   field. Source and target *operations* stay exact — this is not a license to match the wrong
+   edge. `*` as a target operation is **not** unified with a concrete endpoint: naming one consumer
+   is a weaker claim than "all subsequent matching requests."
+8. **Query-parameter subjects** for `semantic_facts` canonicalize to `METHOD /normalizedPath?param`
+   (ADR-16). `GET /api/customers q`, `GET /api/customers query.archived`, and
+   `GET /api/customers?archived` are one key; `GET /api/customers/suggest` is not rewritten, because
+   `suggest` is a path segment, not a trailing query name. Inside `value.accepts`, the strings
+   `"true"` / `"false"` coerce to booleans — query strings on the wire are strings, JSON bodies
+   and ground truth use booleans, and that distinction is not observable as a different fact.
+9. **Parameter `required` is not part of the matching key (ADR-16).** The unit is operation +
+   location + name + type. A UI that always sends `page` / `pageSize` / `q` makes those parameters
+   look required; ground truth marks them optional. The agent cannot recover the flag from the
+   browser. Inventing a parameter that does not exist is still FP; omitting one that does is still
+   FN. The field stays in the schema as documentation.
+10. **Workflow `refresh` steps are dropped from the matching key; role `auth` is scored as
+    `required_business` (ADR-16).** Post-success GETs are what the page does after the user goal,
+    not a second goal. The schema offers `auth` as a role; ground truth records login as
+    `required_business` — those are the same grammatical slot, not two facts. The remaining
+    ordered `(operation, role)` sequence must still match exactly. Subsequence matching is
+    rejected: one mega-workflow of the whole session would then collect every one-step ground-truth
+    workflow. Combining two user goals, or writing three PATCH status calls as one lifecycle,
+    remains FN.
 
 **Hard boundary:** the evaluator does not accept `sent` as equivalent to `shipped` unless that
 alias is in the public table. This is deliberate. The benchmark measures the ability to recover
-**observed canonical facts**, not an LLM judge's taste.
+**observed canonical facts**, not an LLM judge's taste. Structural normal forms (rules 1, 7–10)
+are the same class as erasing `{id}` vs `{customerId}`: they unify notation a careful observer
+could produce from one capture, they do not unify different claims.
 
 > The list of allowed labels comes from ground truth and is published in the evaluation config
 > **before** any runs. For order statuses this is `draft`, `confirmed`, `processing`, `shipped`,

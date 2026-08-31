@@ -7,7 +7,7 @@
 // "invalid" (docs/05 §3: fails schema validation, or has an empty/missing
 // evidence block) is excluded from TP but still counts toward the category's
 // precision denominator -- implemented as a fourth bucket alongside tp/fp/fn.
-import { normalizeMethod, normalizePath, normalizeOperationRef, normalizeSubject, normalizeFieldRef, normalizeValue, normalizeBool, stableStringify } from './normalize.mjs';
+import { normalizeMethod, normalizePath, normalizeOperationRef, normalizeSubject, normalizeFieldRef, normalizeValue, stableStringify } from './normalize.mjs';
 
 function operationKey(op) {
   if (!op || typeof op.method !== 'string' || typeof op.path !== 'string') return null;
@@ -31,9 +31,19 @@ function workflowKey(w) {
   const seq = [];
   for (const step of w.steps) {
     if (!step || typeof step.operation !== 'string') return null;
-    seq.push([normalizeOperationRef(step.operation), typeof step.role === 'string' ? step.role : '']);
+    const role = typeof step.role === 'string' ? step.role : '';
+    if (role === 'refresh') continue;
+    seq.push([normalizeOperationRef(step.operation), normalizeWorkflowRole(role)]);
   }
+  if (seq.length === 0) return null;
   return stableStringify(seq);
+}
+
+/** Rule 10 (docs/04 §4, ADR-16): schema role `auth` is the same slot ground
+ * truth records as `required_business` (login). Not a second fact. */
+function normalizeWorkflowRole(role) {
+  if (role === 'auth') return 'required_business';
+  return role;
 }
 
 export const KEY_FNS = {
@@ -112,19 +122,20 @@ export function matchRecords({ predicted, groundTruth, section, itemErrorsFor })
 }
 
 /**
- * Parameters are scored as: operation + location + name + type + required
- * (docs/04 §3). Flattened out of every predicted operation regardless of
- * whether that operation itself was TP/FP/invalid at the Operations category
- * level -- a parameter's key already embeds its own (normalized) operation
- * reference, so a parameter nested under a wrong or unmatched operation
- * naturally fails to match any ground-truth parameter key on its own. No
- * evidence requirement is applied here (see README).
+ * Parameters are scored as: operation + location + name + type
+ * (docs/04 §3, ADR-16 — `required` dropped from the key). Flattened out of
+ * every predicted operation regardless of whether that operation itself was
+ * TP/FP/invalid at the Operations category level -- a parameter's key already
+ * embeds its own (normalized) operation reference, so a parameter nested
+ * under a wrong or unmatched operation naturally fails to match any
+ * ground-truth parameter key on its own. No evidence requirement is applied
+ * here (see README).
  */
 export function matchParameters({ predictedOperations, groundTruthOperations, rawErrors, errorsUnderPath }) {
   function paramKey(opKey, p) {
     if (!opKey || !p || typeof p.name !== 'string' || typeof p.location !== 'string') return null;
     const type = typeof p.type === 'string' ? p.type : '';
-    return `${opKey}|${p.location}|${p.name}|${type}|${normalizeBool(p.required)}`;
+    return `${opKey}|${p.location}|${p.name}|${type}`;
   }
 
   const gtParams = new Map();

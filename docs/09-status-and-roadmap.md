@@ -1,7 +1,7 @@
 # 09. Status, plan, and quality gates
 
 > **Status:** active — **update on every component status change**
-> **Updated:** 2026-08-30
+> **Updated:** 2026-08-31
 > **Source of truth:** repository state; brief §"Final deliverables"
 
 ---
@@ -33,7 +33,7 @@ documentation, and (per the plan) the harness, agents, evaluator, and runner.
 
 ## 2. Actual component status
 
-Honest picture as of 2026-08-29. Update on every change.
+Honest picture as of 2026-08-31 (~2 AM Toronto, deadline day). Update on every change.
 
 | Component | Status | Where | Comment |
 | --- | :---: | --- | --- |
@@ -46,20 +46,22 @@ Honest picture as of 2026-08-29. Update on every change.
 | Output schema | ✅ done | `miniCRM/benchmark/schemas/reconstruction-output.schema.json` | draft-07, `additionalProperties: false`, nine `semanticFact.kind` values |
 | Ground truth validator | ✅ done | `miniCRM/benchmark/scripts/validate-ground-truth.mjs` | parsing, schema, referential integrity |
 | Reference reconstruction | ✅ done | `miniCRM/benchmark/examples/perfect-reconstruction.json` | All 71 facts with the same `kind` values as ground truth: golden test for VARS = 100 |
-| **Deterministic evaluator** | ❌ missing | — | **blocks every comparison** |
-| **Browser harness** | ❌ missing | — | **blocks any run** |
-| **Baseline agent** | ❌ missing | — | blocks Measured Improvement |
-| **AAE agent** | ❌ missing | — | |
-| **Benchmark runner** | ❌ missing | — | |
+| **Deterministic evaluator** | ✅ done | `evaluator/` | node/ajv, no LLM/embeddings/fuzzy-matching; all 7 required golden tests (docs/05 §7) + regression tests green; `perfect-reconstruction.json` → VARS 100 on all three weight vectors |
+| **Browser harness** | ✅ done | `harness/` | seven tools, risk gate, evidence, path normalization (placeholder-name fix landed 2026-08-30, see project memory) |
+| **Baseline agent** | ✅ done, one run scored | `agents/baseline/` | validated across 5 models via smoke runs (`config/run.local.json`); best recorded official artifact is `anthropic/claude-sonnet-5` at **VARS(frozen) = 46.72** (pre-ADR-16 44.70), see [`06`](06-baseline-and-changelog.md). After ADR-16 a sol smoke run scores 51.2 on the same contract; the Baseline row was not retargeted. **`config/run.default.json` still pins `anthropic/claude-opus-4.6`, which has not been run** — see the model-deviation note in `06` §3 |
+| **AAE agent** | ❌ missing | `agents/aae/` (README only) | Component set revised 2026-08-31 from the baseline measurement (**ADR-18**): asymmetric multi-agent — Explorer, TrafficMiner, DomainSweeper, Inquisitor, per-section Extractors, deterministic Assembler. The planned coverage planner was **dropped before implementation** (`operations` F1 already 1.00) and is recorded as a removed experiment in [`06`](06-baseline-and-changelog.md) §3. Build brief for the implementer: [`AAE-BUILD-PROMPT.md`](../AAE-BUILD-PROMPT.md) |
+| **Benchmark runner** | ❌ missing | — | individual runs launched manually so far, not a runner sweeping all 15 cases × both systems |
 | Artifact generator (OpenAPI/docs) | ❌ missing | — | End to End Quality criterion (20 points) |
 | Reproduction guide | ❌ missing | `docs/REPRODUCTION.md` | deliverable 02 |
 | Video | ❌ missing | — | deliverable 03 |
-| Run trajectories | ❌ missing | `artifacts/runs/` | deliverable 04 |
+| Run trajectories | ⚠️ partial | `results/runs/` | 21 individual runs exist (smoke tests across models/scopes), not yet the full 15-case × both-systems ledger deliverable 04 expects |
 
-**Summary:** the target and the measurement infrastructure around it are ready. Everything that
-produces and measures a result is not. This is exactly the half that 30 of the 100 points depend
-on (Measured Improvement 15 + Reproducibility 15), plus the ability to claim any improvement at
-all.
+**Summary:** the target, the measurement infrastructure, and a working baseline are now ready and a
+first score exists. What's missing is the comparison itself: AAE has no iterations yet, so there is
+nothing to compare the baseline number against, and the runner that would sweep all 15 cases for
+both systems doesn't exist. Given the deadline (§4), this is the critical remaining gap — Measured
+Improvement (15 points) needs at least one AAE iteration scored the same way as the baseline row
+above.
 
 ---
 
@@ -88,16 +90,31 @@ was written against a runway that never existed and has been replaced.
 and every line after the first three is optional. If something has to give, it is agent features —
 never the quality gates, and never a number that wasn't measured.
 
-| # | Outcome | Gate | Rubric |
-| --- | --- | --- | --- |
-| 1 | Freeze the VARS weights (ADR-2) — a 10-minute decision that blocks nothing downstream | Written down before any scored run | Measured Improvement |
-| 2 | Deterministic evaluator | Golden tests of §7 in [`05`](05-evaluation-and-metrics.md) pass; `perfect-reconstruction.json` → VARS = 100 | Measured Improvement 15 |
-| 3 | Harness + baseline; one full run end to end | A valid `submit_reconstruction` and a real VARS number on ≥1 case | the floor for everything else |
-| 4 | AAE with the one or two components with the clearest named failure mode | Each has an ablation, or it isn't claimed | Agent Solution 30 |
-| 5 | Runs on the full case set, both systems, fixed seeds | Full ledger, no cherry-picking | Measured Improvement |
-| 6 | Reproduction guide + submission README | A clean environment reproduces one run | Reproducibility 15 |
-| 7 | Video under 5 minutes | Understandable without narration | required deliverable |
-| 8 | Hot take, main failure mode | Written from what the runs showed | 5 |
+| # | Outcome | Gate | Rubric | Status |
+| --- | --- | --- | --- | :---: |
+| 1 | Freeze the VARS weights (ADR-2) — a 10-minute decision that blocks nothing downstream | Written down before any scored run | Measured Improvement | ✅ done (ADR-13) |
+| 2 | Deterministic evaluator | Golden tests of §7 in [`05`](05-evaluation-and-metrics.md) pass; `perfect-reconstruction.json` → VARS = 100 | Measured Improvement 15 | ✅ done |
+| 3 | Harness + baseline; one full run end to end | A valid `submit_reconstruction` and a real VARS number on ≥1 case | the floor for everything else | ✅ done — VARS(frozen) 46.72 (pre-ADR-16 44.70), see [`06`](06-baseline-and-changelog.md) |
+| 4 | AAE iteration 1: per-section extractors + deterministic assembler (ADR-18) | Each component has an ablation, or it isn't claimed — and here every ablation is a run that already exists | Agent Solution 30 | ❌ not started — **next up** |
+| 5 | Runs on the full case set, both systems, fixed seeds | Full ledger, no cherry-picking | Measured Improvement | ❌ not started |
+| 6 | Reproduction guide + submission README | A clean environment reproduces one run | Reproducibility 15 | ❌ not started |
+| 7 | Video under 5 minutes | Understandable without narration | required deliverable | ❌ not started |
+| 8 | Hot take, main failure mode | Written from what the runs showed | 5 | ❌ not started (hypothesis in `06` §4 is holding: `semantic_facts` F1 = 0.13 is the worst category in the scored run) |
+
+**Given how little runway is left (deadline today, §4 above), line 4 is the fastest path to the
+next scoreable rubric point.** The named failure mode is now measured rather than guessed
+(`06` §4): the baseline explored completely — `coverage` 1.00, `operations` F1 1.00 — and then
+submitted 21 of 71 semantic facts, 10 of 22 dependencies and 3 of 17 workflows. Iteration 1
+therefore attacks synthesis, not exploration. Lines 6–8 depend on having at least that comparison
+to write about.
+
+**Reasoning is deliberately out of iteration 1** (ADR-20): a thinking budget is model configuration
+of the same class as `temperature`, so it is switched on for both systems together in a later
+iteration, with **B2** added as a control point so the gain can be attributed instead of asserted.
+
+**Budgets are frozen across systems** (ADR-21). The baseline row used 179 of 200 steps; raising
+`maxSteps` or `wallClockMs` for AAE means re-running the baseline at the new value before any
+comparison is published. `maxCostUsd` is exempt — it stops a run rather than shaping it.
 
 **Nothing is cut by the clock.** The ordering above is by rubric value per hour, not a list of
 survivors: a deadline reorders priorities, it does not decide what gets dropped. That decision is

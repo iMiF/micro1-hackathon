@@ -152,9 +152,18 @@ owner can override any of these without archaeology:
   not a second matching key, and **not fixed by editing either doc** --
   flagged here for the benchmark owner to resolve; ground truth and the
   schema were left untouched either way.
-- **Workflow matching key is the ordered `(operation, role)` sequence**, not
-  including `depends_on` / `condition` / `description` / `user_goal` (all
-  free text or graph metadata, not part of any "Scoring units" table entry).
+- **Workflow matching key is the ordered `(operation, role)` sequence after
+  dropping `refresh` steps and mapping `auth` → `required_business` (ADR-16),**
+  not including `depends_on` / `condition` / `description` / `user_goal`.
+  Trailing post-success GETs are page aftermath, not a second user goal.
+  Subsequence matching is rejected (one session-length workflow would then
+  collect every one-step ground-truth row).
+- **Parameter matching key is operation + location + name + type (ADR-16).**
+  `required` stays in the schema as documentation and is not scored: a UI
+  that always sends `page` does not make that parameter required.
+- **JSONPath array indexes in dependency field refs collapse (ADR-16):**
+  `$[].id` = `$.id` = `$[*].id`; `$.items[0].x` = `$.items[].x`. `*` as a
+  target operation is not unified with a concrete endpoint.
 - **`dependencies[].kind`** is not part of the dependency matching key
   (docs/04 §3's unit omits it); getting it wrong is currently free. Flagged,
   not fixed, for the same reason as the point above.
