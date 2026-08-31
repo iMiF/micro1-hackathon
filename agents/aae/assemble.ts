@@ -2,6 +2,7 @@ import type { EvidenceRecord } from '../../tooling/evidence/store.js'
 import { SubmissionValidator } from '../../tooling/reconstruction/validate.js'
 import type { Harness } from '../../harness/index.js'
 import { canonicalKey, type Section } from './canonical.js'
+import { sanitizeOperationDisplay } from './display.js'
 import { resolveClaims, type ClaimEntry, type GapEntry } from './boards.js'
 
 /**
@@ -80,6 +81,7 @@ export function assembleFromSectionItems(input: {
       }
       const item = { ...(raw as Record<string, unknown>) }
       delete item.id
+      if (section === 'operations') sanitizeOperationDisplay(item)
       if (looksMalformed(item, section)) {
         dropped.push({ section, reason: 'malformed item', item })
         continue
@@ -211,6 +213,7 @@ export function claimsFromParsedSection(
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) continue
     const item = { ...(raw as Record<string, unknown>) }
     delete item.id
+    if (section === 'operations') sanitizeOperationDisplay(item)
     const key = canonicalKey(section, item)
     if (!key) continue
     const evidence = Array.isArray(item.evidence) ? item.evidence : []

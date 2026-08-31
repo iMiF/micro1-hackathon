@@ -472,6 +472,46 @@ check('nine section outputs: malformed item dropped, unparseable section empty, 
   assert.equal(wfs.length, 1)
 })
 
+check('assembler keeps operations when display fields are missing or malformed', () => {
+  const validator = new SubmissionValidator(
+    join(ROOT, 'miniCRM/benchmark/schemas/reconstruction-output.schema.json'),
+  )
+  const evidence = [{ kind: 'network_request', method: 'GET', path: '/api/x', status: 200 }]
+  const result = assembleFromSectionItems({
+    validator,
+    sections: {
+      operations: [
+        {
+          method: 'GET',
+          path: '/api/x',
+          evidence,
+          summary: 'Fetch x',
+          authentication: 'session-cookie',
+          confidence: 0.8,
+        },
+        {
+          method: 'GET',
+          path: '/api/y',
+          evidence,
+          summary: 12,
+          authentication: true,
+          confidence: 'high',
+        },
+      ],
+    },
+  })
+  const operations = result.document.operations as Array<Record<string, unknown>>
+  assert.equal(operations.length, 2, result.dropped.map((d) => d.reason).join('; '))
+  const kept = operations.find((op) => op.path === '/api/x')
+  assert.equal(kept?.summary, 'Fetch x')
+  assert.equal(kept?.authentication, 'session-cookie')
+  assert.equal(kept?.confidence, 0.8)
+  const stripped = operations.find((op) => op.path === '/api/y')
+  assert.equal('summary' in (stripped ?? {}), false)
+  assert.equal('authentication' in (stripped ?? {}), false)
+  assert.equal('confidence' in (stripped ?? {}), false)
+})
+
 check('assembler keeps miner DELETE claims from a blocked click', () => {
   const validator = new SubmissionValidator(
     join(ROOT, 'miniCRM/benchmark/schemas/reconstruction-output.schema.json'),

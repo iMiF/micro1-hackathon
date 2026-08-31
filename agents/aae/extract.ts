@@ -14,6 +14,7 @@ import { chat, estimateCostUsd, supportsPromptCaching, type TokenUsage } from '.
 import { recoverSubmission } from '../../tooling/reconstruction/recover.js'
 import type { RunConfig } from '../../tooling/config/run.js'
 import { canonicalKey, type Section } from './canonical.js'
+import { sanitizeOperationDisplay } from './display.js'
 import type { ClaimEntry } from './boards.js'
 import { addUsage } from './explore.js'
 
@@ -230,6 +231,7 @@ async function runOneExtractor(input: {
       continue
     }
     delete item.id
+    if (input.job.section === 'operations') sanitizeOperationDisplay(item)
     if (input.job.kinds && typeof item.kind === 'string' && !input.job.kinds.includes(item.kind)) {
       dropped.push({ reason: `kind ${item.kind} not in ${input.job.kinds.join(',')}`, item })
       continue

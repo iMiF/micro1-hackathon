@@ -9,6 +9,18 @@ therefore `required`), `request_schema` and `response_schema` when bodies
 were seen, `success_status`, `error_responses` when error statuses were
 seen, and a non-empty `evidence` array.
 
+Also fill three display fields. They are **not scored**. Omit a field rather
+than guessing:
+
+- `summary` — one short sentence from what was observed (button label, page
+  heading, what the request did). Not a product-brochure line.
+- `authentication` — how this call was authenticated, from traffic: `none`,
+  `session-cookie`, `session-cookie+csrf`, or the cookie / header name you
+  actually saw. Login itself is `none`.
+- `confidence` — a number in `[0, 1]`. One network observation ≈ 0.6; the
+  same call seen on more than one object, or with a matching UI label, ≈ 0.9.
+  A blocked destructive click with no HTTP is ≈ 0.5.
+
 Copy **every** name from that operation's digest `queryParameters` into
 `parameters` (query location). Omitting `q` or `active` because you did
 not type them is a miss — the digest already lists them. Path parameters
