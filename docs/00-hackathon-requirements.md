@@ -1,7 +1,7 @@
 # 00. Hackathon requirements and compliance matrix
 
 > **Status:** frozen (the rules are external and cannot be changed, only clarified)
-> **Updated:** 2026-08-30
+> **Updated:** 2026-08-31
 > **Source of truth:** `micro1 - First Hackathon97ce7c5.pdf` (micro1 Agentic Workflows Hackathon brief)
 
 This file is the single place where the rules live. Other documents link here instead of
@@ -58,7 +58,7 @@ taste.
 | # | Rule (brief) | Our status | Where implemented |
 | --- | --- | --- | --- |
 | 01 | You may build on tools and components you already know | ✅ | Fastify/Vue/Playwright/Postgres |
-| 02 | Clearly show what existed before the competition and what was added | ⚠️ needs a section in the submission README | [`09`](09-status-and-roadmap.md) §"Before and after" |
+| 02 | Clearly show what existed before the competition and what was added | ⚠️ written, not yet copied into the submission README (which is unwritten) | [`09`](09-status-and-roadmap.md) §1 |
 | 03 | Use tools within their license and ToS | ✅ | all dependencies are OSS; the target is our own |
 | 04 | Keep consequential actions in a sandbox/simulation, with human approval **before** the action | ⚠️ designed, not implemented | [`07`](07-safety.md) |
 | 05 | A qualified human reviewer in the loop when a decision could materially affect someone | ⚠️ needs explicit wording | [`07`](07-safety.md) §Human control |
@@ -66,7 +66,7 @@ taste.
 | 07 | Data is public, synthetic, or approved anonymous data | ✅ | MiniCRM is fully synthetic |
 | 08 | Credentials and private information are kept out of the submission | ⚠️ demo login `admin@minicrm.local` / `demo123` is in the repo | [`07`](07-safety.md) §Data |
 | 09 | Every claim about a result is tied to submitted evidence | ⚠️ core discipline | [`08`](08-evidence-and-trajectories.md) |
-| 10 | Give judges enough access to reproduce the main result | ⚠️ | reproduction guide |
+| 10 | Give judges enough access to reproduce the main result | ✅ | [`REPRODUCTION.md`](REPRODUCTION.md) — three paths, the primary one needs no API key |
 
 > **On rule 08.** The demo password for a local synthetic app is not a secret, but
 > `LoginPage.vue` pre-fills the fields, which also runs against the spirit of the benchmark (it
@@ -136,13 +136,15 @@ Template — [`06-baseline-and-changelog.md`](06-baseline-and-changelog.md) §3.
 
 | # | Deliverable | Brief requirements | Our artifact | Status |
 | --- | --- | --- | --- | --- |
-| 01 | **Complete solution code + improvement changelog** | Full project and everything needed to run it, including **the instructions that shape each agent**. README introduces the user and their bottleneck, explains the value. A separate, clearly labeled Improvement Changelog. Ends with the main failure mode and hot take | repo + submission `README.md` + [`06`](06-baseline-and-changelog.md) | ⬜ |
-| 02 | **Reproduction guide** | For a clean environment: setup, **exact commands** for solution / baseline / evaluation, what data is needed, what output to expect, versions, approximate time and cost | `docs/REPRODUCTION.md` (not created) | ⬜ |
-| 03 | **Solution video ≤ 5 minutes** | Problem → simple baseline → one realistic end-to-end run → final comparison → brief changelog → main contribution → one removed experiment | — | ⬜ |
-| 04 | **Agent trajectories** | Representative trajectories **for every agent used**: from instructions to result; what the agent did and how the tools responded; the feedback that shaped the next step; retries and human checkpoints | `artifacts/runs/<run-id>/` | ⬜ |
+| 01 | **Complete solution code + improvement changelog** | Full project and everything needed to run it, including **the instructions that shape each agent**. README introduces the user and their bottleneck, explains the value. A separate, clearly labeled Improvement Changelog. Ends with the main failure mode and hot take | repo + submission `README.md` + [`06`](06-baseline-and-changelog.md) | ⚠️ code, agent instructions (`config/task-prompt.md`, `agents/*/prompts`, `agents/baseline/system-prompt.md`), changelog, failure mode and hot take are all in place; **the root `README.md` is not written** |
+| 02 | **Reproduction guide** | For a clean environment: setup, **exact commands** for solution / baseline / evaluation, what data is needed, what output to expect, versions, approximate time and cost | [`docs/REPRODUCTION.md`](REPRODUCTION.md) | ✅ done — versions, three command paths, expected output per artifact, measured time and cost, troubleshooting, and a named list of its own limits |
+| 03 | **Solution video ≤ 5 minutes** | Problem → simple baseline → one realistic end-to-end run → final comparison → brief changelog → main contribution → one removed experiment | [`VIDEO-SCRIPT.md`](../VIDEO-SCRIPT.md) | ⚠️ scripted — 7 segments ≈ 4:50 covering every required beat, with a claim-to-file table; **not recorded** |
+| 04 | **Agent trajectories** | Representative trajectories **for every agent used**: from instructions to result; what the agent did and how the tools responded; the feedback that shaped the next step; retries and human checkpoints | `results/runs/<run-id>/` | ⚠️ recorded for both systems (`trajectory.jsonl`, `evidence/`, `meta.json`; AAE also `claims.jsonl` / `gaps.jsonl` / `prompts/`), but `results/runs` is gitignored — **must be force-added before submission** |
 
-> Deliverable 04 says "for every agent." We have at least two (baseline and AAE), and if AAE
-> orchestrates several roles internally, a trajectory is needed for each role.
+> Deliverable 04 says "for every agent." We have two systems, and AAE orchestrates several roles
+> internally. Each role's inputs and outputs are recorded per run: the Explorer in `trajectory.jsonl`,
+> the Extractors in `prompts/` and `claims.jsonl`, the Inquisitor in `gaps.jsonl`, and the
+> deterministic Assembler in `assemble-log.json`.
 
 ---
 

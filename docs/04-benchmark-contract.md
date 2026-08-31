@@ -314,14 +314,22 @@ budget without a submission is a result (an invalid output), not a launch error.
 ## 7. Run artifact structure
 
 ```
-artifacts/runs/<run-id>/
-  meta.json           # case, seed, system, model version, target version, budgets
+results/runs/<run-id>/
+  meta.json           # system, model, budgets, isolation deny-list, tokens, cost, wall time, actions
   trajectory.jsonl    # steps: instruction → tool call → response → observation → decision
-  evidence/           # snapshots, request/response bodies, UI states
+  evidence/           # evidence.jsonl: UI actions, network events, policy decisions
+  screenshots/        # captured frames, when the agent took any
+  summary.json        # step counts by kind, operations actually observed
   reconstruction.json # what the agent submitted
-  evaluation.json     # metrics
+  evaluation.json     # metrics (written by the evaluator)
   diff.json           # matched / missing / spurious / invalid
-  report.md           # human-readable write-up
 ```
 
-`<run-id>` is formed as `<system>-<case>-<seed>`, e.g. `aae-case09-seed41`.
+An AAE run additionally carries its internal ledger: `claims.jsonl`, `gaps.jsonl`, `pages.jsonl`,
+`digest.json`, `assemble-log.json` and `prompts/`.
+
+`<run-id>` is `<system>-<utc-timestamp>`, e.g. `aae-2026-08-31T14-51-18-382Z`. The
+`<system>-<case>-<seed>` form this section originally specified belongs to the runner, which was
+never built; runs are launched individually and scoped with `--all` rather than per case. The
+per-run `report.md` in the original list is likewise not produced — see
+[`08`](08-evidence-and-trajectories.md) §4.

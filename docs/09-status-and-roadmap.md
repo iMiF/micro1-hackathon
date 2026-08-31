@@ -33,7 +33,7 @@ documentation, and (per the plan) the harness, agents, evaluator, and runner.
 
 ## 2. Actual component status
 
-Honest picture as of 2026-08-31 (~2 AM Toronto, deadline day). Update on every change.
+Honest picture as of 2026-08-31, ~12:15 PM Toronto — inside the closing window. Update on every change.
 
 | Component | Status | Where | Comment |
 | --- | :---: | --- | --- |
@@ -48,20 +48,22 @@ Honest picture as of 2026-08-31 (~2 AM Toronto, deadline day). Update on every c
 | Reference reconstruction | ✅ done | `miniCRM/benchmark/examples/perfect-reconstruction.json` | All 71 facts with the same `kind` values as ground truth: golden test for VARS = 100 |
 | **Deterministic evaluator** | ✅ done | `evaluator/` | node/ajv, no LLM/embeddings/fuzzy-matching; all 7 required golden tests (docs/05 §7) + regression tests green; `perfect-reconstruction.json` → VARS 100 on all three weight vectors |
 | **Browser harness** | ✅ done | `harness/` | seven tools, risk gate, evidence, path normalization (placeholder-name fix landed 2026-08-30, see project memory) |
-| **Baseline agent** | ✅ done, one run scored | `agents/baseline/` | validated across 5 models via smoke runs (`config/run.local.json`); best recorded official artifact is `anthropic/claude-sonnet-5` at **VARS(frozen) = 46.72** (pre-ADR-16 44.70), see [`06`](06-baseline-and-changelog.md). After ADR-16 a sol smoke run scores 51.2 on the same contract; the Baseline row was not retargeted. **`config/run.default.json` still pins `anthropic/claude-opus-4.6`, which has not been run** — see the model-deviation note in `06` §3 |
-| **AAE agent** | ❌ missing | `agents/aae/` (README only) | Component set revised 2026-08-31 from the baseline measurement (**ADR-18**): asymmetric multi-agent — Explorer, TrafficMiner, DomainSweeper, Inquisitor, per-section Extractors, deterministic Assembler. The planned coverage planner was **dropped before implementation** (`operations` F1 already 1.00) and is recorded as a removed experiment in [`06`](06-baseline-and-changelog.md) §3. Build brief for the implementer: [`AAE-BUILD-PROMPT.md`](../AAE-BUILD-PROMPT.md) |
-| **Benchmark runner** | ❌ missing | — | individual runs launched manually so far, not a runner sweeping all 15 cases × both systems |
+| **Baseline agent** | ✅ done, scored | `agents/baseline/` | The published comparison pair runs on `openai/gpt-5.6-sol`: `results/runs/baseline-2026-08-31T14-45-38-777Z` → **VARS(frozen) = 49.85** (balanced 59.70, flat 59.14), 127 tool actions of 300, 5m26s, $0.92. The earlier `anthropic/claude-sonnet-5` run (46.72, pre-ADR-16 44.70) stays in [`06`](06-baseline-and-changelog.md) as history, not as the comparison point. **`config/run.default.json` still pins `anthropic/claude-opus-4.6`, which has not been run** — deviation recorded in `06` §3 and [`REPRODUCTION.md`](REPRODUCTION.md) §6 |
+| **AAE agent** | ✅ done — iteration 1 landed and scored | `agents/aae/` (commit `5977bd1`) | The ADR-18 asymmetric ensemble: Explorer that never submits, deterministic TrafficMiner and DomainSweeper, Inquisitor, per-section Extractors, deterministic Assembler. Scored on the same contract as the baseline: `results/runs/aae-2026-08-31T14-51-18-382Z` → **VARS(frozen) = 71.21** (balanced 78.18, flat 79.00), 264 actions of 300, 18m12s, $3.32. The planned coverage planner was **dropped before implementation** (`operations` F1 already 1.00) and is recorded as a removed experiment in [`06`](06-baseline-and-changelog.md) §3. Ablation switches exist (`AAE_ABLATE=...`); **no ablation run is scored yet** |
+| **Benchmark runner** | ❌ missing | — | Runs are launched one at a time; there is no sweep of 15 cases × both systems. Consequence: the published pair is scored with `--all` against the full corpus, not as 15 per-case scores. Per-case scoring itself works (`evaluate.mjs --case <id>`) |
+| Submission README | ❌ missing | `README.md` at the repo root | deliverable 01 requires it explicitly: the user and their bottleneck, the value, the before/after boundary of §1 above, and a link to the Improvement Changelog |
 | Artifact generator (OpenAPI/docs) | ❌ missing | — | End to End Quality criterion (20 points) |
-| Reproduction guide | ❌ missing | `docs/REPRODUCTION.md` | deliverable 02 |
-| Video | ❌ missing | — | deliverable 03 |
-| Run trajectories | ⚠️ partial | `results/runs/` | 21 individual runs exist (smoke tests across models/scopes), not yet the full 15-case × both-systems ledger deliverable 04 expects |
+| **Reproduction guide** | ✅ done | [`docs/REPRODUCTION.md`](REPRODUCTION.md) | deliverable 02. Three paths: re-score the shipped runs with no API key (deterministic, verified to return 49.85 and 71.21 exactly), run the baseline, run AAE. Versions, expected output, measured time and cost, and the known limits of the guide are all in it |
+| Video | ⚠️ scripted, not recorded | [`VIDEO-SCRIPT.md`](../VIDEO-SCRIPT.md) | deliverable 03. 7 segments, ~736 words ≈ 4:50, with a claim-to-file table for every on-screen assertion. Recording and upload remain |
+| Run trajectories | ⚠️ recorded, not yet publishable | `results/runs/` | Both published runs carry `trajectory.jsonl`, `evidence/evidence.jsonl`, `meta.json` and `summary.json`; AAE additionally carries `claims.jsonl`, `gaps.jsonl`, `pages.jsonl`, `digest.json`, `assemble-log.json` and `prompts/`. **`results/runs` is in `.gitignore`** — the two published runs must be force-added before submission, or deliverable 04 and Path A of the reproduction guide arrive empty |
 
-**Summary:** the target, the measurement infrastructure, and a working baseline are now ready and a
-first score exists. What's missing is the comparison itself: AAE has no iterations yet, so there is
-nothing to compare the baseline number against, and the runner that would sweep all 15 cases for
-both systems doesn't exist. Given the deadline (§4), this is the critical remaining gap — Measured
-Improvement (15 points) needs at least one AAE iteration scored the same way as the baseline row
-above.
+**Summary:** the comparison exists. Target, evaluator, harness, baseline and AAE iteration 1 are all built, and both systems have
+been run on one model, one budget and one contract, producing **49.85 → 71.21 VARS(frozen)** — a result that keeps its ordering under all
+three weight vectors (ADR-13 obligation #2). What is still missing is breadth rather than substance: no runner, so the pair is scored
+against the full corpus instead of 15 per-case scores; no scored ablation, so each AAE component's individual contribution is argued from
+design rather than measured; no B1 control point, so "architecture, not prompt engineering" remains an argument; and one pair rather than a
+distribution. The remaining hard blockers for the submission itself are the root `README.md`, the recorded video, and force-adding the two
+published runs past `.gitignore`.
 
 ---
 
@@ -86,7 +88,7 @@ Everything else is sequential.
 closing 11:00 AM – 2:00 PM America/Toronto on Aug 31. The 14-day table this section used to contain
 was written against a runway that never existed and has been replaced.
 
-**As of 2026-08-30 there is roughly one working day.** The order below is by rubric value per hour,
+**As of 2026-08-30 there was roughly one working day; as of midday 2026-08-31 the closing window is open.** The order below is by rubric value per hour,
 and every line after the first three is optional. If something has to give, it is agent features —
 never the quality gates, and never a number that wasn't measured.
 
@@ -95,26 +97,26 @@ never the quality gates, and never a number that wasn't measured.
 | 1 | Freeze the VARS weights (ADR-2) — a 10-minute decision that blocks nothing downstream | Written down before any scored run | Measured Improvement | ✅ done (ADR-13) |
 | 2 | Deterministic evaluator | Golden tests of §7 in [`05`](05-evaluation-and-metrics.md) pass; `perfect-reconstruction.json` → VARS = 100 | Measured Improvement 15 | ✅ done |
 | 3 | Harness + baseline; one full run end to end | A valid `submit_reconstruction` and a real VARS number on ≥1 case | the floor for everything else | ✅ done — VARS(frozen) 46.72 (pre-ADR-16 44.70), see [`06`](06-baseline-and-changelog.md) |
-| 4 | AAE iteration 1: per-section extractors + deterministic assembler (ADR-18) | Each component has an ablation, or it isn't claimed — and here every ablation is a run that already exists | Agent Solution 30 | ❌ not started — **next up** |
-| 5 | Runs on the full case set, both systems, fixed seeds | Full ledger, no cherry-picking | Measured Improvement | ❌ not started |
-| 6 | Reproduction guide + submission README | A clean environment reproduces one run | Reproducibility 15 | ❌ not started |
-| 7 | Video under 5 minutes | Understandable without narration | required deliverable | ❌ not started |
-| 8 | Hot take, main failure mode | Written from what the runs showed | 5 | ❌ not started (hypothesis in `06` §4 is holding: `semantic_facts` F1 = 0.13 is the worst category in the scored run) |
+| 4 | AAE iteration 1: per-section extractors + deterministic assembler (ADR-18) | Each component has an ablation, or it isn't claimed | Agent Solution 30 | ✅ done — landed `5977bd1`, scored **VARS(frozen) 71.21** vs the baseline's 49.85 on the same model and budget. Ablation switches exist; **no ablation run is scored**, so per-component contribution is still argued, not measured |
+| 5 | Runs on the full case set, both systems, fixed seeds | Full ledger, no cherry-picking | Measured Improvement | ❌ not started — no runner. The published pair is scored with `--all` against the whole corpus, which is not cherry-picking but is also not the 15-case ledger this line asks for |
+| 6 | Reproduction guide + submission README | A clean environment reproduces one run | Reproducibility 15 | ⚠️ half done — [`REPRODUCTION.md`](REPRODUCTION.md) is written and its no-API-key path is verified; the root `README.md` (deliverable 01) is **not written** |
+| 7 | Video under 5 minutes | Understandable without narration | required deliverable | ⚠️ scripted — `VIDEO-SCRIPT.md`, 7 segments ≈ 4:50, not recorded |
+| 8 | Hot take, main failure mode | Written from what the runs showed | 5 | ✅ done — failure mode measured and written in [`06`](06-baseline-and-changelog.md) §4, hot take in `06` §5: the bottleneck was synthesis, not exploration |
 
-**Given how little runway is left (deadline today, §4 above), line 4 is the fastest path to the
-next scoreable rubric point.** The named failure mode is now measured rather than guessed
-(`06` §4): the baseline explored completely — `coverage` 1.00, `operations` F1 1.00 — and then
-submitted 21 of 71 semantic facts, 10 of 22 dependencies and 3 of 17 workflows. Iteration 1
-therefore attacks synthesis, not exploration. Lines 6–8 depend on having at least that comparison
-to write about.
+**Line 4 is done, and it is what the submission is built on.** The named failure mode was measured rather than guessed
+(`06` §4): the baseline explored completely — `coverage` 1.00, `operations` F1 0.94–1.00 — and then submitted a fraction of what it had
+seen. Iteration 1 therefore attacked synthesis, not exploration, and the categories it moved are exactly the synthesis ones:
+`workflows` F1 0.43 → 0.91, `semantic_facts` 0.14 → 0.43, `dependencies` 0.53 → 0.68. What is left on this line is the ablation set —
+the switches are implemented (`AAE_ABLATE`), the runs are not.
 
 **Reasoning is deliberately out of iteration 1** (ADR-20): a thinking budget is model configuration
 of the same class as `temperature`, so it is switched on for both systems together in a later
 iteration, with **B2** added as a control point so the gain can be attributed instead of asserted.
 
-**Budgets are frozen across systems** (ADR-21). The baseline row used 179 of 200 steps; raising
-`maxSteps` or `wallClockMs` for AAE means re-running the baseline at the new value before any
-comparison is published. `maxCostUsd` is exempt — it stops a run rather than shaping it.
+**Budgets are frozen across systems** (ADR-21), and the published pair honors it: both systems ran at `maxSteps` 300 and
+`wallClockMs` 900000, and neither hit the ceiling — baseline 127 actions, AAE 264. Raising either value for one system means re-running the
+other at the new value before any comparison is published. `maxCostUsd` is exempt — it stops a run rather than shaping it. The resource
+difference the brief asks to be named is time and money, not budget: AAE spent 3.3× the wall time and 3.6× the cost for its 21.4 points.
 
 **Nothing is cut by the clock.** The ordering above is by rubric value per hour, not a list of
 survivors: a deadline reorders priorities, it does not decide what gets dropped. That decision is
@@ -128,10 +130,10 @@ orchestration (OQ-6), the OQ-11 repository split, and the `dependencies` field-r
 noted in ADR-14. Sub-weights inside `semantic_facts` are the one genuine rejection, decided on
 merit rather than on time (ADR-13).
 
-**The honest fallback, if the clock does win.** Two systems, one case, one measured number, and a
-reproduction guide that works beats five agent components and an unmeasured claim. If time runs out
-mid-flight, deliverables 5–8 are protected before line 4 — but that is a fallback to invoke
-deliberately, not a plan to drift into.
+**The honest fallback, if the clock does win.** Two systems, one case, one measured number, and a reproduction guide that works beats
+five agent components and an unmeasured claim. That fallback is now the actual state of the submission, reached deliberately rather than
+drifted into: two systems, one measured comparison, a reproduction guide whose primary path needs no API key. What remains unbuilt is
+recorded above as unbuilt.
 
 ---
 

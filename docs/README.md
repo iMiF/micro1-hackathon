@@ -1,7 +1,7 @@
 # Autonomous API Explorer — Project Documentation
 
 > **Status:** active
-> **Updated:** 2026-08-29
+> **Updated:** 2026-08-31
 > **Language:** English
 > **Scope:** the whole project's documentation (agent + benchmark + MiniCRM target app)
 > **Location:** project root, next to the target app `miniCRM/`, not inside it
@@ -29,6 +29,7 @@ undocumented web application into verifiable API documentation. The project is s
 | 09 | [`09-status-and-roadmap.md`](09-status-and-roadmap.md) | What's done, what isn't, plan and quality gates | everyone, weekly |
 | 10 | [`10-source-review.md`](10-source-review.md) | Archive: reconciliation of the original RU document against the code | archive/audit |
 | 11 | [`11-decisions-and-open-questions.md`](11-decisions-and-open-questions.md) | Decision log (ADR) and open questions | everyone |
+| — | [`REPRODUCTION.md`](REPRODUCTION.md) | Reproduction guide: setup, exact commands, expected output, time and cost | judges, deliverable 02 |
 
 ---
 

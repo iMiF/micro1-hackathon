@@ -1,7 +1,7 @@
 # 02. Solution architecture
 
-> **Status:** draft (only the target side is implemented; the harness, agents, and verifier are not written)
-> **Updated:** 2026-08-30
+> **Status:** active — harness, baseline and AAE iteration 1 are implemented and scored; the Verifier and the Artifact generator are not built
+> **Updated:** 2026-08-31
 > **Source of truth:** design decision; actual state — [`09`](09-status-and-roadmap.md)
 > **Maps to criteria:** Agent Solution & Engineering (30), End to End Quality (20)
 
@@ -42,6 +42,13 @@
                                               │ confidence report        │
                                               └──────────────────────────┘
 ```
+
+> **What of this diagram exists as of 2026-08-31.** Everything on the path from the operator to the
+> evidence store is built and has been run: the harness, both agents, the evidence store. The
+> **Verifier** and the **Artifact generator** are not written — `verifier.enabled` is `false` in
+> `config/run.default.json`, and reconstruction JSON is not yet rendered into OpenAPI or prose.
+> Verification in the shipped system is the weaker, deterministic form described in §4: a claim's
+> `support` level, not a separate verifying role. Component status table: [`09`](09-status-and-roadmap.md) §2.
 
 **Main architectural principle: the decision is separated from the action.** The LLM has no
 direct access to `localhost` or the network. A local runner drives Chromium via Playwright,
@@ -150,22 +157,57 @@ Rationale for choosing this particular baseline —
 
 ## 4. Components of the final agent
 
-Every component exists because it eliminates a **named** failure mode. A component with no
-measured effect is removed and logged in the changelog as a removed experiment (a brief
-requirement).
+Every component exists because it eliminates a **named** failure mode. A component with no measured
+effect is removed and logged in the changelog as a removed experiment (a brief requirement) — which
+is exactly what happened to the coverage planner this section used to open with.
 
-| Component | Failure mode it eliminates | Expected effect | How it's checked |
-| --- | --- | --- | --- |
-| **Coverage planner** | The agent gets stuck in one section, misses uncovered operations | Fewer missed endpoints and path parameters | ablation: turn it off, compare recall on `operations` |
-| **Hypothesis ledger** | A hypothesis is lost between steps; a guess quietly becomes a "fact" | Context preserved; guesses are flagged | ablation: compare hallucination rate |
-| **Experiment planner** | A single observation is treated as an enum value | Better enum semantics and business rules | ablation: compare F1 on `semantic_facts` |
-| **Risk classifier** | The agent takes a destructive action in the name of exploration | Zero unapproved actions | log of policy decisions |
-| **Verifier** | Plausible but unconfirmed claims in the output | Lower hallucination rate, higher evidence support | ablation: turn it off, compare precision |
-| **Artifact generator** | Formally correct JSON that's useless to a human | Ready-to-use OpenAPI/docs | human evaluation (End to End Quality criterion) |
+### 4.1 What shipped: the ADR-18 asymmetric ensemble
 
-> **The artifact generator doesn't affect the primary score.** It converts already-verified
-> canonical JSON into OpenAPI and documentation. This is deliberate: prose quality is judged by a
-> human, not by the deterministic evaluator.
+Iteration 1, implemented in `agents/aae/` and scored at VARS(frozen) 71.21 against the baseline's
+49.85 ([`06`](06-baseline-and-changelog.md) §3). The organizing decision is asymmetry: the roles are
+deliberately unequal, most of them are deterministic, and **the role that explores is not the role
+that writes**.
+
+| Component | Where | Kind | Failure mode it eliminates | Ablation |
+| --- | --- | --- | --- | --- |
+| **Explorer** | `agents/aae/explore.ts` | LLM, the shared seven tools | Nothing on its own — it is the baseline loop with `submit_reconstruction` intercepted. Removing its ability to submit is what frees it to explore without also having to account | `AAE_ABLATE=extractors` returns it to baseline behavior, submitting in its own voice |
+| **TrafficMiner** | `agents/aae/miner.ts` | deterministic | Operations, parameters and status codes that are present in the recorded traffic and never make it into the document. No model call: this is a pass over `evidence.jsonl` | `AAE_ABLATE=miner` |
+| **DomainSweeper** | `agents/aae/sweeper.ts` | deterministic | Whole domains left unvisited because the Explorer found one section interesting; seeds coverage gaps from the observed route surface | `AAE_ABLATE=sweeper` |
+| **Inquisitor** | `agents/aae/inquisitor.ts` | LLM, proposes only | A claim standing on a single observation is submitted as a fact. It never explores and never writes — it ranks under-refuted claims and proposes the experiment that would break one (ADR-19) | `AAE_ABLATE=inquisitor` |
+| **Extractors** | `agents/aae/extract.ts`, `prompts/extract-*.md` | LLM, one per section, parallel | **The measured failure mode:** the agent sees everything and writes down a third of it. Each extractor reads the evidence with exactly one accounting job — operations, query parameters, enums, validation, dependencies, transitions, constraints, workflows | `AAE_ABLATE=extractors` |
+| **Assembler** | `agents/aae/assemble.ts` | deterministic | A final free-form serialization step that truncates, reorders or reinvents. It merges the claim board by a fixed rule and calls `submit_reconstruction` itself — no model in the path | not ablatable; it is the submission path |
+
+The roles **do not talk to each other.** They share two typed boards — a claim board and a gap board
+(`agents/aae/boards.ts`, published per run as `claims.jsonl` and `gaps.jsonl`) — merged by a
+deterministic rule. That is what makes each role's contribution separable at all, and it is the
+concrete answer to OQ-6: multi-agent, but only because the ablation surface is the point.
+
+**Not built:** the Verifier (`verifier.enabled: false`) and the Artifact generator. Verification in
+the shipped system is the `support: observed | varied | refuted_attempt` level a claim carries
+(ADR-19), not a separate role that re-checks claims against evidence.
+
+**Not measured:** the ablations. The switches above are implemented and covered by
+`npm run aae:selftest`, but no ablation run is scored, so each component's individual contribution is
+argued from design rather than demonstrated. Recorded as such in [`09`](09-status-and-roadmap.md) §2
+and [`06`](06-baseline-and-changelog.md) §3.
+
+### 4.2 The pre-measurement design, kept for the record
+
+This is the component set the project planned before the baseline had ever been run. It is preserved
+because the gap between it and §4.1 is the most useful thing the first measurement produced.
+
+| Component | Failure mode it eliminates | What actually happened |
+| --- | --- | --- |
+| **Coverage planner** | The agent gets stuck in one section, misses uncovered operations | **Removed before implementation.** The baseline scored `operations` F1 1.00 and `coverage` 1.00 — nothing left to recover |
+| **Hypothesis ledger** | A hypothesis is lost between steps; a guess quietly becomes a "fact" | Shipped, in a stronger form: the claim board with an explicit `support` level (ADR-19) |
+| **Experiment planner** | A single observation is treated as an enum value | Shipped as the Inquisitor, restricted to proposing refutations only |
+| **Risk classifier** | The agent takes a destructive action in the name of exploration | Shipped in the harness, shared by both systems (`harness/policy.ts`), not an AAE component |
+| **Verifier** | Plausible but unconfirmed claims in the output | Not built; `verifier.enabled: false` |
+| **Artifact generator** | Formally correct JSON that's useless to a human | Not built. End to End Quality (20 points) is the criterion this leaves on the table |
+
+> **The artifact generator doesn't affect the primary score.** It converts already-verified canonical
+> JSON into OpenAPI and documentation. This is deliberate: prose quality is judged by a human, not by
+> the deterministic evaluator.
 
 ---
 

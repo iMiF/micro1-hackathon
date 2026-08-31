@@ -534,6 +534,98 @@ What no longer happens is a run losing a document it demonstrably produced. The 
 `maxTokens` value are both reported alongside the comparison, since both are part of the setup the
 two systems share.
 
+### ADR-18 — AAE is an asymmetric ensemble, and its component list comes from the measurement
+
+**Date:** 2026-08-31 · **Status:** accepted · **Implemented:** commit `5977bd1`, `agents/aae/`
+
+**Context.** The pre-measurement component list ([`02`](02-architecture.md) §4.2) was written before
+any run existed. The first scored baseline run contradicted it: `coverage` 1.00, `operations` F1
+1.00, and `semantic_facts` recall 0.08. The agent explored completely and wrote down a third of what
+it saw. A coverage planner — the first component on that list — had nothing left to recover.
+
+**Decision.** Derive the component set from that measurement instead. Iteration 1 is an **asymmetric
+ensemble**: an Explorer (LLM, the shared seven tools) whose `submit_reconstruction` is intercepted so
+it never writes the document; deterministic TrafficMiner and DomainSweeper passes over recorded
+evidence; an Inquisitor (LLM) that only proposes refutation experiments; per-section Extractors (LLM,
+parallel) that each have exactly one accounting job; and a deterministic Assembler that merges the
+claim board and calls `submit_reconstruction` itself. The roles never talk to each other — they share
+two typed boards merged by a fixed rule. The coverage planner is **dropped before implementation**
+and recorded as a removed experiment in [`06`](06-baseline-and-changelog.md) §3.
+
+**Consequences.** Closes OQ-6 with a reason rather than a preference: the split exists because it
+makes each contribution separately ablatable, not because more components look better. Every role is
+individually switchable (`AAE_ABLATE`), which is the obligation the split takes on — an obligation
+only partly discharged, since no ablation run was scored before the deadline. Measured effect of the
+ensemble as a whole: VARS(frozen) 49.85 → 71.21 on one model and one budget, with the movement
+concentrated in the synthesis categories.
+
+---
+
+### ADR-19 — Curiosity is a data structure, not a trait of the model
+
+**Date:** 2026-08-31 · **Status:** accepted · **Implemented:** `agents/aae/boards.ts`, `inquisitor.ts`
+
+**Context.** "Have the agent be curious and verify its guesses" is a prompt instruction, and a prompt
+instruction cannot be ablated, measured, or audited after the fact.
+
+**Decision.** Every claim carries `support: observed | varied | refuted_attempt`. A claim of kind
+`business_constraint`, `validation` or `derived_value` sitting at `observed` is by definition a
+hypothesis, not a fact. The experiment queue is **computed** from the set of under-refuted claims —
+rank = the claim's category weight (ADR-13) × the number of unresolved claims it would settle — not
+produced by asking a model what it feels uncertain about. Missing knowledge is classified into four
+kinds: already present in captured traffic (TrafficMiner), reachable by varying an input
+(DomainSweeper), reachable only by deliberately violating a UI-enforced rule (Inquisitor), or
+unreachable through the browser at all (OQ-13). Every experiment goes **through** the harness policy
+gate like any other action. Rounds stop on diminishing returns, and the whole round sweep is
+published rather than its best point.
+
+**Consequences.** Curiosity becomes inspectable: `claims.jsonl` and `gaps.jsonl` ship with every run,
+and a judge can see which hypotheses were raised, which were attacked, and which were left standing.
+It also bounds the cost — the queue is finite and ranked, so "keep exploring until satisfied" is not
+a thing the system can do.
+
+---
+
+### ADR-20 — Extended reasoning is model configuration, so it stays out of iteration 1
+
+**Date:** 2026-08-31 · **Status:** accepted
+
+**Context.** A thinking budget is tempting to switch on for AAE alone, and doing so would make the
+architecture look better than it is.
+
+**Decision.** Extended reasoning is configuration of the same class as `temperature` and `maxTokens`,
+all of which the fairness contract declares identical for both systems (ADR-11, ADR-17). Iteration 1
+therefore runs with reasoning **off everywhere** (`aae.reasoning.enabled: false`). When it is turned
+on it is turned on for both systems together, in its own iteration, with a fourth control point
+**B2** (B1 plus reasoning) so the architecture's contribution is `AAE − B2` rather than an assertion.
+If only one control run is affordable, it is B2, not B1.
+
+**Consequences.** The published +21.37 cannot be explained by one system having been allowed to think
+longer. Mechanical note for whoever runs iteration 2: a thinking budget forbids `temperature ≠ 1`, so
+that iteration needs k repeats per point rather than a single deterministic run.
+
+---
+
+### ADR-21 — `maxSteps` and `wallClockMs` are a shared contract; the `aae` block may only subdivide it
+
+**Date:** 2026-08-31 · **Status:** accepted · **Enforced:** `tooling/config/run.ts`, `agents/aae/agent.ts`
+
+**Context.** AAE has internal rounds and roles that each need a share of the step budget. The
+tempting shape — "give the ensemble more steps, it has more to do" — silently converts an
+architecture comparison into a budget comparison.
+
+**Decision.** `budgets.maxSteps` and `budgets.wallClockMs` are the shared fairness contract, enforced
+by the harness rather than by any prompt. The `aae` block in `config/run.default.json` may only
+**subdivide** what `budgets` grants: `rounds.stepBudgetSplit` is asserted to sum to ≤ 1.0 at load
+time and again before the run starts, and a violation refuses to start rather than warning. Raising
+either budget for one system obliges a re-run of the other at the new value before any comparison is
+published. `maxCostUsd` is exempt: it stops a run rather than shaping it.
+
+**Consequences.** In the published pair both systems ran at 300 steps and 900000 ms and neither hit
+the ceiling (baseline 127 actions, AAE 264), so the comparison is not a budget artifact in either
+direction. The resource difference that does exist — 3.3× wall time, 3.6× cost — is reported next to
+the score, as the brief requires.
+
 ---
 
 ## Open questions
@@ -614,15 +706,20 @@ to do by hand.
 
 ---
 
-### OQ-6 — Is multi-agent orchestration needed
+### OQ-6 — Is multi-agent orchestration needed — ✅ **closed by ADR-18** (yes, on the measured failure mode)
 
-**Priority:** low · **Deadline:** after AAE's first runs
+The brief states directly: *"Purposeful choices matter more than the number of components."* The
+question was left open until the single-agent version's real failure mode became visible, and it did:
+the baseline explored completely and transcribed a third of what it saw. Splitting the loop so that
+the role which explores is not the role which writes is a direct response to that, and it moved
+VARS(frozen) 49.85 → 71.21 with the gain concentrated in the synthesis categories.
 
-The brief states directly: *"Purposeful choices matter more than the number of components."*
-Splitting AAE into multiple agents is justified only if an ablation shows a win. Otherwise it's
-unnecessary complexity that costs points rather than earning them.
-
-Decide **after** the single-agent version's real failure mode becomes visible.
+**The condition set here is only partly met.** This question asked for an *ablation* to justify the
+split, and no ablation run was scored before the deadline — the switches exist
+(`AAE_ABLATE=miner,sweeper,inquisitor,extractors`, self-tested) but the runs do not. So the ensemble
+as a whole is measured; its individual components are not. Recorded as an outstanding obligation in
+[`06`](06-baseline-and-changelog.md) §3 and [`09`](09-status-and-roadmap.md) §2 rather than quietly
+counted as satisfied.
 
 ---
 
@@ -722,3 +819,34 @@ Either make it real (submodule or subtree, so the target can be checked out at a
 `application_commit` independently of the tooling), or restate the intent as logical
 self-containment rather than a git boundary. Worth settling before the reproduction guide is
 written, since that guide will tell a judge what to clone.
+
+---
+
+### OQ-13 — Does the full-corpus scope contain facts no browser session can reach?
+
+**Priority:** medium · **Affects:** [`05`](05-evaluation-and-metrics.md), the published recall ceiling
+
+ADR-8 says a *case* only scores browser-observable facts. The published pair is scored with `--all`,
+which applies no case filtering — so if the corpus holds facts that no amount of UI exploration can
+expose, the recall ceiling for both systems is below 1.00 by an unknown margin, and `semantic_facts`
+recall of 0.30 is being measured against an unreachable denominator.
+
+This does not affect the comparison: both systems face the identical ceiling. It affects how the
+absolute numbers should be read, and it is the strongest argument for building the runner and
+scoring per case. Until it is answered, absolute recall figures in this project are reported as
+"of the full corpus", never as "of what was reachable".
+
+---
+
+### OQ-14 — Should the baseline get a per-section submission as a fifth control point?
+
+**Priority:** medium · **Affects:** the attribution of the iteration-1 gain
+
+AAE differs from the baseline in two ways at once: it is multi-agent, and it writes its document in
+sections rather than in a single serialization. A baseline variant that keeps the single loop but
+submits section by section would separate "the ensemble won" from "one-shot serialization was the
+bottleneck". Given the measured failure mode — the agent had the knowledge and did not transcribe it
+— this is a live alternative explanation, not a pedantic one.
+
+One run set answers it. It was not run before the deadline, and the claim in
+[`06`](06-baseline-and-changelog.md) §3 is worded to leave room for it.
