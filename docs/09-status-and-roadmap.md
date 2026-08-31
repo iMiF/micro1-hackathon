@@ -27,7 +27,7 @@ history begins on 2026-08-28:
 ### Added during the competition
 
 Everything else: the MiniCRM app, the case set, ground truth, the output schema, this
-documentation, and (per the plan) the harness, agents, evaluator, and runner.
+documentation, and (per the plan) the harness, agents, evaluator, artifact generator, and runner.
 
 ---
 
@@ -52,12 +52,13 @@ Honest picture as of 2026-08-31, ~12:15 PM Toronto — inside the closing window
 | **AAE agent** | ✅ done — iteration 1 landed and scored | `agents/aae/` (commit `5977bd1`) | The ADR-18 asymmetric ensemble: Explorer that never submits, deterministic TrafficMiner and DomainSweeper, Inquisitor, per-section Extractors, deterministic Assembler. Scored on the same sol contract as the baseline: `results/runs/aae-2026-08-31T14-51-18-382Z` → **VARS(frozen) = 71.21** (balanced 78.18, flat 79.00), 264 actions of 300, 18m12s, $3.32. Luna replication: `…T16-04-43-124Z` → 61.12 vs 33.56. The planned coverage planner was **dropped before implementation** (`operations` F1 already 1.00 on the sonnet baseline) and is recorded as a removed experiment in [`06`](06-baseline-and-changelog.md) §3. Ablation switches exist (`AAE_ABLATE=...`); **no ablation run is scored yet** |
 | **Benchmark runner** | ❌ missing | — | Runs are launched one at a time; there is no sweep of 15 cases × both systems. Consequence: the published pair is scored with `--all` against the full corpus, not as 15 per-case scores. Per-case scoring itself works (`evaluate.mjs --case <id>`) |
 | Submission README | ❌ missing | `README.md` at the repo root | deliverable 01 requires it explicitly: the user and their bottleneck, the value, the before/after boundary of §1 above, and a link to the Improvement Changelog |
-| Artifact generator (OpenAPI/docs) | ❌ missing | — | End to End Quality criterion (20 points) |
+| Artifact generator (OpenAPI/docs) | ✅ done | `artifacts/` | Deterministic render of `reconstruction.json` → OpenAPI 3.1 + `API.md`. No LLM, no new facts. Path A drafts: `results/runs/aae-2026-08-31T14-51-18-382Z/artifacts/` and the paired baseline `…/artifacts/`. `npm run artifacts:preview` serves Swagger UI with a dropdown of those drafts (and the committed perfect-reconstruction example, labeled as a reference). Does not affect VARS |
 | **Reproduction guide** | ✅ done | [`docs/REPRODUCTION.md`](REPRODUCTION.md) | deliverable 02. Three paths: re-score the shipped sol Path A pair with no API key (deterministic, verified to return 49.85 and 71.21 exactly), run the baseline, run AAE. The luna pair is also in `results/runs/INDEX.md`. Versions, expected output, measured time and cost, and the known limits of the guide are all in it |
 | Video | ⚠️ scripted, not recorded | [`VIDEO-SCRIPT.md`](../VIDEO-SCRIPT.md) | deliverable 03. 7 segments, ~736 words ≈ 4:50, with a claim-to-file table for every on-screen assertion. Recording and upload remain |
-| Run trajectories | ✅ done | `results/runs/INDEX.md` | Path A sol pair plus luna replication pair and repeats are tracked via `.gitignore` exceptions. Each run carries `trajectory.jsonl`, `evidence/evidence.jsonl`, `meta.json` and `summary.json`; AAE additionally carries `claims.jsonl`, `gaps.jsonl`, `pages.jsonl`, `digest.json`, `assemble-log.json` and `prompts/` |
+| **Run trajectories** | ✅ done | `results/runs/INDEX.md` | Path A sol pair plus luna replication pair and repeats are tracked via `.gitignore` exceptions. Each run carries `trajectory.jsonl`, `evidence/evidence.jsonl`, `meta.json` and `summary.json`; AAE additionally carries `claims.jsonl`, `gaps.jsonl`, `pages.jsonl`, `digest.json`, `assemble-log.json` and `prompts/`. Path A directories also carry `artifacts/openapi.json` and `artifacts/API.md` |
 
-**Summary:** the comparison exists. Target, evaluator, harness, baseline and AAE iteration 1 are all built, and both systems have
+**Summary:** the comparison exists. Target, evaluator, harness, baseline, AAE iteration 1 and the
+artifact generator are all built, and both systems have
 been run on the shipped default (`openai/gpt-5.6-sol`, ADR-22), producing **49.85 → 71.21 VARS(frozen)** — a result that keeps its ordering under all
 three weight vectors (ADR-13 obligation #2). A luna replication (33.56 → 61.12) shows the same sign and the same categories, so the delta is not a strong-model artifact. What is still missing is breadth rather than substance: no runner, so the pair is scored
 against the full corpus instead of 15 per-case scores; no scored ablation, so each AAE component's individual contribution is argued from
@@ -157,7 +158,7 @@ Visual complexity without measurement is worse than a simple system with honest 
 In increasing order of pain:
 
 1. Number of AAE iterations — three substantive iterations beat five shallow ones.
-2. Artifact generator down to a minimum: OpenAPI without human-readable docs.
+2. Artifact generator down to a minimum: OpenAPI without human-readable docs. *(shipped as OpenAPI 3.1 plus a deterministic `API.md` render of the same JSON — still no LLM prose.)*
 3. Ablation runs for some components — but then honestly state the contribution isn't isolated.
 4. Number of cases — **never below 10** (the brief's threshold), and never at the expense of the
    hard case.

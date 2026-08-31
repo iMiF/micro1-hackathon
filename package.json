@@ -11,7 +11,10 @@
     "baseline:run": "tsx agents/baseline/run.ts",
     "aae:selftest": "tsx agents/aae/selftest.ts",
     "aae:run": "tsx agents/aae/run.ts",
-    "evaluate": "node evaluator/bin/evaluate.mjs"
+    "evaluate": "node evaluator/bin/evaluate.mjs",
+    "artifacts:generate": "tsx artifacts/bin/generate.ts",
+    "artifacts:preview": "tsx artifacts/bin/preview.ts",
+    "artifacts:selftest": "tsx --test artifacts/tests/*.test.ts"
   },
   "devDependencies": {
     "@types/node": "22.10.5",

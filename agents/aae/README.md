@@ -31,5 +31,8 @@ The model id, temperature and `model.maxTokens` come from
 evaluator:
 
 ```
-node evaluator/bin/evaluate.mjs --submission <runDir>/reconstruction.json --all --meta <runDir>/meta.json --out <runDir>
+npm run evaluate -- --run <run-id> --all
 ```
+
+The run also writes `artifacts/openapi.json` and `artifacts/API.md` from the submitted JSON
+(no LLM, not scored). Browse drafts with `npm run artifacts:preview`.

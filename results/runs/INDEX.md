@@ -23,4 +23,6 @@ except for the directories listed here). Re-score any row with Path A in
 
 Every directory carries `reconstruction.json`, `evaluation.json`, `diff.json`, `meta.json`,
 `summary.json`, `trajectory.jsonl` and `evidence/`. AAE directories also carry `claims.jsonl`,
-`gaps.jsonl`, `pages.jsonl`, `digest.json`, `assemble-log.json` and `prompts/`.
+`gaps.jsonl`, `pages.jsonl`, `digest.json`, `assemble-log.json` and `prompts/`. The Path A pair
+additionally carries `artifacts/openapi.json` and `artifacts/API.md`, rendered from the same
+`reconstruction.json` (no LLM).

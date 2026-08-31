@@ -1,6 +1,6 @@
 # 02. Solution architecture
 
-> **Status:** active — harness, baseline and AAE iteration 1 are implemented and scored; the Verifier and the Artifact generator are not built
+> **Status:** active — harness, baseline and AAE iteration 1 are implemented and scored; the Artifact generator is built; the Verifier is not
 > **Updated:** 2026-08-31
 > **Source of truth:** design decision; actual state — [`09`](09-status-and-roadmap.md)
 > **Maps to criteria:** Agent Solution & Engineering (30), End to End Quality (20)
@@ -45,10 +45,12 @@
 
 > **What of this diagram exists as of 2026-08-31.** Everything on the path from the operator to the
 > evidence store is built and has been run: the harness, both agents, the evidence store. The
-> **Verifier** and the **Artifact generator** are not written — `verifier.enabled` is `false` in
-> `config/run.default.json`, and reconstruction JSON is not yet rendered into OpenAPI or prose.
-> Verification in the shipped system is the weaker, deterministic form described in §4: a claim's
-> `support` level, not a separate verifying role. Component status table: [`09`](09-status-and-roadmap.md) §2.
+> **Artifact generator** is built (`artifacts/`): it renders `reconstruction.json` into OpenAPI 3.1
+> and `API.md` with no LLM and no new facts. `npm run artifacts:preview` serves those files in
+> Swagger UI with a dropdown of runs. The **Verifier** is not written — `verifier.enabled` is
+> `false` in `config/run.default.json`. Verification in the shipped system is the weaker,
+> deterministic form described in §4: a claim's `support` level, not a separate verifying role.
+> Component status table: [`09`](09-status-and-roadmap.md) §2.
 
 **Main architectural principle: the decision is separated from the action.** The LLM has no
 direct access to `localhost` or the network. A local runner drives Chromium via Playwright,
@@ -183,9 +185,11 @@ The roles **do not talk to each other.** They share two typed boards — a claim
 deterministic rule. That is what makes each role's contribution separable at all, and it is the
 concrete answer to OQ-6: multi-agent, but only because the ablation surface is the point.
 
-**Not built:** the Verifier (`verifier.enabled: false`) and the Artifact generator. Verification in
+**Not built:** the Verifier (`verifier.enabled: false`). The Artifact generator is `artifacts/`:
+a deterministic render of the submitted JSON into OpenAPI 3.1 and `API.md`. Verification in
 the shipped system is the `support: observed | varied | refuted_attempt` level a claim carries
-(ADR-19), not a separate role that re-checks claims against evidence.
+(ADR-19), not a separate role that re-checks claims against evidence. The same files can be
+paged through in a browser: `npm run artifacts:preview`.
 
 **Not measured:** the ablations. The switches above are implemented and covered by
 `npm run aae:selftest`, but no ablation run is scored, so each component's individual contribution is
@@ -204,7 +208,7 @@ because the gap between it and §4.1 is the most useful thing the first measurem
 | **Experiment planner** | A single observation is treated as an enum value | Shipped as the Inquisitor, restricted to proposing refutations only |
 | **Risk classifier** | The agent takes a destructive action in the name of exploration | Shipped in the harness, shared by both systems (`harness/policy.ts`), not an AAE component |
 | **Verifier** | Plausible but unconfirmed claims in the output | Not built; `verifier.enabled: false` |
-| **Artifact generator** | Formally correct JSON that's useless to a human | Not built. End to End Quality (20 points) is the criterion this leaves on the table |
+| **Artifact generator** | Formally correct JSON that's useless to a human | Shipped in `artifacts/`. Deterministic OpenAPI 3.1 + `API.md`; Swagger preview with a run dropdown (`npm run artifacts:preview`); does not add facts; VARS unchanged |
 
 > **The artifact generator doesn't affect the primary score.** It converts already-verified canonical
 > JSON into OpenAPI and documentation. This is deliberate: prose quality is judged by a human, not by
@@ -257,7 +261,7 @@ To keep roles from blurring during development:
 | Harness | Executing tool calls, normalizing observations, applying risk policy | Does not plan, does not interpret |
 | Agent (baseline / AAE) | Deciding the next step, producing the reconstruction | Has no access to ground truth or source code |
 | Evaluator | Schema validation, normalization, fact matching, metrics | Uses no LLM, embeddings, or fuzzy matching |
-| Artifact generator | Turning verified JSON into OpenAPI/docs | Does not add facts |
+| Artifact generator | Turning verified JSON into OpenAPI/docs; local Swagger preview of those files | Does not add facts |
 
 Violating any of these boundaries is a defect, not an optimization.
 
@@ -279,13 +283,14 @@ micro1/
 ├── tooling/               browser driver, evidence capture, deterministic serialization
 ├── harness/               executes tool calls, normalizes observations, applies risk policy
 ├── evaluator/             schema validation, normalization, matching, VARS
+├── artifacts/             reconstruction JSON → OpenAPI 3.1 + API.md; `artifacts:preview` is Swagger UI over those files
 ├── runner/                Reset → Launch → Capture → Evaluate → Aggregate ([`04`](04-benchmark-contract.md) §6)
 └── results/               trajectories, evidence, submissions, scores, the experiment ledger
 ```
 
 `benchmark/` stays inside `miniCRM/` on purpose: ground truth is generated from the target's own
 code by `miniCRM/benchmark/scripts/emit-ground-truth.mjs`, and separating them would let the two
-drift. Everything that is *not* the target — agents, harness, evaluator, runner — lives outside it
+drift. Everything that is *not* the target — agents, harness, evaluator, artifacts, runner — lives outside it
 (ADR-6).
 
 **Two rules that keep this from eroding:**

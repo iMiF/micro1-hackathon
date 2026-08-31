@@ -1,5 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { basename, join } from 'node:path'
+import { generateArtifacts } from '../../artifacts/src/generate.js'
 import { Harness } from '../../harness/index.js'
 import { loadDotEnv } from '../../tooling/config/env.js'
 import { ledgerEntry, loadRunConfig } from '../../tooling/config/run.js'
@@ -66,6 +67,9 @@ async function main(): Promise<void> {
   const submission = harness.getSubmission()
 
   writeFileSync(join(runDir, 'reconstruction.json'), JSON.stringify(submission, null, 2) + '\n')
+  const generated = generateArtifacts({ submission, outDir: join(runDir, 'artifacts') })
+  console.log(`wrote ${generated.openapiPath}`)
+  console.log(`wrote ${generated.markdownPath}`)
   writeFileSync(
     join(runDir, 'meta.json'),
     JSON.stringify(
@@ -94,9 +98,7 @@ async function main(): Promise<void> {
       `cache_read=${usage.cache_read_input_tokens} cache_write=${usage.cache_creation_input_tokens}`,
   )
   console.log('score with:')
-  console.log(
-    `  node evaluator/bin/evaluate.mjs --submission ${join(runDir, 'reconstruction.json')} --all --meta ${join(runDir, 'meta.json')} --out ${runDir}`,
-  )
+  console.log(`  npm run evaluate -- --run ${basename(runDir)} --all`)
 }
 
 main().catch((error) => {

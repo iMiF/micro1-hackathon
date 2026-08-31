@@ -100,21 +100,16 @@ starting an agent. **Path A does not need this step either.**
 ## 3. Path A — reproduce the headline numbers without running an agent
 
 Scoring is a deterministic program: no LLM, no embeddings, no fuzzy matching, no network anywhere in
-`evaluator/` (`docs/05` §7). The same submission always yields the same score, on any machine. So
-the comparison itself can be re-derived from the shipped artifacts:
+`evaluator/` (`docs/05` §7). The same submission always yields the same score, on any machine. The
+comparison itself can be re-derived from the shipped artifacts. `--run <id>` fills `--submission`,
+`--meta` and `--out` from `results/runs/<id>/`:
 
 ```bash
 # baseline
-node evaluator/bin/evaluate.mjs \
-  --submission results/runs/baseline-2026-08-31T14-45-38-777Z/reconstruction.json \
-  --meta       results/runs/baseline-2026-08-31T14-45-38-777Z/meta.json \
-  --all --out /tmp/score-baseline
+node evaluator/bin/evaluate.mjs --run baseline-2026-08-31T14-45-38-777Z --all
 
 # AAE
-node evaluator/bin/evaluate.mjs \
-  --submission results/runs/aae-2026-08-31T14-51-18-382Z/reconstruction.json \
-  --meta       results/runs/aae-2026-08-31T14-51-18-382Z/meta.json \
-  --all --out /tmp/score-aae
+node evaluator/bin/evaluate.mjs --run aae-2026-08-31T14-51-18-382Z --all
 ```
 
 Expected — identical to the `evaluation.json` already committed inside each run directory:
@@ -139,6 +134,28 @@ Expected — identical to the `evaluation.json` already committed inside each ru
 Both runs are `openai/gpt-5.6-sol`, `temperature 0`, `maxSteps` 300, `wallClockMs` 900000,
 `maxTokens` 32000, scored with `--all` — a run of `config/run.default.json` with no model overlay
 (ADR-22).
+
+The same reconstruction files render into a draft spec a person can read. No API key, no network:
+
+```bash
+npm run artifacts:generate -- baseline-2026-08-31T14-45-38-777Z
+npm run artifacts:generate -- aae-2026-08-31T14-51-18-382Z
+```
+
+Expected: `openapi.json` (OpenAPI 3.1) and `API.md` (operations, semantic facts, workflows, dependencies,
+claims), each headed with the human-review disclaimer from `docs/07` §3. The committed copies of
+those files already sit in each Path A run directory under `artifacts/`. The generator does not
+change VARS — it does not add facts.
+
+To page through the drafts in a browser (Swagger UI, dropdown of available runs, `API.md` tab):
+
+```bash
+npm run artifacts:preview -- --open
+```
+
+Default URL: `http://127.0.0.1:8090`. The Swagger chrome is loaded from jsDelivr; the specs stay
+local. `Try it out` needs MiniCRM running and is proxied to `http://127.0.0.1:3000`. Optional —
+Path A scoring does not use it.
 
 **Same architecture on the cheaper `openai/gpt-5.6-luna`** (replication, `maxSteps` 200):
 baseline `results/runs/baseline-2026-08-31T16-00-44-545Z/` VARS 33.56 / $0.05 vs AAE
@@ -172,6 +189,7 @@ npm run typecheck
 npm run harness:selftest        # normalizer, policy gate, tool schemas — no target needed
 npm run baseline:selftest
 npm run aae:selftest
+npm run artifacts:selftest      # OpenAPI render + preview catalog/server: empty doc, path placeholders, no invented fields, artifact switcher
 ```
 
 ---
@@ -185,14 +203,11 @@ npm run baseline:run
 ```
 
 It prints the target, model, budget and the run directory, then writes to
-`results/runs/baseline-<utc-timestamp>/` and finishes by printing the exact `evaluate.mjs` command
+`results/runs/baseline-<utc-timestamp>/` and finishes by printing the score command
 for that directory. Run it:
 
 ```bash
-node evaluator/bin/evaluate.mjs \
-  --submission results/runs/baseline-<ts>/reconstruction.json \
-  --meta       results/runs/baseline-<ts>/meta.json \
-  --all --out  results/runs/baseline-<ts>
+npm run evaluate -- --run baseline-<ts> --all
 ```
 
 **What you get** in the run directory:
@@ -206,6 +221,7 @@ node evaluator/bin/evaluate.mjs \
 | `meta.json` | The run ledger: model, budgets, isolation deny-list, tokens, cost, wall time, tool actions |
 | `summary.json` | Step and evidence counts, and the list of operations actually observed |
 | `evaluation.json`, `diff.json` | Written by the evaluator: scores, and matched / missing / spurious / invalid per category |
+| `artifacts/openapi.json`, `artifacts/API.md` | Draft spec rendered from `reconstruction.json` (no LLM). Not scored |
 
 `diff.json` is the file to open if you want to see *why* a score is what it is — it names each
 credited and each missed fact.
@@ -351,7 +367,7 @@ them:
 - **No runner yet.** There is no single command that runs all 15 benchmark cases across both systems
   and aggregates them. The scored pair was therefore produced with `--all` — the full ground-truth
   corpus — not as 15 per-case scores. `--case <id>` scoring works today
-  (`node evaluator/bin/evaluate.mjs --submission ... --case case-09-create-order-workflow`) and the
+  (`npm run evaluate -- --run <id> --case case-09-create-order-workflow`) and the
   15 case ids are in `miniCRM/benchmark/cases.json`; what is missing is the orchestration around it.
 - **The default model is the stronger one.** `config/run.default.json` pins `openai/gpt-5.6-sol`
   (ADR-22) at `maxSteps` 300. Path A re-scores that pair. A live run with no overlay produces sol,

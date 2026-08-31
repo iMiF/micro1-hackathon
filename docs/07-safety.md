@@ -115,4 +115,4 @@ mechanism needs to exist ahead of time — it's part of the product, not the ben
 - [ ] Policy decisions are recorded as evidence and visible in the trajectory
 - [ ] No production credentials, personal data, or sensitive request bodies in the submission
 - [ ] Human approval is demonstrated for actions outside the safe sandbox policy
-- [ ] The README and the header of generated artifacts state that the output requires human review
+- [x] The README and the header of generated artifacts state that the output requires human review

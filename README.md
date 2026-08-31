@@ -127,19 +127,14 @@ the shipped artifacts without running an agent, starting a database or contactin
 npm install
 cd evaluator && npm install && cd ..
 
-node evaluator/bin/evaluate.mjs \
-  --submission results/runs/baseline-2026-08-31T14-45-38-777Z/reconstruction.json \
-  --meta       results/runs/baseline-2026-08-31T14-45-38-777Z/meta.json \
-  --all --out /tmp/score-baseline     # → VARS 49.85
-
-node evaluator/bin/evaluate.mjs \
-  --submission results/runs/aae-2026-08-31T14-51-18-382Z/reconstruction.json \
-  --meta       results/runs/aae-2026-08-31T14-51-18-382Z/meta.json \
-  --all --out /tmp/score-aae          # → VARS 71.21
+node evaluator/bin/evaluate.mjs --run baseline-2026-08-31T14-45-38-777Z --all   # → VARS 49.85
+node evaluator/bin/evaluate.mjs --run aae-2026-08-31T14-51-18-382Z --all        # → VARS 71.21
 ```
 
 Requires Node ≥ 22 (the repo reads `.env` with the built-in `process.loadEnvFile`, so there is no
-`dotenv` dependency).
+`dotenv` dependency). The same reconstructions also render to a draft spec (`openapi.json`, `API.md`);
+Path A of [`docs/REPRODUCTION.md`](docs/REPRODUCTION.md) has `artifacts:generate` and the optional
+Swagger preview.
 
 Running the agents yourself — target setup, credentials, browser, the exact commands, expected
 output, measured time and cost, and the guide's own known limits — is
@@ -158,6 +153,7 @@ C AAE, ~$3.32).
 | `agents/baseline/` | The baseline: one general-purpose browser agent |
 | `agents/aae/` | AAE iteration 1 — the asymmetric ensemble (Explorer, TrafficMiner, DomainSweeper, Inquisitor, Extractors, Assembler) |
 | `evaluator/` | The deterministic scorer (Node + ajv). No LLM, no embeddings, no fuzzy matching, no network |
+| `artifacts/` | Deterministic renderer: `reconstruction.json` → OpenAPI 3.1 + `API.md`. `npm run artifacts:preview` is Swagger UI with a dropdown of those drafts. No LLM, no new facts |
 | `config/` | Run configuration and the shared task prompt |
 | `results/runs/<run-id>/` | Trajectories, evidence, submissions and scores — deliverable 04 |
 | `docs/` | Project documentation, 14 files, indexed in [`docs/README.md`](docs/README.md) |
@@ -233,6 +229,7 @@ a run directory rather than a description.
 | Iteration 2 — reasoning budget (ADR-20) | *not started* | — | Deliberately deferred: a thinking budget is model configuration of the same class as `temperature`, so it gets switched on for both systems together, with a control point, or the gain is asserted rather than attributed |
 | Iteration 3 — verifier | *not started* | — | `verifier.enabled` is `false` in `config/run.default.json`; the switch exists, the component does not |
 | Ablation set | *not started* | — | `AAE_ABLATE=miner,sweeper,inquisitor,extractors` is implemented and self-tested, but no ablation run is scored — so each component's individual contribution is argued from design, not measured |
+| Artifact generator | Deterministic OpenAPI 3.1 + `API.md` from the submitted JSON. No LLM, no new facts. Does not affect VARS. Swagger preview with a run dropdown: `npm run artifacts:preview` | Path A `…/artifacts/` | **Kept.** Product layer, not an agent iteration |
 | **Final** | = Iteration 1 on sol. No further iteration was run before the deadline | the two sol run directories above | **49.85 → 71.21 VARS**, shipped default, one budget, one contract, three weight vectors, both trajectories published. Luna replication 33.56 → 61.12 is the check that the delta is not a model artifact |
 
 ---
@@ -344,8 +341,7 @@ Stated here rather than left for a judge to find. Longer list in
   `maxSteps` 300. It scores higher than `gpt-5.6-luna` on both systems (49.85 vs 33.56 baseline;
   71.21 vs 61.12 AAE) and ~15× more for the pair. The published pair is a run of that default; the
   luna pair is a cheaper replication, documented in [`docs/06`](docs/06-baseline-and-changelog.md) §3.
-- **Not built:** the artifact generator (reconstruction JSON is not yet rendered into OpenAPI and
-  prose) and the standalone Verifier role.
+- **Not built:** the standalone Verifier role (`verifier.enabled` is `false`). The artifact generator is shipped: Path A drafts live in each run's `artifacts/` (`openapi.json`, `API.md`).
 
 ---
 
@@ -356,7 +352,7 @@ Stated here rather than left for a judge to find. Longer list in
 | 01 | Complete solution code + Improvement Changelog | this repository · this README §6 · [`docs/06`](docs/06-baseline-and-changelog.md) |
 | 02 | Reproduction guide | [`docs/REPRODUCTION.md`](docs/REPRODUCTION.md) |
 | 03 | Solution video (≤ 5 min) | [`VIDEO-SCRIPT.md`](VIDEO-SCRIPT.md) |
-| 04 | Agent trajectories | `results/runs/<run-id>/` — `trajectory.jsonl`, `evidence/`, `meta.json`, `summary.json`; AAE additionally `claims.jsonl`, `gaps.jsonl`, `pages.jsonl`, `assemble-log.json`, `prompts/` |
+| 04 | Agent trajectories | `results/runs/<run-id>/` — `trajectory.jsonl`, `evidence/`, `meta.json`, `summary.json`; AAE additionally `claims.jsonl`, `gaps.jsonl`, `pages.jsonl`, `assemble-log.json`, `prompts/`. Path A pair also has `artifacts/openapi.json` and `artifacts/API.md` |
 
 Rules-to-implementation matrix, including all ten ground rules:
 [`docs/00-hackathon-requirements.md`](docs/00-hackathon-requirements.md).

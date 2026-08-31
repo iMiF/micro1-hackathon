@@ -1,0 +1,2123 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Reconstructed API (draft)",
+    "description": "This document is a draft produced by an agent from observed UI and HTTP traffic. It is not a source of truth. Do not use it for integration without review by a qualified human.",
+    "version": "1.0.0"
+  },
+  "x-aae-disclaimer": "This document is a draft produced by an agent from observed UI and HTTP traffic. It is not a source of truth. Do not use it for integration without review by a qualified human.",
+  "paths": {
+    "/api/customers/{id}": {
+      "delete": {
+        "operationId": "op-1",
+        "tags": [
+          "customers"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "ui_action",
+            "page": "/customers/202",
+            "ui_text": "Delete",
+            "note": "Destructive Delete action was blocked before a request was sent."
+          }
+        ]
+      },
+      "get": {
+        "operationId": "op-6",
+        "tags": [
+          "customers"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "archived": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "firstName": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "integer"
+                    },
+                    "lastName": {
+                      "type": "string"
+                    },
+                    "phone": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_response",
+            "method": "GET",
+            "path": "/api/customers/202",
+            "status": 200
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "op-17",
+        "tags": [
+          "customers"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "archived": {
+                    "type": "boolean"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "archived": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "firstName": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "integer"
+                    },
+                    "lastName": {
+                      "type": "string"
+                    },
+                    "phone": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_request",
+            "method": "PATCH",
+            "path": "/api/customers/202",
+            "json_paths": [
+              "$.archived",
+              "$.version"
+            ]
+          },
+          {
+            "kind": "network_response",
+            "method": "PATCH",
+            "path": "/api/customers/202",
+            "status": 200
+          }
+        ]
+      }
+    },
+    "/api/orders/{id}": {
+      "delete": {
+        "operationId": "op-2",
+        "tags": [
+          "orders"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "ui_action",
+            "page": "/orders/new",
+            "ui_text": "Delete draft",
+            "note": "Destructive Delete draft action was blocked before a request was sent."
+          }
+        ]
+      },
+      "get": {
+        "operationId": "op-11",
+        "tags": [
+          "orders"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "addressSnapshot": {
+                      "type": "object"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "customerEmailSnapshot": {
+                      "type": "string"
+                    },
+                    "customerId": {
+                      "type": "integer"
+                    },
+                    "customerNameSnapshot": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "integer"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "nameSnapshot": {
+                            "type": "string"
+                          },
+                          "productId": {
+                            "type": "integer"
+                          },
+                          "quantity": {
+                            "type": "integer"
+                          },
+                          "skuSnapshot": {
+                            "type": "string"
+                          },
+                          "unitPriceCents": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "orderNumber": {
+                      "type": "string"
+                    },
+                    "paymentStatus": {
+                      "type": "string"
+                    },
+                    "shippingCents": {
+                      "type": "integer"
+                    },
+                    "shippingMethodId": {
+                      "type": "integer"
+                    },
+                    "statusId": {
+                      "type": "integer"
+                    },
+                    "subtotalCents": {
+                      "type": "integer"
+                    },
+                    "taxCents": {
+                      "type": "integer"
+                    },
+                    "totalCents": {
+                      "type": "integer"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_response",
+            "method": "GET",
+            "path": "/api/orders/1001",
+            "status": 200
+          }
+        ]
+      }
+    },
+    "/api/auth/session": {
+      "get": {
+        "operationId": "op-3",
+        "tags": [
+          "auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "csrfToken": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "email": {
+                          "type": "string"
+                        },
+                        "id": {
+                          "type": "integer"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_response",
+            "method": "GET",
+            "path": "/api/auth/session",
+            "status": 200,
+            "json_paths": [
+              "$.csrfToken",
+              "$.user.email",
+              "$.user.id",
+              "$.user.name"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/countries": {
+      "get": {
+        "operationId": "op-4",
+        "tags": [
+          "countries"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_response",
+            "method": "GET",
+            "path": "/api/countries",
+            "status": 200,
+            "json_paths": [
+              "$[].code",
+              "$[].name"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/customers": {
+      "get": {
+        "operationId": "op-5",
+        "tags": [
+          "customers"
+        ],
+        "parameters": [
+          {
+            "name": "archived",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            },
+            "required": false
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "archived": {
+                            "type": "boolean"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "firstName": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "integer"
+                          },
+                          "lastName": {
+                            "type": "string"
+                          },
+                          "phone": {
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "pageSize": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_request",
+            "method": "GET",
+            "path": "/api/customers",
+            "note": "Observed query parameters archived, page, pageSize, and q."
+          },
+          {
+            "kind": "network_response",
+            "method": "GET",
+            "path": "/api/customers",
+            "status": 200,
+            "json_paths": [
+              "$.items",
+              "$.page",
+              "$.pageSize",
+              "$.total"
+            ]
+          }
+        ]
+      },
+      "post": {
+        "operationId": "op-21",
+        "tags": [
+          "customers"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "archived": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "firstName": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "integer"
+                    },
+                    "lastName": {
+                      "type": "string"
+                    },
+                    "phone": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_request",
+            "method": "POST",
+            "path": "/api/customers",
+            "json_paths": [
+              "$.email",
+              "$.firstName",
+              "$.lastName",
+              "$.phone"
+            ]
+          },
+          {
+            "kind": "network_response",
+            "method": "POST",
+            "path": "/api/customers",
+            "status": 201
+          }
+        ]
+      }
+    },
+    "/api/customers/{customerId}/addresses": {
+      "get": {
+        "operationId": "op-7",
+        "tags": [
+          "customers"
+        ],
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "city": {
+                        "type": "string"
+                      },
+                      "countryCode": {
+                        "type": "string"
+                      },
+                      "countryName": {
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "customerId": {
+                        "type": "integer"
+                      },
+                      "id": {
+                        "type": "integer"
+                      },
+                      "label": {
+                        "type": "string"
+                      },
+                      "line1": {
+                        "type": "string"
+                      },
+                      "line2": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "postalCode": {
+                        "type": "string"
+                      },
+                      "regionCode": {
+                        "type": "string"
+                      },
+                      "regionId": {
+                        "type": "integer"
+                      },
+                      "regionName": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_response",
+            "method": "GET",
+            "path": "/api/customers/101/addresses",
+            "status": 200
+          }
+        ]
+      },
+      "post": {
+        "operationId": "op-22",
+        "tags": [
+          "customers"
+        ],
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "city": {
+                    "type": "string"
+                  },
+                  "countryCode": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "line1": {
+                    "type": "string"
+                  },
+                  "line2": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "postalCode": {
+                    "type": "string"
+                  },
+                  "regionId": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "city": {
+                      "type": "string"
+                    },
+                    "countryCode": {
+                      "type": "string"
+                    },
+                    "countryName": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "customerId": {
+                      "type": "integer"
+                    },
+                    "id": {
+                      "type": "integer"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "line1": {
+                      "type": "string"
+                    },
+                    "line2": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "postalCode": {
+                      "type": "string"
+                    },
+                    "regionCode": {
+                      "type": "string"
+                    },
+                    "regionId": {
+                      "type": "integer"
+                    },
+                    "regionName": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_request",
+            "method": "POST",
+            "path": "/api/customers/101/addresses",
+            "json_paths": [
+              "$.city",
+              "$.countryCode",
+              "$.label",
+              "$.line1",
+              "$.line2",
+              "$.postalCode",
+              "$.regionId"
+            ]
+          },
+          {
+            "kind": "network_response",
+            "method": "POST",
+            "path": "/api/customers/101/addresses",
+            "status": 201
+          }
+        ]
+      }
+    },
+    "/api/customers/suggest": {
+      "get": {
+        "operationId": "op-8",
+        "tags": [
+          "customers"
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "email": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_request",
+            "method": "GET",
+            "path": "/api/customers/suggest",
+            "note": "Observed q query parameter."
+          },
+          {
+            "kind": "network_response",
+            "method": "GET",
+            "path": "/api/customers/suggest",
+            "status": 200
+          }
+        ]
+      }
+    },
+    "/api/dashboard/summary": {
+      "get": {
+        "operationId": "op-9",
+        "tags": [
+          "dashboard"
+        ],
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "customerCount": {
+                      "type": "integer"
+                    },
+                    "orderCount": {
+                      "type": "integer"
+                    },
+                    "ordersByStatus": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "count": {
+                            "type": "integer"
+                          },
+                          "statusId": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "revenueCents": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_request",
+            "method": "GET",
+            "path": "/api/dashboard/summary",
+            "note": "Observed period=30d."
+          },
+          {
+            "kind": "network_response",
+            "method": "GET",
+            "path": "/api/dashboard/summary",
+            "status": 200
+          }
+        ]
+      }
+    },
+    "/api/orders": {
+      "get": {
+        "operationId": "op-10",
+        "tags": [
+          "orders"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "customerEmailSnapshot": {
+                            "type": "string"
+                          },
+                          "customerId": {
+                            "type": "integer"
+                          },
+                          "customerNameSnapshot": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "integer"
+                          },
+                          "orderNumber": {
+                            "type": "string"
+                          },
+                          "paymentStatus": {
+                            "type": "string"
+                          },
+                          "statusId": {
+                            "type": "integer"
+                          },
+                          "totalCents": {
+                            "type": "integer"
+                          },
+                          "updatedAt": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "pageSize": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_request",
+            "method": "GET",
+            "path": "/api/orders",
+            "note": "Observed page, pageSize, q, and status query parameters."
+          },
+          {
+            "kind": "network_response",
+            "method": "GET",
+            "path": "/api/orders",
+            "status": 200
+          }
+        ]
+      },
+      "post": {
+        "operationId": "op-24",
+        "tags": [
+          "orders"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "note": {
+                    "type": "string"
+                  },
+                  "quoteId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "addressSnapshot": {
+                      "type": "object"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "customerEmailSnapshot": {
+                      "type": "string"
+                    },
+                    "customerId": {
+                      "type": "integer"
+                    },
+                    "customerNameSnapshot": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "integer"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "orderNumber": {
+                      "type": "string"
+                    },
+                    "paymentStatus": {
+                      "type": "string"
+                    },
+                    "shippingCents": {
+                      "type": "integer"
+                    },
+                    "shippingMethodId": {
+                      "type": "integer"
+                    },
+                    "statusId": {
+                      "type": "integer"
+                    },
+                    "subtotalCents": {
+                      "type": "integer"
+                    },
+                    "taxCents": {
+                      "type": "integer"
+                    },
+                    "totalCents": {
+                      "type": "integer"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_request",
+            "method": "POST",
+            "path": "/api/orders",
+            "json_paths": [
+              "$.note",
+              "$.quoteId"
+            ]
+          },
+          {
+            "kind": "network_response",
+            "method": "POST",
+            "path": "/api/orders",
+            "status": 201
+          }
+        ]
+      }
+    },
+    "/api/orders/{id}/activity": {
+      "get": {
+        "operationId": "op-12",
+        "tags": [
+          "orders"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "createdBy": {
+                        "type": "integer"
+                      },
+                      "createdByName": {
+                        "type": "string"
+                      },
+                      "data": {
+                        "type": "object"
+                      },
+                      "eventType": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "integer"
+                      },
+                      "orderId": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_response",
+            "method": "GET",
+            "path": "/api/orders/1001/activity",
+            "status": 200
+          }
+        ]
+      }
+    },
+    "/api/products": {
+      "get": {
+        "operationId": "op-13",
+        "tags": [
+          "products"
+        ],
+        "parameters": [
+          {
+            "name": "active",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            },
+            "required": false
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "active": {
+                            "type": "boolean"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "priceCents": {
+                            "type": "integer"
+                          },
+                          "sku": {
+                            "type": "string"
+                          },
+                          "stockQty": {
+                            "type": "integer"
+                          },
+                          "updatedAt": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "pageSize": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_request",
+            "method": "GET",
+            "path": "/api/products",
+            "note": "Observed active, page, and pageSize query parameters."
+          },
+          {
+            "kind": "network_response",
+            "method": "GET",
+            "path": "/api/products",
+            "status": 200
+          }
+        ]
+      }
+    },
+    "/api/products/{id}": {
+      "get": {
+        "operationId": "op-14",
+        "tags": [
+          "products"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "priceCents": {
+                      "type": "integer"
+                    },
+                    "sku": {
+                      "type": "string"
+                    },
+                    "stockQty": {
+                      "type": "integer"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_response",
+            "method": "GET",
+            "path": "/api/products/205",
+            "status": 200
+          }
+        ]
+      }
+    },
+    "/api/products/suggest": {
+      "get": {
+        "operationId": "op-15",
+        "tags": [
+          "products"
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "priceCents": {
+                        "type": "integer"
+                      },
+                      "sku": {
+                        "type": "string"
+                      },
+                      "stockQty": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_request",
+            "method": "GET",
+            "path": "/api/products/suggest",
+            "note": "Observed q query parameter."
+          },
+          {
+            "kind": "network_response",
+            "method": "GET",
+            "path": "/api/products/suggest",
+            "status": 200
+          }
+        ]
+      }
+    },
+    "/api/regions": {
+      "get": {
+        "operationId": "op-16",
+        "tags": [
+          "regions"
+        ],
+        "parameters": [
+          {
+            "name": "country",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "string"
+                      },
+                      "countryCode": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_request",
+            "method": "GET",
+            "path": "/api/regions",
+            "note": "Observed country=CA."
+          },
+          {
+            "kind": "network_response",
+            "method": "GET",
+            "path": "/api/regions",
+            "status": 200
+          }
+        ]
+      }
+    },
+    "/api/orders/{id}/status": {
+      "patch": {
+        "operationId": "op-18",
+        "tags": [
+          "orders"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "statusId": {
+                    "type": "integer"
+                  },
+                  "version": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "addressSnapshot": {
+                      "type": "object"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "customerEmailSnapshot": {
+                      "type": "string"
+                    },
+                    "customerId": {
+                      "type": "integer"
+                    },
+                    "customerNameSnapshot": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "integer"
+                    },
+                    "items": {
+                      "type": "array"
+                    },
+                    "orderNumber": {
+                      "type": "string"
+                    },
+                    "paymentStatus": {
+                      "type": "string"
+                    },
+                    "shippingCents": {
+                      "type": "integer"
+                    },
+                    "shippingMethodId": {
+                      "type": "integer"
+                    },
+                    "statusId": {
+                      "type": "integer"
+                    },
+                    "subtotalCents": {
+                      "type": "integer"
+                    },
+                    "taxCents": {
+                      "type": "integer"
+                    },
+                    "totalCents": {
+                      "type": "integer"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_request",
+            "method": "PATCH",
+            "path": "/api/orders/1001/status",
+            "json_paths": [
+              "$.statusId",
+              "$.version"
+            ]
+          },
+          {
+            "kind": "network_response",
+            "method": "PATCH",
+            "path": "/api/orders/1001/status",
+            "status": 200
+          }
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "op-19",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "csrfToken": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "email": {
+                          "type": "string"
+                        },
+                        "id": {
+                          "type": "integer"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid email or password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "x-error-code": "INVALID_CREDENTIALS"
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_request",
+            "method": "POST",
+            "path": "/api/auth/login",
+            "json_paths": [
+              "$.email",
+              "$.password"
+            ]
+          },
+          {
+            "kind": "network_response",
+            "method": "POST",
+            "path": "/api/auth/login",
+            "status": 200
+          }
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "op-20",
+        "tags": [
+          "auth"
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_response",
+            "method": "POST",
+            "path": "/api/auth/logout",
+            "status": 204
+          }
+        ]
+      }
+    },
+    "/api/order-quotes": {
+      "post": {
+        "operationId": "op-23",
+        "tags": [
+          "order-quotes"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "addressId": {
+                    "type": "integer"
+                  },
+                  "customerId": {
+                    "type": "integer"
+                  },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "productId": {
+                          "type": "integer"
+                        },
+                        "quantity": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  },
+                  "shippingMethodId": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "expiresAt": {
+                      "type": "string"
+                    },
+                    "quoteId": {
+                      "type": "string"
+                    },
+                    "shippingCents": {
+                      "type": "integer"
+                    },
+                    "subtotalCents": {
+                      "type": "integer"
+                    },
+                    "taxCents": {
+                      "type": "integer"
+                    },
+                    "totalCents": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_request",
+            "method": "POST",
+            "path": "/api/order-quotes",
+            "json_paths": [
+              "$.addressId",
+              "$.customerId",
+              "$.items",
+              "$.shippingMethodId"
+            ]
+          },
+          {
+            "kind": "network_response",
+            "method": "POST",
+            "path": "/api/order-quotes",
+            "status": 201
+          }
+        ]
+      }
+    },
+    "/api/orders/{id}/notes": {
+      "post": {
+        "operationId": "op-25",
+        "tags": [
+          "orders"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "body": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "body": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "createdBy": {
+                      "type": "integer"
+                    },
+                    "createdByName": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "integer"
+                    },
+                    "orderId": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_request",
+            "method": "POST",
+            "path": "/api/orders/1001/notes",
+            "json_paths": [
+              "$.body"
+            ]
+          },
+          {
+            "kind": "network_response",
+            "method": "POST",
+            "path": "/api/orders/1001/notes",
+            "status": 201
+          }
+        ]
+      }
+    },
+    "/api/shipping/options": {
+      "post": {
+        "operationId": "op-26",
+        "tags": [
+          "shipping"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "addressId": {
+                    "type": "integer"
+                  },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "productId": {
+                          "type": "integer"
+                        },
+                        "quantity": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "options": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "estimatedDays": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer"
+                            }
+                          },
+                          "methodId": {
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "priceCents": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-evidence": [
+          {
+            "kind": "network_request",
+            "method": "POST",
+            "path": "/api/shipping/options",
+            "json_paths": [
+              "$.addressId",
+              "$.items"
+            ]
+          },
+          {
+            "kind": "network_response",
+            "method": "POST",
+            "path": "/api/shipping/options",
+            "status": 200
+          }
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "auth"
+    },
+    {
+      "name": "countries"
+    },
+    {
+      "name": "customers"
+    },
+    {
+      "name": "dashboard"
+    },
+    {
+      "name": "order-quotes"
+    },
+    {
+      "name": "orders"
+    },
+    {
+      "name": "products"
+    },
+    {
+      "name": "regions"
+    },
+    {
+      "name": "shipping"
+    }
+  ]
+}

@@ -10,5 +10,5 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["tooling/**/*.ts", "harness/**/*.ts", "agents/**/*.ts", "runner/**/*.ts"]
+  "include": ["tooling/**/*.ts", "harness/**/*.ts", "agents/**/*.ts", "artifacts/**/*.ts", "runner/**/*.ts"]
 }

@@ -1,5 +1,6 @@
-import { mkdirSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { basename, join } from 'node:path'
+import { generateArtifacts } from '../../artifacts/src/generate.js'
 import { Harness } from '../../harness/index.js'
 import { loadDotEnv } from '../../tooling/config/env.js'
 import { ledgerEntry, loadRunConfig } from '../../tooling/config/run.js'
@@ -93,9 +94,19 @@ async function main(): Promise<void> {
 
   const wall_time_ms = Date.now() - wallStarted
   const cost = await estimateCostUsd(config.model.id, usage)
-  const submission = harness ? harness.getSubmission() : undefined
+  let submission: unknown = harness ? harness.getSubmission() : undefined
   if (submission && typeof submission === 'object') {
     writeFileSync(join(runDir, 'reconstruction.json'), JSON.stringify(submission, null, 2) + '\n')
+  } else {
+    const reconPath = join(runDir, 'reconstruction.json')
+    if (existsSync(reconPath)) {
+      submission = JSON.parse(readFileSync(reconPath, 'utf8')) as unknown
+    }
+  }
+  if (submission && typeof submission === 'object') {
+    const generated = generateArtifacts({ submission, outDir: join(runDir, 'artifacts') })
+    console.log(`wrote ${generated.openapiPath}`)
+    console.log(`wrote ${generated.markdownPath}`)
   }
 
   writeFileSync(
@@ -133,9 +144,7 @@ async function main(): Promise<void> {
       `rounds=${roundsRun} ablated=${ablated.join(',') || 'none'}`,
   )
   console.log('score with:')
-  console.log(
-    `  node evaluator/bin/evaluate.mjs --submission ${join(runDir, 'reconstruction.json')} --all --meta ${join(runDir, 'meta.json')} --out ${runDir}`,
-  )
+  console.log(`  npm run evaluate -- --run ${basename(runDir)} --all`)
 }
 
 main().catch((error) => {

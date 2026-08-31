@@ -1,6 +1,6 @@
 # 06. Baseline and Improvement Changelog
 
-> **Status:** baseline and AAE iteration 1 both scored; the comparison is published
+> **Status:** baseline and AAE iteration 1 both scored; the comparison is published; artifact generator shipped
 > **Updated:** 2026-08-31
 > **Source of truth:** brief §"Show how the solution improved", §"Tell the story with an improvement changelog"
 > **Maps to criteria:** Measured Improvement (15), Hot Take (5), deliverable 01
@@ -71,6 +71,7 @@ Column format is defined by the brief. Filled in as experiments are run.
 | Iteration 2 (reasoning, ADR-20) | _not started_ | | Requires a control point B2 so the gain can be attributed to reasoning rather than asserted |
 | Iteration 3 (verifier) | _not started_ | | `verifier.enabled` is `false` in `config/run.default.json`; the switch exists, the component does not |
 | Ablation set | _not started_ | | `AAE_ABLATE=miner,sweeper,inquisitor,extractors` is implemented and self-tested, but no ablation run is scored — so each component's individual contribution is argued from design, not measured |
+| Artifact generator | Deterministic render of the submitted JSON into OpenAPI 3.1 and `API.md`, so a person can review a draft spec rather than canonical JSON. No LLM; missing fields stay missing. Does not affect VARS. `npm run artifacts:preview` is Swagger UI over those files with a dropdown of runs | `artifacts/` plus the Path A directories `results/runs/baseline-2026-08-31T14-45-38-777Z/artifacts/` and `results/runs/aae-2026-08-31T14-51-18-382Z/artifacts/` | **Kept.** Product layer, not an agent iteration. Re-run with `npm run artifacts:generate -- <run-id>`; browse with `npm run artifacts:preview` |
 | **Final** | = Iteration 1 on sol. No further iteration was run before the deadline | the two sol run directories above | **49.85 → 71.21 VARS(frozen)** on the shipped default (`openai/gpt-5.6-sol`, `maxSteps` 300), one budget, one contract, three weight vectors, both trajectories published. The luna replication (33.56 → 61.12) is the check that this delta is not a strong-model artifact (ADR-22) |
 
 > **Model, recorded per ADR-22:** `config/run.default.json` pins `model.id` to `openai/gpt-5.6-sol`,
@@ -99,8 +100,9 @@ becomes "we added a component because we could."
 
 **Status of this plan as of 2026-08-31:** it was written before the baseline was measured, and the
 measurement rewrote it. Row 1 was removed unimplemented; rows 2 and 3 were merged into the ADR-18
-ensemble and shipped as iteration 1; rows 4 and 5 are unbuilt. It is kept unedited below because the
-distance between what was planned and what the measurement demanded is itself the finding.
+ensemble and shipped as iteration 1; row 4 (Verifier) is unbuilt; row 5 (artifact generator) shipped
+later as a product layer, not an agent iteration — see the changelog row above. The table is kept
+because the distance between what was planned and what the measurement demanded is itself the finding.
 
 | # | What we add | Expected baseline failure mode | How we measure the effect |
 | --- | --- | --- | --- |
@@ -109,6 +111,9 @@ distance between what was planned and what the measurement demanded is itself th
 | 3 | Experiment planner | An enum value is named from a single observation; wrong tie to the UI label | Δ F1(semantic_facts) |
 | 4 | Verifier | Plausible but unconfirmed claims in the final output | Δ precision, Δ evidence support rate |
 | 5 | Artifact generator | Valid JSON that's useless to a human | human evaluation, doesn't affect VARS |
+
+Row 5 shipped after iteration 1, as a product layer rather than an agent iteration: `artifacts/`
+renders the submitted JSON into OpenAPI 3.1 and `API.md` with no LLM. See the changelog row above.
 
 Every iteration gets an **ablation**: the whole system minus this component. Without an ablation
 we can't claim the contribution is specifically its.

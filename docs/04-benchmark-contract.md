@@ -321,9 +321,15 @@ results/runs/<run-id>/
   screenshots/        # captured frames, when the agent took any
   summary.json        # step counts by kind, operations actually observed
   reconstruction.json # what the agent submitted
+  artifacts/          # OpenAPI 3.1 + API.md, rendered from reconstruction.json (no LLM)
+    openapi.json
+    API.md
   evaluation.json     # metrics (written by the evaluator)
   diff.json           # matched / missing / spurious / invalid
 ```
+
+`npm run artifacts:preview` serves those files in Swagger UI with a dropdown of runs. It does not
+write anything back and does not affect VARS.
 
 An AAE run additionally carries its internal ledger: `claims.jsonl`, `gaps.jsonl`, `pages.jsonl`,
 `digest.json`, `assemble-log.json` and `prompts/`.

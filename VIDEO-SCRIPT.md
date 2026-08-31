@@ -157,9 +157,7 @@ cd miniCRM && npm run db:reset        # deterministic seed
 npm run dev                           # target on :5173
 npm run baseline:run                  # → results/runs/baseline-<ts>/
 npm run aae:run                       # → results/runs/aae-<ts>/
-node evaluator/bin/evaluate.mjs \
-  --submission results/runs/<id>/reconstruction.json --all \
-  --meta results/runs/<id>/meta.json --out results/runs/<id>
+npm run evaluate -- --run <id> --all
 ```
 
 ---
@@ -214,13 +212,15 @@ node evaluator/bin/evaluate.mjs \
 
 ## Доделать до записи
 
-- **Нет `README.md` в корне** — deliverable 01 требует его прямо.
-- **Нет `docs/REPRODUCTION.md`** — deliverable 02. Скелет = пять команд из сегмента 8.
-  Он уже указан в карте `docs/README.md`, то есть ссылка ведёт в пустоту.
-- **`docs/09` §2 устарел**: AAE помечен missing, хотя итерация закоммичена (`5977bd1`).
-- **ADR-18…21 нет в `docs/11`** (последний записанный — ADR-17).
+Сделано: корневой `README.md` (deliverable 01), [`docs/REPRODUCTION.md`](docs/REPRODUCTION.md)
+(deliverable 02), AAE в [`docs/09`](docs/09-status-and-roadmap.md) §2, ADR-18…22 в
+[`docs/11`](docs/11-decisions-and-open-questions.md).
+
+Ещё открыто:
+
+- Видео не записано (этот скрипт — заготовка deliverable 03).
 - Прогоны сделаны в режиме `--all`, не по 15 кейсам. В озвучке говорим «full corpus»,
-  не «fifteen cases».
+  не «fifteen cases». Runner так и не собран.
 
 ## Если не влезает в 5:00
 
