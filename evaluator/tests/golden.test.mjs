@@ -258,17 +258,96 @@ test('dependency field references: header: is case-folded, cookie: is not (RFC 7
   assert.equal(diff.categories.dependencies.matched[0].ground_truth_id, 'dep-a');
 });
 
-test('operation path placeholder names must match exactly -- {orderId} does not match ground truth {id}', () => {
-  // docs/04 §1 publishes the placeholder convention ({id}, {customerId},
-  // {addressId}) as fixed vocabulary, not something the agent has to guess;
-  // the evaluator therefore does NOT generalize "{anything}" to one wildcard
-  // token when building an operation's canonical key. An agent that departs
-  // from the published names is scored as a miss, not silently forgiven.
+test('operation path placeholder NAMES are wildcarded -- {orderId} matches ground truth {id} (docs/04 §4 rule 1, fixed 2026-08-30)', () => {
+  // Was the opposite until 2026-08-30: docs/04 §4 rule 1 was edited (in the
+  // same commit that added the harness) to erase placeholder names as well
+  // as concrete ids, explicitly pointing at tooling/browser/paths.ts as the
+  // one implementation both the agent-side serializer and the evaluator
+  // must share -- "two implementations of this rule will disagree". This
+  // evaluator's normalizePath was never updated to match and kept exact-name
+  // comparison (see the old version of this test, and evaluator/README.md's
+  // now-corrected "Known interpretation calls"), so it silently diverged
+  // from its own contract doc. Confirmed to matter, not just theoretical:
+  // the 2026-08-30 Haiku baseline run produced a workflow (`wf_001`) that
+  // matched ground truth `wf-create-order` step-for-step except for `{id}`
+  // vs `{customerId}` on one nested route, and under the old behavior that
+  // alone zeroed the whole workflow.
   const scope = { operations: [{ id: 'op-a', method: 'GET', path: '/api/orders/{id}' }], facts: [], dependencies: [], workflows: [], unknownIds: [], scope: 'test' };
   const doc = emptyDoc({ operations: [{ method: 'GET', path: '/api/orders/{orderId}', evidence: ev('network_request') }] });
   const { evaluation } = run(doc, scope);
   const c = evaluation.categories.operations;
-  assert.equal(c.tp, 0);
-  assert.equal(c.fp, 1);
-  assert.equal(c.fn, 1);
+  assert.equal(c.tp, 1, '{orderId} and {id} must reduce to the same {} key');
+  assert.equal(c.fp, 0);
+  assert.equal(c.fn, 0);
+});
+
+test('operation path placeholder names do not cause false collisions across genuinely different routes', () => {
+  // Erasing names must not merge two operations that differ in something
+  // other than the placeholder name -- e.g. a different resource or a
+  // different concrete segment position.
+  const scope = {
+    operations: [
+      { id: 'op-a', method: 'GET', path: '/api/customers/{customerId}/addresses' },
+      { id: 'op-b', method: 'GET', path: '/api/orders/{id}/activity' },
+    ],
+    facts: [], dependencies: [], workflows: [], unknownIds: [], scope: 'test',
+  };
+  const doc = emptyDoc({
+    operations: [
+      { method: 'GET', path: '/api/customers/{id}/addresses', evidence: ev('network_request') },
+      { method: 'GET', path: '/api/orders/{orderId}/activity', evidence: ev('network_request') },
+    ],
+  });
+  const { evaluation } = run(doc, scope);
+  const c = evaluation.categories.operations;
+  assert.equal(c.tp, 2, 'each submitted operation should match its own ground-truth counterpart, not each other');
+  assert.equal(c.fp, 0);
+  assert.equal(c.fn, 0);
+});
+
+test('bare {param} dependency field references are also wildcarded, same rule as path placeholders', () => {
+  const scope = { operations: [], facts: [], dependencies: [
+    { id: 'dep-order-id-to-status', source_operation: 'GET /api/orders/{id}', source_field: '$.id', target_operation: 'PATCH /api/orders/{id}/status', target_field: '{id}' },
+  ], workflows: [], unknownIds: [], scope: 'test' };
+  const doc = emptyDoc({
+    dependencies: [
+      { id: 'q1', source_operation: 'GET /api/orders/{id}', source_field: '$.id', target_operation: 'PATCH /api/orders/{id}/status', target_field: '{orderId}', evidence: ev('network_request') },
+    ],
+  });
+  const { evaluation } = run(doc, scope);
+  const c = evaluation.categories.dependencies;
+  assert.equal(c.tp, 1);
+  assert.equal(c.fp, 0);
+  assert.equal(c.fn, 0);
+});
+
+test('dependency field references: query. is a declared prefix (docs/04 §4 rule 6, added 2026-08-30), case-sensitive like $.', () => {
+  // Ground truth's dep-country-to-regions uses target_field "query.country",
+  // sourced from the live route (miniCRM/apps/api/src/routes/geo.ts reads
+  // request.query.country). docs/04 §4 rule 6 did not previously list
+  // `query.` among the declared prefixes even though docs/04 §3 already uses
+  // the same notation for operations[].parameters ("query.status: integer")
+  // -- a documentation gap, not an evaluator bug: normalizeFieldRef already
+  // left unrecognized prefixes untouched (case-sensitive), which is the
+  // right behavior for query. too, so no matching-code change was needed,
+  // only the doc/prompt catching up. This test locks the behavior in.
+  const scope = { operations: [], facts: [], dependencies: [
+    { id: 'dep-country-to-regions', source_operation: 'GET /api/countries', source_field: '$[].code', target_operation: 'GET /api/regions', target_field: 'query.country' },
+  ], workflows: [], unknownIds: [], scope: 'test' };
+  const docMatch = emptyDoc({
+    dependencies: [
+      { id: 'q1', source_operation: 'GET /api/countries', source_field: '$[].code', target_operation: 'GET /api/regions', target_field: 'query.country', evidence: ev('network_request') },
+    ],
+  });
+  const { evaluation: evMatch } = run(docMatch, scope);
+  assert.equal(evMatch.categories.dependencies.tp, 1, 'query.country must match query.country exactly');
+
+  const docCase = emptyDoc({
+    dependencies: [
+      { id: 'q1', source_operation: 'GET /api/countries', source_field: '$[].code', target_operation: 'GET /api/regions', target_field: 'query.Country', evidence: ev('network_request') },
+    ],
+  });
+  const { evaluation: evCase } = run(docCase, scope);
+  assert.equal(evCase.categories.dependencies.tp, 0, 'query. names are case-sensitive -- query.Country must NOT match query.country');
+  assert.equal(evCase.categories.dependencies.fp, 1);
 });

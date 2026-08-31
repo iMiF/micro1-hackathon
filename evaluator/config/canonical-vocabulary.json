@@ -8,23 +8,43 @@
     "40": "shipped",
     "50": "cancelled"
   },
-  "payment_status_values": ["unpaid", "paid", "refunded"],
-  "activity_event_types": ["ORDER_CREATED", "STATUS_CHANGED", "NOTE_ADDED"],
+  "payment_status_values": [
+    "unpaid",
+    "paid",
+    "refunded"
+  ],
+  "activity_event_types": [
+    "ORDER_CREATED",
+    "STATUS_CHANGED",
+    "NOTE_ADDED"
+  ],
   "dependency_field_prefixes": {
-    "$comment": "docs/04 §4 rule 6. header: and cookie: names are case-folded for comparison because HTTP header names and this benchmark's single cookie name are case-insensitive on the wire; $. (JSONPath into a body) and {param} (path placeholder) are left case-sensitive because JSON keys are.",
+    "$comment": "docs/04 §4 rule 6. header: and cookie: names are case-folded for comparison because HTTP header names and this benchmark's single cookie name are case-insensitive on the wire; $. (JSONPath into a body) and query. (query-string parameter, added 2026-08-30) are left case-sensitive because JSON keys and query parameter names are. {param} (path placeholder) used to be compared case-sensitively too; since 2026-08-30 its NAME is wildcarded to a bare {} instead (docs/04 §4 rule 1) -- only the fact that it's a placeholder (vs. a literal value) still matters for matching.",
     "header": "case-insensitive name",
     "cookie": "case-insensitive name (single cookie: sid)",
     "Set-Cookie": "response header, case-insensitive name",
     "$.": "JSONPath into a response/request body, case-sensitive",
-    "{param}": "path placeholder, case-sensitive, drawn from the operation's own normalized path"
+    "{param}": "path placeholder -- NAME is wildcarded to {} for matching since 2026-08-30, see docs/04 §4 rule 1",
+    "query.": "query-string parameter name, case-sensitive, added 2026-08-30"
   },
   "path_placeholders": {
-    "$comment": "docs/04 §1: the only placeholder names ground truth uses. Not a closed enum the schema enforces -- an agent-chosen placeholder name that differs from these will simply fail to match a ground-truth operation/dependency/workflow-step key, which is a real (if maybe unfair) scoring outcome, not a bug. See evaluator/README.md 'Known interpretation calls'.",
-    "names": ["id", "customerId", "addressId"]
+    "$comment": "docs/04 §1: the placeholder names ground truth uses, for agents that want to write human-readable output. Since 2026-08-30 (docs/04 §4 rule 1) an agent-chosen placeholder name that differs from ground truth's does NOT cost a match -- the name is wildcarded to a bare {} on both sides before comparison. This list is documentation, not a scored vocabulary. See evaluator/README.md 'Known interpretation calls' for the (now corrected) history.",
+    "names": [
+      "id",
+      "customerId",
+      "addressId"
+    ]
   },
   "unordered_value_keys": {
     "$comment": "Keys inside a structured semantic_facts.value object (definitions.semanticFactValue) whose array is treated as a set, not a sequence, when computing the canonical matching key -- ground truth writes them in one order (e.g. ascending numeric) but that order carries no semantic meaning. Declared here, applied by src/normalize.mjs normalizeValue(), so it is a public rule rather than a silent code behavior.",
-    "keys": ["to", "accepts", "matches", "requires", "base", "excludedStatusIds"]
+    "keys": [
+      "to",
+      "accepts",
+      "matches",
+      "requires",
+      "base",
+      "excludedStatusIds"
+    ]
   },
   "aliases": {
     "$comment": "Explicit (kind, subject, value) synonyms the evaluator should treat as equal. Empty on purpose -- see top-level $comment. Shape if ever populated: [{\"kind\":\"...\",\"subject\":\"...\",\"from\":\"...\",\"to\":\"...\"}]",

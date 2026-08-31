@@ -100,14 +100,34 @@ precisely than every edge case of *how equality is decided*. Where the docs
 were silent, here is what was chosen and why -- flagged so the benchmark
 owner can override any of these without archaeology:
 
-- **Path placeholder names are exact, not wildcarded.** docs/04 §1 publishes
-  a *closed, fixed* set of placeholder names (`{id}`, `{customerId}`,
-  `{addressId}`) -- unlike the author-coined `semantic_facts.value` shorthand
-  ADR-14 had to fix, this is not a guessing game, so an operation/dependency/
-  workflow-step reference is matched with placeholder names taken literally
-  after only formatting normalization (trim, slashes). Verified against
-  `miniCRM/benchmark/scripts/emit-ground-truth.mjs`: it hard-codes exactly
-  these three names and reuses `{id}` across customers/orders/products.
+- **Path placeholder names are wildcarded, not exact (reversed 2026-08-30).**
+  This bullet used to say the opposite -- that docs/04 §1's closed set of
+  three placeholder names made this a non-guessing game, so names were
+  compared literally. That was correct when written, but docs/04 §4 rule 1
+  was edited later the same day (in the commit that added the harness) to
+  the opposite rule: erase placeholder names too, matching
+  `tooling/browser/paths.ts`, because ground truth's own naming is
+  inconsistent across resources (orders keep `:id` even nested, customers
+  use `:customerId`/`:addressId` -- verified against the live route source,
+  it's a real inconsistency in the target app, not sloppy ground truth) and
+  an agent has no reliable way to always recover which one applies. This
+  file's `src/normalize.mjs` was never updated to match that rule change and
+  silently kept the old exact-name behavior -- caught 2026-08-30 by running
+  the first real baseline (Haiku): a workflow that matched ground truth
+  step-for-step except for one placeholder name scored zero anyway. Fixed by
+  making `normalizePath`/`normalizeFieldRef` erase names the same way
+  `paths.ts` does; see `tests/golden.test.mjs` for the regression tests
+  (including one confirming this does not cause false collisions between
+  genuinely different routes). Ground truth itself was not touched.
+- **`query.` is a declared `dependencies[].*_field` prefix (added
+  2026-08-30).** Missing from docs/04 §4 rule 6's list even though docs/04
+  §3 already uses the same notation for `operations[].parameters`
+  (`query.status: integer`) and `dep-country-to-regions` already used it
+  (sourced from the real route, `request.query.country` in
+  `miniCRM/apps/api/src/routes/geo.ts`). No code change was needed --
+  `normalizeFieldRef` already left unrecognized prefixes untouched
+  (case-sensitive), which is the correct behavior for `query.` too -- only
+  the doc and the agent-facing prompt were missing it.
 - **Evidence is required for TP eligibility on operations, semantic_facts,
   dependencies, and workflows, but *not* on parameters.** docs/05 §3 states
   the empty/invalid-evidence-is-`invalid` rule once, in the general "what F1

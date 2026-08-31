@@ -162,11 +162,21 @@ normalization rules are public and the agent is aware of them:
    `/api/customers/{customerId}/addresses` all reduce to `/api/customers/{}/addresses`.
    The name has to go because ground truth itself is not consistent about it: it has
    `GET /api/orders/{id}/activity` next to `GET /api/customers/{customerId}/addresses`, and an
-   agent has no way to know which convention applies where. A name-sensitive key would cost points
-   for an operation that was correctly discovered, and would drag its parameters down with it.
-   The implementation both the agent-side serializer and the evaluator must use is
-   `tooling/browser/paths.ts` (`normalizePath`, `operationKey`) — two implementations of this rule
-   will disagree.
+   agent has no way to know which convention applies where. Verified against the live route source
+   (`miniCRM/apps/api/src/routes/*.ts`): ground truth's naming is *accurate* — orders really are
+   `:id` even nested, customers really are `:customerId`/`:addressId` — this is a genuine
+   inconsistency in the target app, not a ground-truth authoring slip, and not something worth
+   "fixing" by renaming routes in ground truth, since that would make it stop matching the real
+   app. A name-sensitive key would cost points for an operation that was correctly discovered, and
+   would drag its parameters down with it — confirmed on the first baseline run, not hypothetical:
+   order response bodies (`OrderActivity`, `OrderNote`) literally contain a field named `orderId`,
+   which leads a careful agent that reuses observed field names to write `{orderId}` for a path
+   ground truth calls `{id}` — the opposite of a careless guess. The implementation both the
+   agent-side serializer and the evaluator must use is `tooling/browser/paths.ts` (`normalizePath`,
+   `operationKey`) — two implementations of this rule will disagree. **They did, from
+   2026-08-30 22:39 UTC (when this rule was written) until 2026-08-30 (fixed): `evaluator/src/
+   normalize.mjs` kept its earlier exact-name behavior and was never updated to match. See
+   `evaluator/README.md` "Known interpretation calls" for the historical note.**
 2. **Methods** are upper-case.
 3. **Canonical labels** for enums: the exact label **visible in the UI**, converted to
    `lower_snake_case`.
@@ -175,7 +185,13 @@ normalization rules are public and the agent is aware of them:
    object whose keys come from `definitions.semanticFactValue` in the output schema — a closed,
    published list (ADR-14). No key or vocabulary word in the matching key has to be invented.
 6. **Field references in `dependencies`** use declared prefixes: `header:`, `cookie:`,
-   `Set-Cookie:`, and JSONPath (`$.field`) for body fields.
+   `Set-Cookie:`, `query.` for query-string parameters, and JSONPath (`$.field`) for body fields.
+   `query.` was missing from this list until 2026-08-30 even though docs/04 §3 already uses the
+   same notation for `operations[].parameters` (`query.status: integer`) -- a documentation gap,
+   not a ground-truth error: `dep-country-to-regions` is generated from the live route
+   (`request.query.country` in `miniCRM/apps/api/src/routes/geo.ts`), it just was never added to
+   this list or to the agent-facing prompt. A bare `{param}` value (no prefix) is also allowed, and
+   is normalized the same way as path-parameter names in rule 1 below -- same reasoning, same fix.
 
 **Hard boundary:** the evaluator does not accept `sent` as equivalent to `shipped` unless that
 alias is in the public table. This is deliberate. The benchmark measures the ability to recover

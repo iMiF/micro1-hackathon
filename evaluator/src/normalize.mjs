@@ -15,23 +15,56 @@ export function normalizeMethod(method) {
 }
 
 /**
- * Rule 1 (docs/04 §4): paths are normalized. Ground truth already writes paths
- * in final normalized form (placeholders already substituted by the benchmark
- * author -- see docs/04 §1 and emit-ground-truth.mjs). The evaluator's job is
- * NOT to guess which path segments are identifiers; that guess is the agent's
- * job, using the published placeholder convention (config/canonical-vocabulary.json
- * path_placeholders). The evaluator only does formatting normalization: trim,
- * force a leading slash, collapse repeated slashes, drop a trailing slash
- * (except the root path itself). Placeholder names are left exactly as given.
+ * Rule 1 (docs/04 §4, fixed 2026-08-30): paths are normalized -- concrete
+ * identifiers AND path-parameter NAMES are both erased to a bare `{}`
+ * segment. `/api/customers/12/addresses`, `/api/customers/{id}/addresses`
+ * and `/api/customers/{customerId}/addresses` all reduce to the same
+ * `/api/customers/{}/addresses`.
+ *
+ * This must behave identically to `tooling/browser/paths.ts` normalizePath --
+ * docs/04 §4 rule 1 says so explicitly ("two implementations of this rule
+ * will disagree"), and until this fix they did: this file used to do only
+ * formatting normalization and leave placeholder names exact (see git
+ * history / evaluator/README.md "Known interpretation calls" for the old
+ * text), while paths.ts already erased names, per a docs/04 §4 edit that
+ * landed in the same commit as the harness and was never carried over here.
+ * Confirmed live in the 2026-08-30 Haiku baseline run: the agent's `wf_001`
+ * matched ground truth `wf-create-order` step-for-step except for
+ * `{id}` vs `{customerId}` on one nested route, and that alone zeroed the
+ * whole workflow under the old (exact-name) behavior.
+ *
+ * Ground truth's own placeholder naming is verified correct against the
+ * live route source (`miniCRM/apps/api/src/routes/*.ts`, e.g. orders keep
+ * `:id` even on nested routes, customers use `:customerId`/`:addressId`) --
+ * this is a real inconsistency in the target app, not a ground-truth
+ * authoring bug, so ground truth is not changed. An outside agent observing
+ * only the browser has no way to recover which convention the server code
+ * chose for a given nested route (confirmed by a concrete case: order
+ * response bodies literally contain a field named `orderId`, which would
+ * lead a careful agent to write `{orderId}` for a path ground truth calls
+ * `{id}` -- the opposite of guessing wrong from carelessness). A
+ * name-sensitive key would cost points for a correctly discovered
+ * operation/dependency/workflow-step for reasons outside the agent's
+ * control, so the name is erased in the matching key on both sides.
  */
 export function normalizePath(pathStr) {
   if (typeof pathStr !== 'string') return pathStr;
-  let s = pathStr.trim();
-  if (s.length === 0) return s;
-  if (!s.startsWith('/')) s = '/' + s;
-  s = s.replace(/\/{2,}/g, '/');
-  if (s.length > 1 && s.endsWith('/')) s = s.slice(0, -1);
-  return s;
+  const withoutQuery = pathStr.split('?')[0] ?? pathStr;
+  const withoutHash = withoutQuery.split('#')[0] ?? withoutQuery;
+  const segments = withoutHash.split('/').filter((seg) => seg.length > 0);
+  const normalized = segments.map((seg) => (isPathParamSegment(seg) ? '{}' : seg));
+  return '/' + normalized.join('/');
+}
+
+/** Mirrors `tooling/browser/paths.ts` isConcreteId + isTemplated: a segment
+ * that is a bare numeric/UUID id, or already a `{name}` / `:name` template,
+ * is a path parameter regardless of what name (if any) it carries. */
+function isPathParamSegment(segment) {
+  if (/^\d+$/.test(segment)) return true;
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(segment)) return true;
+  if (/^\{.*\}$/.test(segment)) return true;
+  if (/^:.+/.test(segment)) return true;
+  return false;
 }
 
 /**
@@ -76,14 +109,24 @@ export function normalizeSubject(subject) {
 }
 
 /**
- * Rule 6 (docs/04 §4): field references in dependencies use declared prefixes
- * header:, cookie:, Set-Cookie:, and JSONPath ($.field) for body fields; path
- * placeholders ({id}) also appear as bare target_field values. header: names
- * are case-folded because HTTP header names are case-insensitive on the wire
- * (RFC 7230 §3.2); cookie: and Set-Cookie: names are left as-is (cookie names
- * are case-sensitive per RFC 6265, and this benchmark only ever uses one:
- * "sid"); "$." JSONPath and "{param}" segments are left exactly as given
- * because JSON field names and placeholder names are case-sensitive.
+ * Rule 6 (docs/04 §4, extended 2026-08-30 to add `query.`): field references
+ * in dependencies use declared prefixes header:, cookie:, Set-Cookie:,
+ * `query.` for query-string parameters, and JSONPath ($.field) for body
+ * fields; path placeholders ({id}) also appear as bare target_field values.
+ * header: names are case-folded because HTTP header names are
+ * case-insensitive on the wire (RFC 7230 §3.2); cookie: and Set-Cookie:
+ * names are left as-is (cookie names are case-sensitive per RFC 6265, and
+ * this benchmark only ever uses one: "sid"); "$." JSONPath and "query."
+ * segments are left exactly as given because JSON field names and query
+ * parameter names are case-sensitive (confirmed against the live route,
+ * e.g. `request.query.country` in miniCRM/apps/api/src/routes/geo.ts).
+ *
+ * A bare `{param}` value (no prefix) is a path placeholder reused as a
+ * field reference -- e.g. dependencies like dep-order-id-to-status use
+ * `{id}` as target_field to mean "the id embedded in the target path".
+ * Same ambiguity as Rule 1 (an agent cannot always recover which of the
+ * published placeholder names ground truth chose for a given route), so it
+ * gets the same treatment: collapsed to a bare `{}` for matching.
  */
 export function normalizeFieldRef(ref) {
   if (typeof ref !== 'string') return ref;
@@ -97,6 +140,9 @@ export function normalizeFieldRef(ref) {
   }
   if (lower.startsWith('cookie:')) {
     return 'cookie:' + trimmed.slice('cookie:'.length).trim();
+  }
+  if (/^\{.*\}$/.test(trimmed)) {
+    return '{}';
   }
   return trimmed;
 }
