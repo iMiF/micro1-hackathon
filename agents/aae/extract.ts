@@ -18,9 +18,10 @@ import type { ClaimEntry } from './boards.js'
 import { addUsage } from './explore.js'
 
 /**
- * Per-section extractors. Nine calls, `concurrency` in flight, digest as the
- * cached system prefix, section contract as the suffix. An unparseable section
- * is retried once, then dropped.
+ * Per-section extractors. Nine calls, digest as the cached system prefix,
+ * section contract as the suffix. The first job runs alone so its system
+ * prefix is in the prompt cache before the rest go out at `concurrency`.
+ * An unparseable section is retried once, then dropped.
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url))
@@ -96,7 +97,7 @@ export async function runExtractors(input: {
   const records: ExtractorRecord[] = []
   const claims: ClaimEntry[] = []
 
-  await mapPool(jobs, input.concurrency, async (job) => {
+  const runJob = async (job: (typeof EXTRACTOR_JOBS)[number]) => {
     const result = await runOneExtractor({
       job,
       digestJson: input.digestJson,
@@ -113,7 +114,12 @@ export async function runExtractors(input: {
     })
     records.push(result.record)
     claims.push(...result.claims)
-  })
+  }
+
+  const warmup = jobs[0]
+  const rest = jobs.slice(1)
+  if (warmup !== undefined) await runJob(warmup)
+  await mapPool(rest, input.concurrency, runJob)
 
   records.sort((a, b) => a.id.localeCompare(b.id))
   return { claims, records, usage }
@@ -162,6 +168,7 @@ async function runOneExtractor(input: {
       messages: [{ role: 'user', content: user }],
       maxTokens: input.config.model.maxTokens,
       enableCaching: supportsPromptCaching(input.config.model.id),
+      cacheLastMessage: false,
       sessionId: input.sessionId,
     })
     addUsage(input.usage, response.usage)

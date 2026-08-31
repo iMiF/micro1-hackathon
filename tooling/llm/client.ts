@@ -68,16 +68,22 @@ export interface ChatRequest {
   /** Per-call output ceiling. Comes from the shared run configuration (ADR-17). */
   maxTokens?: number
   /**
-   * Marks one cache breakpoint at the end of `system` (which, by Anthropic's
+   * Marks a cache breakpoint at the end of `system` (which, by Anthropic's
    * tools→system→messages cache ordering, also covers `tools` before it — both
-   * are byte-identical for the whole run) and one rolling breakpoint on the
-   * last message's last content block, so the growing-but-mostly-unchanged
-   * conversation prefix is billed as a cache read on every later turn instead
-   * of a fresh full-price read. Two breakpoints total, under Anthropic's cap of
-   * four. Caller decides via `supportsPromptCaching(model)` — this flag does
-   * not itself know which models support it (ADR-10: mechanics, not strategy).
+   * are byte-identical for the whole run). Combined with `cacheLastMessage`
+   * (default true) that is two breakpoints, under Anthropic's cap of four.
+   * Caller decides via `supportsPromptCaching(model)` — this flag does not
+   * itself know which models support it (ADR-10: mechanics, not strategy).
    */
   enableCaching?: boolean
+  /**
+   * When `enableCaching` is set, also mark a rolling breakpoint on the last
+   * message's last content block so the growing conversation prefix is a cache
+   * read on later turns. Default true. One-shot callers (extractors, inquisitor)
+   * pass false: their unique suffix is never re-read, and writing it at the
+   * cache-write tariff would cost more than a plain input token.
+   */
+  cacheLastMessage?: boolean
   /**
    * Groups every call of one run under one trace in the OpenRouter dashboard
    * (their `x-session-id` header, up to 128 chars) -- unlike `enableCaching`
@@ -205,6 +211,10 @@ export async function estimateCostUsd(model: string, usage: TokenUsage): Promise
 
 const EPHEMERAL_CACHE = { type: 'ephemeral' as const }
 
+export type CachedSystem =
+  | string
+  | Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }>
+
 /** Adds a cache breakpoint at the end of a message's content (or wraps a bare string so it can carry one). */
 function withCacheBreakpoint(content: Anthropic.MessageParam['content']): Anthropic.MessageParam['content'] {
   if (typeof content === 'string') {
@@ -217,6 +227,32 @@ function withCacheBreakpoint(content: Anthropic.MessageParam['content']): Anthro
   if (last === undefined) return blocks
   blocks[lastIndex] = { ...last, cache_control: EPHEMERAL_CACHE } as typeof last
   return blocks
+}
+
+/**
+ * Shapes `system` and `messages` for Anthropic prompt caching. Pure: does not
+ * call the network. One-shot callers pass `cacheLastMessage: false` so only the
+ * shared prefix is marked.
+ */
+export function applyPromptCaching(input: {
+  system: string
+  messages: Anthropic.MessageParam[]
+  enableCaching?: boolean
+  cacheLastMessage?: boolean
+}): { system: CachedSystem; messages: Anthropic.MessageParam[] } {
+  if (!input.enableCaching) {
+    return { system: input.system, messages: input.messages }
+  }
+  const system: CachedSystem = [{ type: 'text', text: input.system, cache_control: EPHEMERAL_CACHE }]
+  if (input.cacheLastMessage === false) {
+    return { system, messages: input.messages }
+  }
+  const messages = input.messages.map((message, index) =>
+    index === input.messages.length - 1
+      ? { ...message, content: withCacheBreakpoint(message.content) }
+      : message,
+  )
+  return { system, messages }
 }
 
 export async function chat(request: ChatRequest): Promise<ChatResponse> {
@@ -233,17 +269,7 @@ export async function chat(request: ChatRequest): Promise<ChatResponse> {
     timeout: nonstreamingTimeoutMs(maxTokens),
   })
 
-  const system = request.enableCaching
-    ? [{ type: 'text' as const, text: request.system, cache_control: EPHEMERAL_CACHE }]
-    : request.system
-
-  const messages = request.enableCaching
-    ? request.messages.map((message, index) =>
-        index === request.messages.length - 1
-          ? { ...message, content: withCacheBreakpoint(message.content) }
-          : message,
-      )
-    : request.messages
+  const { system, messages } = applyPromptCaching(request)
 
   const response = await client.messages.create(
     {

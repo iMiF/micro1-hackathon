@@ -16,6 +16,7 @@ import {
   salvageSubmission,
 } from '../../tooling/reconstruction/recover.js'
 import {
+  applyPromptCaching,
   costFromTokenPrices,
   lookupOpenRouterPrices,
   nonstreamingTimeoutMs,
@@ -180,6 +181,41 @@ test('prompt caching is offered only to Anthropic models (ADR-10: mechanics, not
   assert.equal(supportsPromptCaching('anthropic/claude-sonnet-5'), true)
   assert.equal(supportsPromptCaching('deepseek/deepseek-v4-pro'), false)
   assert.equal(supportsPromptCaching('deepseek/deepseek-chat-v3.1'), false)
+})
+
+test('applyPromptCaching marks system always and last message unless cacheLastMessage is false', () => {
+  const messages = [
+    { role: 'user' as const, content: 'task' },
+    { role: 'assistant' as const, content: 'ok' },
+    { role: 'user' as const, content: 'suffix' },
+  ]
+  const off = applyPromptCaching({ system: 'sys', messages })
+  assert.equal(off.system, 'sys')
+  assert.equal(off.messages, messages)
+
+  const conversation = applyPromptCaching({ system: 'sys', messages, enableCaching: true })
+  assert.ok(Array.isArray(conversation.system))
+  assert.equal(conversation.system[0]?.text, 'sys')
+  assert.deepEqual(conversation.system[0]?.cache_control, { type: 'ephemeral' })
+  assert.equal(conversation.messages[0]?.content, 'task')
+  const last = conversation.messages[2]?.content
+  assert.ok(Array.isArray(last))
+  assert.equal(last[0]?.type, 'text')
+  if (last[0]?.type === 'text') {
+    assert.equal(last[0].text, 'suffix')
+    assert.deepEqual(last[0].cache_control, { type: 'ephemeral' })
+  }
+
+  const prefixOnly = applyPromptCaching({
+    system: 'sys',
+    messages,
+    enableCaching: true,
+    cacheLastMessage: false,
+  })
+  assert.ok(Array.isArray(prefixOnly.system))
+  assert.deepEqual(prefixOnly.system[0]?.cache_control, { type: 'ephemeral' })
+  assert.equal(prefixOnly.messages, messages)
+  assert.equal(prefixOnly.messages[2]?.content, 'suffix')
 })
 
 test('submit unwraps a reconstruction that was not nested under reconstruction', () => {

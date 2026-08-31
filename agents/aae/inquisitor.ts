@@ -167,6 +167,7 @@ export async function runInquisitor(input: {
     messages: [{ role: 'user', content: user }],
     maxTokens: input.config.model.maxTokens,
     enableCaching: supportsPromptCaching(input.config.model.id),
+    cacheLastMessage: false,
     sessionId: input.sessionId,
   })
   addUsage(usage, response.usage)
