@@ -382,6 +382,75 @@ deviation under [`04`](04-benchmark-contract.md) §5.
 
 ---
 
+### ADR-17 — Submission recovery is shared, mechanical, and never returns empty-handed
+
+**Date:** 2026-08-31 · **Status:** accepted · **Refines:** ADR-12
+
+**Context.** The first `deepseek/deepseek-chat-v3.1` runs
+(`results/runs/baseline-2026-08-31T00-32-52-219Z`, `…T01-32-22-527Z`) produced
+`reconstruction.json` = `null` and `summary.json` `finished: false`: `submit_reconstruction` was
+never called on the harness at all. The chain, established from the artifacts rather than guessed:
+the tool argument arrived with no `reconstruction` key and nothing resembling the document, the
+sibling text held no parseable JSON, so `reconstructionArg` returned `undefined` — and because
+`rememberAttempt` fired only when recovery had *already* succeeded, `lastAttempt` stayed unset. Two
+validation retries burned, the wall clock ended the run, and the end-of-loop net
+(`lastAttempt !== undefined`) could not fire. The net could only ever catch the case where it was
+not needed.
+
+The same run refutes the obvious suspicion. Input volume was not the cause: that run summed 178 100
+input tokens over ~46 calls (~4k average context) against 3 314 283 over 94 calls (~35k average) in
+the Haiku run that succeeded. The pressure is on the **output** side — the whole document leaves the
+model as a single tool argument, ~26k characters (~9k tokens) for a full MiniCRM reconstruction,
+against a `max_tokens` that was hardcoded at 16 384 and never passed from the run configuration.
+
+**Decision — three parts.**
+
+1. **Recovery lives in `tooling/reconstruction/recover.ts`, not in an agent's tree.** Baseline and
+   AAE must recover identically; an unequal recovery path silently favours whichever system has it,
+   which is the same objection ADR-12 raises against a shared interpreter, only harder to see.
+2. **A last-resort salvage runs once the loop is over and nothing was stored.** It repairs a JSON
+   document cut off mid-generation — keep everything up to the last complete nested value, drop the
+   partial one, close the containers still open — and then supplies `[]` for any required section
+   the truncation removed. It is purely structural: no value is edited, no `kind` chosen, no fact
+   invented. It cannot inflate a score, because an empty section yields no true positives and the
+   facts it does not contain are counted as false negatives exactly as they would be had the run
+   submitted nothing. What it changes is the floor: a truncated document scores what actually
+   arrived instead of scoring zero as `invalid`.
+3. **The per-call output ceiling is shared configuration.** `model.maxTokens` moves into
+   `config/run.default.json` (32 000), is recorded in every run's ledger entry, and is therefore
+   identical for both systems by construction — like every other budget (ADR-11).
+
+**The ceiling has a second-order cost, paid here.** The Anthropic SDK refuses a *non-streaming*
+request whose estimated duration exceeds ten minutes — it estimates 60 minutes at 128k output tokens
+— unless the client carries an explicit timeout, so a 32k ceiling is rejected before it reaches the
+network (`AnthropicError: Streaming is required…`). Lowering the ceiling back under ~21k would trade
+away the headroom the document needs, so `tooling/llm/client.ts` sets the timeout the SDK would have
+computed, using the SDK's own formula and derived from the shared `maxTokens` — identical for both
+systems, no new configuration field. Verified by execution: the same request throws without the
+timeout and reaches the network with it. Streaming is the more robust answer and is the follow-up if
+a scored run ever approaches this bound; at ~9k tokens for a full document, Opus does not.
+
+**Diagnostics, so the next failure is not guesswork.** Every `submit_reconstruction` call logs the
+argument size, the nested document size, the sibling-text size, the argument keys, and the
+response's `stop_reason`. An empty argument with `stop_reason=max_tokens` is a truncated generation;
+an empty argument that stopped normally is a model that cannot fill a free-form `object` parameter.
+The two need different fixes and are indistinguishable without the line.
+
+**Verified by execution** (the standing rule since ADR-7/ADR-8). The real 26 266-character Haiku
+submission was truncated at eleven points from 95% down to 3% and pushed through salvage plus the
+validator: every one produced a schema-valid document containing exactly the items that survived the
+cut, and a healthy submission passed through byte-identical. The 60% cut scores VARS(frozen) 22.18
+under the deterministic evaluator where it previously scored 0. Both self-test suites are green,
+with three new cases covering repair, the empty-section fill, and the nothing-to-recover path.
+
+**Consequences.** A run can still end without a submission — if the model never called the tool, or
+called it with nothing recoverable in either channel — and that is still a result, recorded as such.
+What no longer happens is a run losing a document it demonstrably produced. The salvage path and the
+`maxTokens` value are both reported alongside the comparison, since both are part of the setup the
+two systems share.
+
+---
+
 ## Open questions
 
 ### OQ-1 — Actual deadline date — ✅ **resolved 2026-08-30**

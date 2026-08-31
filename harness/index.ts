@@ -13,12 +13,111 @@ import type { PageObservation } from '../tooling/browser/observe.js'
  * discipline (docs/04 §5).
  */
 
+export interface ToolDefinition {
+  name: string
+  description: string
+  input_schema: {
+    type: 'object'
+    properties: Record<string, unknown>
+    required?: string[]
+    additionalProperties?: boolean
+  }
+}
+
+/**
+ * The seven-tool surface of docs/02 §2. Parameter names and shapes live here so
+ * baseline and AAE cannot silently drift (`element_id`, not `elementId`).
+ * Prose in `description` is mechanical — what the tool does — not how to explore.
+ */
+export const TOOL_DEFINITIONS: ToolDefinition[] = [
+  {
+    name: 'observe_page',
+    description:
+      'Return the current page URL, visible text, and interactive elements with harness-assigned ids. Call this after every navigation or mutation before acting on elements: ids are re-issued on every observation.',
+    input_schema: { type: 'object', properties: {}, additionalProperties: false },
+  },
+  {
+    name: 'click',
+    description: 'Click the element with the given id from the latest observe_page() result.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        element_id: { type: 'string', description: 'Element id from the latest observe_page() result.' },
+      },
+      required: ['element_id'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'fill',
+    description: 'Type a value into the element with the given id. Does not submit the form by itself.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        element_id: { type: 'string', description: 'Element id from the latest observe_page() result.' },
+        value: { type: 'string', description: 'Text to type into the field.' },
+      },
+      required: ['element_id', 'value'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'select',
+    description: 'Choose an option on a select element. `value` is the option value, not the visible label.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        element_id: { type: 'string', description: 'Element id from the latest observe_page() result.' },
+        value: { type: 'string', description: 'Option value to select.' },
+      },
+      required: ['element_id', 'value'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'go_back',
+    description: 'Navigate back in the browser history.',
+    input_schema: { type: 'object', properties: {}, additionalProperties: false },
+  },
+  {
+    name: 'get_network_events',
+    description:
+      'Return captured API requests and responses. Each event has `path` (ids and parameter names erased to `{}`) and `rawPath` (the path as it appeared on the wire). Pass `since` to get events after a given event id.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        since: { type: 'string', description: 'Optional event id; only events after this id are returned.' },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'submit_reconstruction',
+    description:
+      'End the run by submitting the reconstruction document. The argument must be schema-conformant JSON. A run without a valid submission scores nothing.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        reconstruction: {
+          type: 'object',
+          description:
+            'The full reconstruction document: schema_version 1.0.0 and arrays operations, semantic_facts, dependencies, workflows, claims, each with nested evidence.',
+        },
+      },
+      required: ['reconstruction'],
+      additionalProperties: false,
+    },
+  },
+]
+
 export interface HarnessConfig {
   baseUrl: string
   runDir: string
   policyProfile: PolicyProfile
   /** Budget in tool calls. Identical for both systems (ADR-11). */
   maxSteps: number
+  /** Wall-clock budget from the shared run configuration. Optional only for non-scored smoke tests. */
+  wallClockMs?: number
   allowlist?: string[]
   headless?: boolean
   captureScreenshots?: boolean
@@ -36,6 +135,7 @@ export class Harness {
   private step = 0
   private submission: unknown = null
   private finished = false
+  private startedAt: number | null = null
 
   constructor(private readonly config: HarnessConfig) {
     this.driver = new BrowserDriver({
@@ -47,6 +147,7 @@ export class Harness {
   }
 
   async start(startPath = '/'): Promise<void> {
+    this.startedAt = Date.now()
     await this.driver.start()
     await this.driver.goto(startPath)
   }
@@ -61,15 +162,24 @@ export class Harness {
   }
 
   isFinished(): boolean {
-    return this.finished || this.step >= this.config.maxSteps
+    return this.finished || this.step >= this.config.maxSteps || this.wallClockExceeded()
   }
 
   getSubmission(): unknown {
     return this.submission
   }
 
+  stepsUsed(): number {
+    return this.step
+  }
+
   budgetLeft(): number {
     return Math.max(0, this.config.maxSteps - this.step)
+  }
+
+  private wallClockExceeded(): boolean {
+    if (!this.config.wallClockMs || this.startedAt == null) return false
+    return Date.now() - this.startedAt >= this.config.wallClockMs
   }
 
   // ---------------------------------------------------------------- tools ---
@@ -113,13 +223,18 @@ export class Harness {
    * Ends the run. The harness stores the submission verbatim and does not judge
    * it: validation and scoring are the evaluator's job, and nothing here may
    * touch the content on its way out (ADR-12).
+   *
+   * Budgets stop further exploration, not delivery: a submit after the step or
+   * wall-clock limit is still stored. Without this, a long final generation
+   * would produce a reconstruction the harness then refuses to accept.
    */
   async submit_reconstruction(reconstruction: unknown): Promise<ToolResult> {
+    if (this.submission != null) return { ok: false, error: 'run already finished' }
     return this.run('submit_reconstruction', {}, async () => {
       this.submission = reconstruction
       this.finished = true
       return { ok: true, accepted: true }
-    })
+    }, { deliver: true })
   }
 
   // -------------------------------------------------------------- plumbing ---
@@ -204,11 +319,19 @@ export class Harness {
     tool: string,
     args: Record<string, unknown>,
     body: () => Promise<ToolResult>,
+    options?: { deliver?: boolean },
   ): Promise<ToolResult> {
-    if (this.finished) return { ok: false, error: 'run already finished' }
-    if (this.step >= this.config.maxSteps) {
-      this.finished = true
-      return { ok: false, error: 'step budget exhausted' }
+    if (this.submission != null) return { ok: false, error: 'run already finished' }
+    if (!options?.deliver) {
+      if (this.finished) return { ok: false, error: 'run already finished' }
+      if (this.step >= this.config.maxSteps) {
+        this.finished = true
+        return { ok: false, error: 'step budget exhausted' }
+      }
+      if (this.wallClockExceeded()) {
+        this.finished = true
+        return { ok: false, error: 'wall-clock budget exhausted' }
+      }
     }
 
     this.step += 1
@@ -226,12 +349,13 @@ export class Harness {
   }
 }
 
-/** What the agent sees for one network event. */
-function presentEvent(event: NetworkEvent): Record<string, unknown> {
+/** What the agent sees for one network event. `path` is tooling-normalized; `rawPath` is the wire path. */
+export function presentEvent(event: NetworkEvent): Record<string, unknown> {
   return {
     id: event.id,
     method: event.method,
     path: event.path,
+    rawPath: event.rawPath,
     query: event.query,
     status: event.status,
     request_headers: event.requestHeaders,

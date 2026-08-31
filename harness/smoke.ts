@@ -2,6 +2,7 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Harness } from './index.js'
+import { loadDotEnv } from '../tooling/config/env.js'
 
 /**
  * Live smoke test: drives the real MiniCRM through the harness the way an agent
@@ -15,6 +16,8 @@ import { Harness } from './index.js'
  *
  * Run: npm run harness:smoke
  */
+
+loadDotEnv()
 
 const BASE_URL = process.env.MINICRM_URL ?? 'http://localhost:5173'
 

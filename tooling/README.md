@@ -7,8 +7,10 @@ serialization/validation of the submission.
 
 Concretely, what belongs here: executing a tool call, normalizing an observation into the contract
 of `docs/02` §2, recording an `ev_NNN` entry, validating a submission against
-`miniCRM/benchmark/schemas/reconstruction-output.schema.json`, assigning ids, de-duplicating, and
-retrying an invalid submission an equal number of times for both systems (ADR-12).
+`miniCRM/benchmark/schemas/reconstruction-output.schema.json`, assigning ids, de-duplicating,
+retrying an invalid submission an equal number of times for both systems (ADR-12), and recovering a
+submission the model emitted in the wrong channel or cut off mid-generation (ADR-17,
+`reconstruction/recover.ts` — structural repair only, it never chooses a `kind` or invents a fact).
 
 What does not belong here: interpreting an observation, choosing a `kind`, mapping free text into
 the schema, or an adaptive retry policy — that last one is a strategy, not infrastructure.

@@ -26,8 +26,21 @@
   },
 
   "model": {
-    "$comment": "The model must match when comparing workflows rather than models (docs/04 §5). Recorded into every run's ledger entry.",
-    "id": "claude-opus-4-6",
-    "temperature": 0
+    "$comment": "The model must match when comparing workflows rather than models (docs/04 §5). Recorded into every run's ledger entry. maxTokens is the per-call output ceiling: the whole reconstruction leaves the model as one tool argument (~9k tokens for a full MiniCRM document), and a generation cut off mid-JSON reaches the harness as an unreadable argument, so the ceiling is part of the fairness contract and lives here rather than in a client default (ADR-17).",
+    "id": "anthropic/claude-opus-4.6",
+    "temperature": 0,
+    "maxTokens": 32000
+  },
+
+  "isolation": {
+    "$comment": "docs/04 §1 mechanical safeguard. Paths that must never appear in the assembled agent context. The public schema under miniCRM/benchmark/schemas/ is not listed: it is benchmark input. Checked by tooling/isolation/context.ts, not by discipline.",
+    "deny": [
+      "miniCRM/benchmark/ground-truth",
+      "miniCRM/benchmark/cases.json",
+      "miniCRM/benchmark/examples/perfect-reconstruction.json",
+      "miniCRM/apps",
+      "miniCRM/db",
+      "docs/"
+    ]
   }
 }

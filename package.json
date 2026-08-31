@@ -6,7 +6,9 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "harness:selftest": "tsx harness/selftest.ts",
-    "harness:smoke": "tsx harness/smoke.ts"
+    "harness:smoke": "tsx harness/smoke.ts",
+    "baseline:selftest": "tsx agents/baseline/selftest.ts",
+    "baseline:run": "tsx agents/baseline/run.ts"
   },
   "devDependencies": {
     "@types/node": "22.10.5",
@@ -14,6 +16,7 @@
     "typescript": "5.7.3"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.78.0",
     "ajv": "8.17.1",
     "playwright": "1.50.1"
   },

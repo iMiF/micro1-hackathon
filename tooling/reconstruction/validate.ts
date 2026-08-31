@@ -13,6 +13,9 @@ import Ajv, { type ErrorObject } from 'ajv'
  * a wrong submission score better, the change belongs in an agent, not here.
  */
 
+/** Extra attempts after the first invalid submit. Same number for both systems (ADR-12). */
+export const VALIDATION_RETRIES = 2
+
 export interface ValidationResult {
   valid: boolean
   /** Human-readable messages, safe to hand back to the agent for a retry. */

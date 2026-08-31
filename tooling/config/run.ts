@@ -18,7 +18,8 @@ export interface RunConfig {
   credentials: { email: string; password: string; role: string }
   budgets: { maxSteps: number; wallClockMs: number }
   policy: { profile: 'strict' | 'sandbox'; allowlist: string[] }
-  model: { id: string; temperature: number }
+  model: { id: string; temperature: number; maxTokens?: number }
+  isolation: { deny: string[] }
 }
 
 const DEFAULT_PATH = 'config/run.default.json'
@@ -88,6 +89,8 @@ export function ledgerEntry(config: RunConfig): Record<string, unknown> {
     policyProfile: config.policy.profile,
     model: config.model.id,
     temperature: config.model.temperature,
+    maxTokens: config.model.maxTokens,
+    isolationDeny: config.isolation.deny,
   }
 }
 
@@ -114,8 +117,10 @@ function assertComplete(config: RunConfig): void {
   if (!config.credentials?.email) missing.push('credentials.email')
   if (!config.credentials?.password) missing.push('credentials.password')
   if (!config.budgets?.maxSteps) missing.push('budgets.maxSteps')
+  if (!config.budgets?.wallClockMs) missing.push('budgets.wallClockMs')
   if (!config.policy?.profile) missing.push('policy.profile')
   if (!config.model?.id) missing.push('model.id')
+  if (!config.isolation?.deny?.length) missing.push('isolation.deny')
   if (missing.length > 0) {
     throw new Error(`run configuration is missing: ${missing.join(', ')}`)
   }

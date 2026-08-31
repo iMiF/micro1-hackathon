@@ -42,7 +42,11 @@ export interface PageObservation {
 const MAX_TEXT_CHARS = 6000
 const MAX_ELEMENTS = 200
 
-/** Runs in the page. Returns plain data only — no interpretation (ADR-10). */
+/**
+ * Source evaluated in the page. Kept as a string so tsx cannot inject
+ * `__name` into a function that Playwright then ships across the boundary.
+ * Invoked explicitly: `page.evaluate(\`(\${COLLECT})(\${n})\`)`.
+ */
 const COLLECT = `(maxElements) => {
   const isVisible = (el) => {
     const rect = el.getBoundingClientRect()
@@ -61,7 +65,7 @@ const COLLECT = `(maxElements) => {
     if (wrapping && wrapping.textContent) return wrapping.textContent.trim()
     const placeholder = el.getAttribute('placeholder')
     if (placeholder) return placeholder.trim()
-    const text = (el.textContent || '').replace(/\s+/g, ' ').trim()
+    const text = (el.textContent || '').replace(/\\s+/g, ' ').trim()
     if (text) return text
     return el.getAttribute('title') || el.getAttribute('name') || ''
   }
@@ -84,27 +88,24 @@ const COLLECT = `(maxElements) => {
   document.querySelectorAll('[data-aae-el]').forEach((el) => el.removeAttribute('data-aae-el'))
   const nodes = Array.from(document.querySelectorAll(selector)).filter(isVisible)
   const elements = nodes.slice(0, maxElements).map((el, index) => {
-    // Stamped so a handle can be resolved later without the agent ever seeing a
-    // selector. The target never reads this attribute; it is cleared on the next
-    // observation and does not survive navigation.
     el.setAttribute('data-aae-el', String(index))
     return {
-    index,
-    role: roleOf(el),
-    label: nameOf(el).slice(0, 200),
-    tag: el.tagName.toLowerCase(),
-    testId: el.getAttribute('data-testid'),
-    name: el.getAttribute('name'),
-    type: el.getAttribute('type'),
-    value: 'value' in el && typeof el.value === 'string' ? el.value.slice(0, 200) : null,
-    href: el.getAttribute('href'),
-    options: el.tagName.toLowerCase() === 'select'
-      ? Array.from(el.options).map((o) => o.value + '|' + o.textContent.trim())
-      : null,
-    enabled: !el.disabled,
+      index,
+      role: roleOf(el),
+      label: nameOf(el).slice(0, 200),
+      tag: el.tagName.toLowerCase(),
+      testId: el.getAttribute('data-testid'),
+      name: el.getAttribute('name'),
+      type: el.getAttribute('type'),
+      value: 'value' in el && typeof el.value === 'string' ? el.value.slice(0, 200) : null,
+      href: el.getAttribute('href'),
+      options: el.tagName.toLowerCase() === 'select'
+        ? Array.from(el.options).map((o) => o.value + '|' + (o.textContent || '').trim())
+        : null,
+      enabled: !el.disabled,
     }
   })
-  const text = (document.body ? document.body.innerText : '').replace(/\s+/g, ' ').trim()
+  const text = (document.body ? document.body.innerText : '').replace(/\\s+/g, ' ').trim()
   return { url: location.href, path: location.pathname, title: document.title, text, elements }
 }`
 
@@ -119,12 +120,15 @@ export interface ObservationResult {
 }
 
 export async function observePage(page: Page): Promise<ObservationResult> {
-  const raw = (await page.evaluate(COLLECT as never, MAX_ELEMENTS)) as {
+  const raw = (await page.evaluate(`(${COLLECT})(${MAX_ELEMENTS})`)) as {
     url: string
     path: string
     title: string
     text: string
     elements: Array<Omit<ObservedElement, 'id'> & { index: number }>
+  }
+  if (!raw || !Array.isArray(raw.elements)) {
+    throw new Error('observe_page: page script returned no elements — is the target serving HTML?')
   }
 
   const handles = new Map<string, number>()
@@ -133,7 +137,7 @@ export async function observePage(page: Page): Promise<ObservationResult> {
     handles.set(id, element.index)
     return {
       id,
-      role: element.role,
+      role: element.role as ElementRole,
       label: element.label,
       tag: element.tag,
       testId: element.testId,

@@ -86,6 +86,14 @@ submit_reconstruction(reconstruction)  → structured output, ends the run
 `submit_reconstruction` takes a **structured argument**, not Markdown. This rules out a situation
 where the model prints prose instead of a result and the run can't be scored.
 
+The harness method itself does no thinking: it stores the document, marks the run finished, and
+returns `{ok, accepted}`. It exists as a tool rather than a final message so that "the agent is
+done" is machine-readable and distinguishable from "the budget ran out" ([`04`](04-benchmark-contract.md) §6),
+and so the submission lands in the run artifact next to the trajectory. Its one hazard is that the
+entire document — roughly 26k characters for a full MiniCRM reconstruction — leaves the model as a
+single argument; recovering one that was truncated or emitted in the wrong channel is the shared,
+deterministic job of `tooling/reconstruction/recover.ts` (ADR-17).
+
 ---
 
 ## 3. Baseline: general-purpose browser agent

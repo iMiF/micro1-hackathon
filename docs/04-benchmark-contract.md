@@ -226,7 +226,7 @@ The list above says these must be identical. This section says where they live, 
 
 | File | Holds | Read by |
 | --- | --- | --- |
-| `config/run.default.json` | target URL, credentials and role, budgets, policy profile, model and temperature | both agents, the harness, the runner |
+| `config/run.default.json` | target URL, credentials and role, budgets, policy profile, model, temperature, per-call output ceiling (`model.maxTokens`) | both agents, the harness, the runner |
 | `config/task-prompt.md` | the task prompt: start URL, goal, output contract, epistemic rules, credentials, budget | both agents |
 | `config/run.local.json` | optional gitignored overlay; environment variables `MINICRM_URL`, `AAE_EMAIL`, `AAE_PASSWORD` override both | — |
 
@@ -256,6 +256,7 @@ empty credential throws rather than telling the agent to sign in as nobody.
 - [ ] The task prompt is identical; scaffolding prompts differ by design and both are published (ADR-11)
 - [ ] The baseline prompt is the honest minimal version, not a weakened one — the ADR-11 test applies
 - [ ] Neither system uses a shared component that interprets meaning; the shared layer is deterministic (ADR-12)
+- [ ] Submission recovery and salvage are the shared `tooling/` path, identical for both systems (ADR-17)
 - [ ] Ground truth and target source code are unavailable in the agent's context (mechanically checked)
 - [ ] The evaluator is deterministic: no LLM, embeddings, or hidden fuzzy matching
 - [ ] Cases ≥ 10; one primary hard case designated and analyzed

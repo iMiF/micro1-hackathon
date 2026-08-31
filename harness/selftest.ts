@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { normalizePath, operationKey } from '../tooling/browser/paths.js'
 import { classify, decide } from './policy.js'
+import { presentEvent, TOOL_DEFINITIONS } from './index.js'
 import { SubmissionValidator } from '../tooling/reconstruction/validate.js'
 import { loadRunConfig, renderTaskPrompt, ledgerEntry } from '../tooling/config/run.js'
 import type { ObservedElement } from '../tooling/browser/observe.js'
@@ -185,7 +186,56 @@ test('a missing credential fails loudly rather than silently', () => {
     budgets: { maxSteps: 0, wallClockMs: 0 },
     policy: { profile: 'sandbox', allowlist: [] },
     model: { id: 'm', temperature: 0 },
+    isolation: { deny: [] },
   } as never), /no value for|still contains|unknown placeholder/)
+})
+
+test('the run configuration carries the isolation deny-list', () => {
+  const config = loadRunConfig()
+  assert.ok(config.isolation.deny.includes('miniCRM/benchmark/ground-truth'))
+  assert.ok(config.isolation.deny.includes('miniCRM/benchmark/cases.json'))
+  assert.ok(config.isolation.deny.includes('docs/'))
+})
+
+console.log('tool surface')
+
+test('exactly seven tools, with element_id not elementId', () => {
+  assert.equal(TOOL_DEFINITIONS.length, 7)
+  assert.deepEqual(
+    TOOL_DEFINITIONS.map((tool) => tool.name),
+    [
+      'observe_page',
+      'click',
+      'fill',
+      'select',
+      'go_back',
+      'get_network_events',
+      'submit_reconstruction',
+    ],
+  )
+  const click = TOOL_DEFINITIONS.find((tool) => tool.name === 'click')
+  assert.ok(click && 'element_id' in click.input_schema.properties)
+  assert.ok(click && !('elementId' in click.input_schema.properties))
+})
+
+test('network events expose rawPath alongside the normalized path', () => {
+  const presented = presentEvent({
+    id: 'net_0001',
+    method: 'GET',
+    path: '/api/customers/{}',
+    rawPath: '/api/customers/12',
+    query: {},
+    status: 200,
+    requestHeaders: {},
+    responseHeaders: {},
+    requestBody: null,
+    responseBody: null,
+    durationMs: 1,
+    step: 1,
+    startedAt: 0,
+  })
+  assert.equal(presented.path, '/api/customers/{}')
+  assert.equal(presented.rawPath, '/api/customers/12')
 })
 
 console.log(failures === 0 ? '\nall harness self-tests passed' : `\n${failures} failing`)
