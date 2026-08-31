@@ -12,11 +12,15 @@ keys, not prose. `meaning` is free text and is not scored.
 
 `kind` is only `enum_mapping` or `identifier_meaning`.
 
-Subjects: the JSON body field as it appears on the wire (`order.statusId`,
-`shipping.methodId`, `activity.eventType`, `order.paymentStatus`), not the
-UI widget name (`shippingOption.methodId`). Also `header:Name`,
-`cookie:name`, `Set-Cookie:name`. Field-reference prefixes are
-case-sensitive except HTTP header names.
+Subjects: only fields that have a **separate UI label for each code**
+(`order.statusId`, `order.paymentStatus`, `shipping.methodId`,
+`activity.eventType`). Not the UI widget name (`shippingOption.methodId`).
+Also `header:Name`, `cookie:name`, `Set-Cookie:name`. Field-reference
+prefixes are case-sensitive except HTTP header names.
+
+Do **not** emit enums for booleans (`archived`, `active`), geography
+(`countryCode`, `regionId`, ISO country codes), or any field whose values
+are identifiers rather than a labelled code table.
 
 Every entry needs a non-empty `evidence` array. A meaning needs both a UI
 side (`ui_label` / `ui_control` / `ui_action`) and a network side. A single

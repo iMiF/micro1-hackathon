@@ -11,6 +11,12 @@ copies, not computed totals. One `business_constraint` on the snapshot
 field (if you saw it stay put after the source changed) belongs to the
 constraints extractor, not here.
 
+Do **not** emit `derived_value` for `*totalCents`, `subtotalCents`, or
+`lineTotalCents`. Line arithmetic (qty × unit, sum of lines) is not a
+scored derived fact. Tax rates, shipping free-threshold, and dashboard
+aggregates (`dashboard.revenueCents`, `dashboard.customerCount`,
+`dashboard.ordersByStatus`) are.
+
 Query-parameter subjects canonicalize to `METHOD /normalizedPath?param`
 (not `METHOD /path q`, not `query.param` as a subject). `"true"` / `"false"`
 inside `value.accepts` should be booleans; numeric strings should be
@@ -24,6 +30,9 @@ A parameter the UI always sends is not therefore `required`, and it is
 not `query_semantics` either. Do **not** emit `accepts: [1]` or
 `accepts: [20]` or `accepts: ["30d"]` just because every list request
 carried `page` / `pageSize` / `period`. Those are client defaults.
+Do **not** emit `accepts` from country codes or status ids you happened
+to see in traffic (`["CA","US"]`, `[10,20]`). `GET /api/regions?country`
+is `{ "requires": ["country"] }`, not `{ "accepts": ["CA","US"] }`.
 `matches` only if the UI or the response shows **which fields** are
 searched, and then list every field you actually saw — a partial
 `["firstName"]` is a miss, not a near-hit. If you only saw the typed

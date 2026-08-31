@@ -8,9 +8,10 @@ are two facts.
 
 `value` keys come from the published `semanticFactValue` fragment (`from`,
 `to`). Do not write prose in `value`. For `to`, list only destinations
-you actually switched to in this run. An incomplete `to: [40]` when you
-did not try cancel is worse than omitting the fact — do not guess the
-rest of the graph.
+you actually switched to in this run. An incomplete `to: [40]` or
+`to: [50]` when you did not exercise the rest of that source state's
+graph is worse than omitting the fact — do not guess the rest of the
+graph, and do not publish a singleton `to` you did not fully map.
 
 `concurrency.value` is the error `code` token from the 409 body
 (`"VERSION_CONFLICT"`), not `{field, effect: "increase"}`. Subject is

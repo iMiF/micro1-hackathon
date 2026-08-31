@@ -33,6 +33,7 @@ export interface EvidenceDigest {
   operations: OperationDigest[]
   pages: PageDigest[]
   timeline: TimelineEvent[]
+  blockedActions: BlockedAction[]
   stats: DigestStats
 }
 
@@ -62,6 +63,16 @@ interface TimelineEvent {
   deltaMsFromAction: number | null
 }
 
+interface BlockedAction {
+  step: number
+  page: string
+  label: string
+  role: string
+  verdict: string
+  riskClass: string
+  evidenceId: string
+}
+
 const ARRAY_SAMPLE = 6
 const SHAPE_CAP = 3
 const QUERY_VALUE_CAP = 12
@@ -78,6 +89,7 @@ export function buildDigest(
   const operations = digestOperations(evidence, clipStats)
   const pageDigests = digestPages(pages, evidence)
   const timeline = digestTimeline(evidence)
+  const blockedActions = digestBlockedActions(evidence)
   const stats: DigestStats = {
     operations: operations.length,
     pages: pageDigests.length,
@@ -86,20 +98,21 @@ export function buildDigest(
     truncated: false,
     bytes: 0,
   }
-  let digest: EvidenceDigest = { operations, pages: pageDigests, timeline, stats }
+  let digest: EvidenceDigest = { operations, pages: pageDigests, timeline, blockedActions, stats }
   let json = stableJson(digest)
   if (json.length > DIGEST_MAX_BYTES) {
     const shrunkPages = pageDigests.map((page) => ({
       ...page,
       textExcerpt: page.textExcerpt.slice(0, 120),
     }))
-    digest = { operations, pages: shrunkPages, timeline, stats: { ...stats, truncated: true } }
+    digest = { operations, pages: shrunkPages, timeline, blockedActions, stats: { ...stats, truncated: true } }
     json = stableJson(digest)
     if (json.length > DIGEST_MAX_BYTES) {
       digest = {
         operations,
         pages: shrunkPages,
         timeline: timeline.slice(0, 80),
+        blockedActions,
         stats: { ...stats, truncated: true, timelineEvents: Math.min(80, timeline.length) },
       }
       json = stableJson(digest)
@@ -297,6 +310,35 @@ function digestTimeline(evidence: EvidenceRecord[]): TimelineEvent[] {
     })
   }
   return out
+}
+
+function digestBlockedActions(evidence: EvidenceRecord[]): BlockedAction[] {
+  const out: BlockedAction[] = []
+  for (const record of evidence) {
+    if (record.kind !== 'policy_decision') continue
+    if (record.data.verdict === 'allow') continue
+    const element = asRecord(record.data.element)
+    out.push({
+      step: record.step,
+      page: lastUiPage(evidence, record.step),
+      label: typeof element.label === 'string' ? element.label : '',
+      role: typeof element.role === 'string' ? element.role : '',
+      verdict: typeof record.data.verdict === 'string' ? record.data.verdict : '',
+      riskClass: typeof record.data.riskClass === 'string' ? record.data.riskClass : '',
+      evidenceId: record.id,
+    })
+  }
+  return out.sort((a, b) => a.step - b.step || a.evidenceId.localeCompare(b.evidenceId))
+}
+
+function lastUiPage(evidence: EvidenceRecord[], step: number): string {
+  const actions = evidence
+    .filter((r) => r.kind === 'ui_action' && r.step <= step)
+    .sort((a, b) => b.step - a.step || a.id.localeCompare(b.id))
+  for (const record of actions) {
+    if (typeof record.data.page === 'string' && record.data.page) return record.data.page
+  }
+  return ''
 }
 
 function addShape(into: Map<string, unknown>, body: unknown, clipStats: { clippedArrays: number }): void {

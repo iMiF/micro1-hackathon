@@ -1,4 +1,5 @@
 import type { EvidenceRecord } from '../../tooling/evidence/store.js'
+import { canonicalKey } from './canonical.js'
 import type { ClaimEntry, GapEntry } from './boards.js'
 
 /**
@@ -64,7 +65,100 @@ export function mineTraffic(
     }
   }
 
+  for (const blocked of mineBlockedDeletes(evidence, round)) {
+    claims.push(blocked)
+  }
+
   return { claims, gaps }
+}
+
+/**
+ * A blocked Delete / Delete draft click is still an observed operation: the
+ * harness recorded the intent, the HTTP never ran. "Delete Me" is a customer
+ * display name that happens to match the destructive regex — not an endpoint.
+ */
+export function mineBlockedDeletes(evidence: EvidenceRecord[], round: number): ClaimEntry[] {
+  const claims: ClaimEntry[] = []
+  for (const record of evidence) {
+    if (record.kind !== 'policy_decision') continue
+    if (record.data.verdict !== 'block' || record.data.riskClass !== 'DESTRUCTIVE') continue
+    const element = asRecord(record.data.element)
+    const label = typeof element.label === 'string' ? element.label.trim() : ''
+    const mapped = mapBlockedDelete(label, evidence, record.step)
+    if (!mapped) continue
+    const nestedEvidence = [
+      {
+        kind: 'ui_action',
+        ui_text: label,
+        note: `click blocked by risk policy: ${String(record.data.riskClass)}, verdict ${String(record.data.verdict)}`,
+      },
+    ]
+    maybeClaim(claims, {
+      section: 'operations',
+      item: {
+        method: 'DELETE',
+        path: mapped.path,
+        parameters: [{ name: 'id', location: 'path', required: true, type: 'integer' }],
+        evidence: nestedEvidence,
+      },
+      evidenceIds: [record.id],
+      producedBy: 'miner',
+      support: 'observed',
+      round,
+    })
+    maybeClaim(claims, {
+      section: 'workflows',
+      item: {
+        user_goal: mapped.goal,
+        steps: [{ operation: `DELETE ${mapped.path}`, role: 'required_business' }],
+        evidence: nestedEvidence,
+      },
+      evidenceIds: [record.id],
+      producedBy: 'miner',
+      support: 'observed',
+      round,
+    })
+  }
+  return claims
+}
+
+function mapBlockedDelete(
+  label: string,
+  evidence: EvidenceRecord[],
+  step: number,
+): { path: string; goal: string } | null {
+  const lower = label.toLowerCase()
+  if (lower === 'delete me') return null
+  if (lower === 'delete draft') {
+    return { path: '/api/orders/{}', goal: 'delete a draft order' }
+  }
+  if (lower !== 'delete') return null
+  const resource = recentDetailResource(evidence, step)
+  if (resource === 'orders') return { path: '/api/orders/{}', goal: 'delete a draft order' }
+  if (resource === 'customers') return { path: '/api/customers/{}', goal: 'delete a customer' }
+  return null
+}
+
+function recentDetailResource(evidence: EvidenceRecord[], step: number): 'orders' | 'customers' | null {
+  const nets = evidence
+    .filter((r) => r.kind === 'network_event' && r.step <= step)
+    .sort((a, b) => b.step - a.step || a.id.localeCompare(b.id))
+  for (const record of nets) {
+    const path = typeof record.data.path === 'string' ? record.data.path : ''
+    if (path === '/api/orders/{}' || path === '/api/orders/{}/activity' || path === '/api/orders/{}/status') {
+      return 'orders'
+    }
+    if (path === '/api/customers/{}' || path === '/api/customers/{}/addresses') return 'customers'
+  }
+  return null
+}
+
+function maybeClaim(claims: ClaimEntry[], entry: Omit<ClaimEntry, 'canonicalKey'>): void {
+  if (entry.evidenceIds.length === 0) return
+  const key = canonicalKey(entry.section, entry.item)
+  if (!key) return
+  if (claims.some((c) => c.section === entry.section && c.canonicalKey === key)) return
+  claims.push({ ...entry, canonicalKey: key })
 }
 
 function groupFamilies(events: EvidenceRecord[]): Family[] {

@@ -167,13 +167,17 @@ function nestedFromIds(ids: string[], evidence: EvidenceRecord[]): Array<Record<
       const status = typeof record.data.status === 'number' ? record.data.status : undefined
       out.push(compact({ kind: 'network_request', method, path, status }))
       out.push(compact({ kind: 'network_response', method, path, status }))
-    } else if (record.kind === 'ui_action') {
+    } else if (record.kind === 'ui_action' || record.kind === 'policy_decision') {
       const element = asRecord(record.data.element) ?? {}
       out.push(
         compact({
           kind: 'ui_action',
           page: typeof record.data.page === 'string' ? record.data.page : undefined,
           ui_text: typeof element.label === 'string' ? element.label : undefined,
+          note:
+            record.kind === 'policy_decision'
+              ? `click blocked by risk policy: ${String(record.data.riskClass)}, verdict ${String(record.data.verdict)}`
+              : undefined,
         }),
       )
     }

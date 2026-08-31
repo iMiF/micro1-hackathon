@@ -10,8 +10,10 @@ delete-guards into one row.
 keys come from the published `semanticFactValue` fragment (`effect`,
 `requires`, …). Use those keys, not prose.
 
-Do **not** emit `EMAIL_EXISTS` here — that is `validation` on
-`customer.email`. Do not invent a constraint you did not see rejected.
+Do **not** emit `EMAIL_EXISTS`, `OUT_OF_STOCK`, `PRODUCT_INACTIVE`, or
+`INVALID_CREDENTIALS` here — those are `validation` facts (field
+`customer.email` for uniqueness; the failing operation for the others).
+Do not invent a constraint you did not see rejected.
 
 These facts start as hypotheses: one observation is not a law. Still
 record what you saw, with evidence.

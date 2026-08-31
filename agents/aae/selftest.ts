@@ -16,7 +16,7 @@ import { Boards, resolveClaims, type ClaimEntry } from './boards.js'
 import { buildDigest, type PageSnapshot } from './digest.js'
 import { mineTraffic } from './miner.js'
 import { seedCoverageGaps, sweepDomains } from './sweeper.js'
-import { assembleFromSectionItems } from './assemble.js'
+import { assembleFromClaims, assembleFromSectionItems } from './assemble.js'
 import { INTERCEPT_MESSAGE, dispatchExploreTool } from './explore.js'
 import { rankOpenGaps } from './inquisitor.js'
 import { applyAblations, computeRoundAllotments } from './agent.js'
@@ -339,6 +339,44 @@ check('inquisitor ranks destructive sweeper gaps above pagination defaults', () 
   assert.equal(ranked[0]?.id, 'gap_002')
 })
 
+function policyBlock(id: string, step: number, label: string): EvidenceRecord {
+  return {
+    id,
+    kind: 'policy_decision',
+    step,
+    at: '2026-08-31T00:00:00.000Z',
+    data: {
+      tool: 'click',
+      element: { id: 'el_1', label, role: 'button' },
+      riskClass: 'DESTRUCTIVE',
+      verdict: 'block',
+      reason: 'destructive',
+    },
+  }
+}
+
+check('TrafficMiner emits DELETE from blocked Delete draft and ignores Delete Me', () => {
+  const draft = mineTraffic([policyBlock('ev_050', 10, 'Delete draft')], 1)
+  const ops = draft.claims.filter((c) => c.section === 'operations')
+  const wfs = draft.claims.filter((c) => c.section === 'workflows')
+  assert.equal(ops.length, 1)
+  assert.equal(ops[0]?.canonicalKey, 'DELETE /api/orders/{}')
+  assert.equal(wfs.length, 1)
+  const named = mineTraffic([policyBlock('ev_051', 11, 'Delete Me')], 1)
+  assert.equal(named.claims.length, 0)
+})
+
+check('TrafficMiner maps exact Delete to the nearby detail resource', () => {
+  const evidence: EvidenceRecord[] = [
+    net('ev_052', 8, { method: 'GET', path: '/api/customers/{}', rawPath: '/api/customers/12', query: {}, response_body: { id: 12 } }),
+    policyBlock('ev_053', 9, 'Delete'),
+  ]
+  const { claims } = mineTraffic(evidence, 1)
+  const ops = claims.filter((c) => c.section === 'operations')
+  assert.equal(ops.length, 1)
+  assert.equal(ops[0]?.canonicalKey, 'DELETE /api/customers/{}')
+})
+
 console.log('digest')
 
 check('same evidence twice is byte-identical; clipping recorded; cap held', () => {
@@ -361,6 +399,18 @@ check('same evidence twice is byte-identical; clipping recorded; cap held', () =
   assert.ok(a.digest.stats.bytes <= 120_000)
   assert.ok(a.digest.timeline.every((event) => !('at' in event)))
   assert.equal(typeof a.digest.timeline[0]?.deltaMsFromAction, 'number')
+})
+
+check('digest lists blocked policy clicks without allowing Delete Me as an operation', () => {
+  const evidence: EvidenceRecord[] = [
+    policyBlock('ev_060', 2, 'Delete draft'),
+    policyBlock('ev_061', 3, 'Delete Me'),
+  ]
+  const { digest } = buildDigest(evidence)
+  assert.equal(digest.blockedActions.length, 2)
+  assert.equal(digest.blockedActions[0]?.label, 'Delete draft')
+  assert.equal(digest.blockedActions[0]?.verdict, 'block')
+  assert.equal(digest.blockedActions[1]?.label, 'Delete Me')
 })
 
 console.log('assembler')
@@ -420,6 +470,25 @@ check('nine section outputs: malformed item dropped, unparseable section empty, 
   assert.equal(deps.length, 1)
   const wfs = result.document.workflows as unknown[]
   assert.equal(wfs.length, 1)
+})
+
+check('assembler keeps miner DELETE claims from a blocked click', () => {
+  const validator = new SubmissionValidator(
+    join(ROOT, 'miniCRM/benchmark/schemas/reconstruction-output.schema.json'),
+  )
+  const evidence = [policyBlock('ev_070', 4, 'Delete draft')]
+  const mined = mineTraffic(evidence, 1)
+  const result = assembleFromClaims({
+    claims: mined.claims,
+    nextGapId: 1,
+    evidence,
+    validator,
+  })
+  assert.equal(result.dropped.length, 0, result.dropped.map((d) => d.reason).join('; '))
+  const operations = result.document.operations as Array<Record<string, unknown>>
+  assert.ok(operations.some((op) => op.method === 'DELETE' && String(op.path).includes('/api/orders/')))
+  const workflows = result.document.workflows as Array<Record<string, unknown>>
+  assert.equal(workflows.length, 1)
 })
 
 console.log('explorer intercept')
