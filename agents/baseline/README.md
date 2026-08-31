@@ -35,8 +35,15 @@ cp .env.example .env   # once, at repo root
 reads it at the start of `baseline:run`. Exporting the variable in the shell instead still works
 and takes priority if both are set.
 
-`baseline:run` writes `results/runs/baseline-<utc>/` (the `runDir` the harness receives). Score
-separately — the agent does not call the evaluator:
+`baseline:run` writes `results/runs/baseline-<utc>/` (the `runDir` the harness receives). `meta.json`
+records `cost` as an OpenRouter list-price estimate (`GET /api/v1/models` × the run's native token
+counts, including cache read/write tokens when `config.model.id` is an Anthropic model — see
+`cache_creation_input_tokens`/`cache_read_input_tokens` in the same file), not a hardcoded table and
+not the billed generation record. `config/run.default.json` `budgets.maxCostUsd` is an optional hard
+USD cap: the loop checks it before every LLM call and stops (falling through to the existing
+ADR-17 salvage) rather than continuing over it — it is a spend guard, not part of the frozen
+fairness contract, so it is fine to edit freely. Score separately — the agent does not call the
+evaluator:
 
 ```
 node evaluator/bin/evaluate.mjs --submission <runDir>/reconstruction.json --all --meta <runDir>/meta.json --out <runDir>

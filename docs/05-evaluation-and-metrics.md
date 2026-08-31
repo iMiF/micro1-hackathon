@@ -123,7 +123,7 @@ into `invalid` and **do not count as TP**, but are counted in the precision deno
 | **Evidence support rate** | facts and claims with a non-empty, valid `evidence` block / all submitted | Provenance discipline; required by ground rule 09 |
 | **Coverage** | discovered ground-truth operation groups / total | Helps interpret VARS: low VARS from narrow exploration ≠ low VARS from errors |
 | **Wall time** | per case, median + p90 | Operational practicality |
-| **Cost** | per case, median + p90 | Required by the brief's table |
+| **Cost** | per case, median + p90. USD = OpenRouter list prices from `GET /api/v1/models` (prompt + completion per token) × native token counts from the run (`tooling/llm/client.ts`). Not the billed generation record. | Required by the brief's table |
 | **Tool actions** | per case, median + p90 | Exploration efficiency |
 | **Valid submission rate** | runs with a valid `submit_reconstruction` / total | Basic reliability; a case with no valid submission scores 0 |
 

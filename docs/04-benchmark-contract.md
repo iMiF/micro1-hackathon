@@ -276,7 +276,7 @@ The runner is neither an LLM nor an evaluator. It's the experiment dispatcher.
 | **Launch** | Runs baseline or AAE with the same tool surface, versions, and budgets | Resource fairness |
 | **Capture** | Saves the sequence of tool calls, observations, network activity, screenshots, final JSON | Trajectory and evidence are verifiable |
 | **Evaluate** | Invokes the deterministic evaluator with the case's ground truth | The same rubric with no manual tuning |
-| **Aggregate** | Records seed, model version, wall time, tokens, cost, results | A complete experiment ledger |
+| **Aggregate** | Records seed, model version, wall time, tokens, cost, results. Cost is an OpenRouter list-price estimate (`GET /api/v1/models` × native tokens), identical for both systems because both go through `tooling/llm/client.ts`. | A complete experiment ledger |
 
 A run ends when `submit_reconstruction` is called **or** the budget is exhausted. Running out of
 budget without a submission is a result (an invalid output), not a launch error.
