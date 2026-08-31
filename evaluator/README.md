@@ -36,7 +36,10 @@ npm install                 # once, installs ajv (JSON Schema draft-07 validatio
 npm test                    # the golden-test suite, see below
 
 # score a real run against one case (the real per-run scoring mode -- docs/04 §6)
-node bin/evaluate.mjs --submission path/to/reconstruction.json --case case-09-create-order-workflow
+node bin/evaluate.mjs --run <run-id> --case case-09-create-order-workflow
+
+# score a scored run against the full corpus (Path A)
+node bin/evaluate.mjs --run aae-2026-08-31T14-51-18-382Z --all
 
 # score against the full, unfiltered ground-truth corpus (what the
 # perfect-reconstruction golden test uses; ADR-8 case-filtering does not apply)
@@ -46,7 +49,8 @@ node bin/evaluate.mjs --submission ../miniCRM/benchmark/examples/perfect-reconst
 node bin/evaluate.mjs --submission run.json --case case-09-create-order-workflow --weights-file my-weights.json
 ```
 
-`--submission` and (`--case <id>` xor `--all`) are the only required flags.
+`--run <id>` or `--submission <path>`, plus (`--case <id>` xor `--all`), are the required flags.
+`--run` fills submission, meta and out from `results/runs/<id>/`.
 `node bin/evaluate.mjs --help` lists the rest. Every invocation reports VARS
 under **all three** weight vectors (`frozen`, `rejected_balanced`,
 `rejected_flat`) side by side, per ADR-13's obligation #2 -- `--weights-set`

@@ -7,5 +7,4 @@ from here and from nowhere else — no target figures standing in for measured o
 
 Shipped scored runs are listed in [`runs/INDEX.md`](runs/INDEX.md). Re-score them with Path A of
 [`docs/REPRODUCTION.md`](../docs/REPRODUCTION.md). There is no `results:list` aggregator yet —
-open `evaluation.json` in a run directory, or invoke `evaluator/bin/evaluate.mjs` on that
-directory's `reconstruction.json`.
+open `evaluation.json` in a run directory, or `npm run evaluate -- --run <id> --all`.

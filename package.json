@@ -10,7 +10,8 @@
     "baseline:selftest": "tsx agents/baseline/selftest.ts",
     "baseline:run": "tsx agents/baseline/run.ts",
     "aae:selftest": "tsx agents/aae/selftest.ts",
-    "aae:run": "tsx agents/aae/run.ts"
+    "aae:run": "tsx agents/aae/run.ts",
+    "evaluate": "node evaluator/bin/evaluate.mjs"
   },
   "devDependencies": {
     "@types/node": "22.10.5",

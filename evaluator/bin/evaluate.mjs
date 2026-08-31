@@ -6,19 +6,20 @@
 // perfect-reconstruction.json golden test in docs/05 §7, and general sanity
 // checks). No LLM call, no network call, no embeddings anywhere in this file
 // or anything it imports.
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
-import { readJson, resolveFromProject, EVALUATOR_ROOT } from '../src/io.mjs';
+import { readJson, resolveFromProject, resolveRunDir } from '../src/io.mjs';
 import { loadSchema, compileValidator, validateSubmission, itemErrorStrings, errorsUnderPath } from '../src/schema.mjs';
 import { loadGroundTruthCorpus, loadCases, findCase, scopeToCase, fullCorpusScope } from '../src/groundtruth.mjs';
 import { matchRecords, matchParameters } from '../src/match.mjs';
 import { buildCategory, computeVars, secondaryMetrics, CATEGORY_KEYS } from '../src/score.mjs';
 
 function parseArgs(argv) {
-  const args = { weightsSet: null, out: null, meta: null, case: null, all: false, submission: null };
+  const args = { weightsSet: null, out: null, meta: null, case: null, all: false, submission: null, run: null };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--submission') args.submission = argv[++i];
+    else if (a === '--run') args.run = argv[++i];
     else if (a === '--case') args.case = argv[++i];
     else if (a === '--all') args.all = true;
     else if (a === '--weights-set') args.weightsSet = argv[++i];
@@ -27,14 +28,19 @@ function parseArgs(argv) {
     else if (a === '--meta') args.meta = argv[++i];
     else if (a === '--quiet') args.quiet = true;
     else if (a === '--help' || a === '-h') args.help = true;
+    else if (a && !a.startsWith('-') && !args.run && !args.submission) args.run = a;
     else throw new Error(`Unknown argument: ${a}`);
   }
   return args;
 }
 
-const HELP = `Usage: node bin/evaluate.mjs --submission <reconstruction.json> (--case <case-id> | --all) [options]
+const HELP = `Usage: node bin/evaluate.mjs --run <run-id> (--all | --case <case-id>) [options]
+       node bin/evaluate.mjs --submission <reconstruction.json> (--all | --case <case-id>) [options]
 
-  --submission <path>   Path to the agent/baseline reconstruction.json to score. Required.
+  --run <id>            Scored run under results/runs/<id>/. Fills --submission,
+                         --meta and --out from that directory. A bare run-id is
+                         accepted in the same place: evaluate.mjs <run-id> --all
+  --submission <path>   Path to reconstruction.json. Required unless --run is set.
   --case <case-id>      Score against one case's scoped ground truth (real per-run scoring;
                          docs/04 §6). Mutually exclusive with --all.
   --all                 Score against the full, unfiltered ground-truth corpus (used by the
@@ -48,13 +54,23 @@ const HELP = `Usage: node bin/evaluate.mjs --submission <reconstruction.json> (-
                          vector nobody has frozen yet, with no code change.
   --meta <path>         Optional JSON file with {"wall_time_ms":n,"cost":n,"tool_actions":n} to echo
                          into the secondary-metrics block. The evaluator never invents these.
-  --out <dir>           Directory to write evaluation.json and diff.json into (default: alongside
-                         --submission).
+                         Default with --run: <run>/meta.json when that file exists.
+  --out <dir>           Directory to write evaluation.json and diff.json into.
+                         Default with --run: the run directory; otherwise alongside --submission.
   --quiet                Suppress the human-readable stdout summary; still writes the JSON files.
 `;
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  if (args.run) {
+    const runDir = resolveRunDir(args.run);
+    args.submission = args.submission ?? path.join(runDir, 'reconstruction.json');
+    args.out = args.out ?? runDir;
+    if (!args.meta) {
+      const metaPath = path.join(runDir, 'meta.json');
+      if (existsSync(metaPath)) args.meta = metaPath;
+    }
+  }
   if (args.help || !args.submission) {
     process.stdout.write(HELP);
     process.exit(args.help ? 0 : 1);
