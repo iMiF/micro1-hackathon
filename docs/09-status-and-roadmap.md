@@ -54,7 +54,7 @@ Honest picture as of 2026-08-31, ~12:15 PM Toronto — inside the closing window
 | Submission README | ❌ missing | `README.md` at the repo root | deliverable 01 requires it explicitly: the user and their bottleneck, the value, the before/after boundary of §1 above, and a link to the Improvement Changelog |
 | Artifact generator (OpenAPI/docs) | ❌ missing | — | End to End Quality criterion (20 points) |
 | **Reproduction guide** | ✅ done | [`docs/REPRODUCTION.md`](REPRODUCTION.md) | deliverable 02. Three paths: re-score the shipped luna runs with no API key (deterministic, verified to return 33.56 and 61.12 exactly), run the baseline, run AAE. Versions, expected output, measured time and cost, and the known limits of the guide are all in it |
-| Video | ⚠️ scripted, not recorded | local shot list (gitignored) | deliverable 03. Recording and upload remain |
+| Video | ⚠️ scripted, not recorded | [`VIDEO-SCRIPT.md`](../VIDEO-SCRIPT.md) | deliverable 03. 7 segments, ~736 words ≈ 4:50, with a claim-to-file table for every on-screen assertion. Recording and upload remain |
 | Run trajectories | ⚠️ recorded, not yet publishable | `results/runs/` | Both published runs carry `trajectory.jsonl`, `evidence/evidence.jsonl`, `meta.json` and `summary.json`; AAE additionally carries `claims.jsonl`, `gaps.jsonl`, `pages.jsonl`, `digest.json`, `assemble-log.json` and `prompts/`. **`results/runs` is in `.gitignore`** — the two published runs must be force-added before submission, or deliverable 04 and Path A of the reproduction guide arrive empty |
 
 **Summary:** the comparison exists. Target, evaluator, harness, baseline and AAE iteration 1 are all built, and both systems have
@@ -100,7 +100,7 @@ never the quality gates, and never a number that wasn't measured.
 | 4 | AAE iteration 1: per-section extractors + deterministic assembler (ADR-18) | Each component has an ablation, or it isn't claimed | Agent Solution 30 | ✅ done — landed `5977bd1`, scored **VARS(frozen) 61.12** vs the luna baseline's 33.56 on the shipped default; sol replication 71.21 vs 49.85. Ablation switches exist; **no ablation run is scored**, so per-component contribution is still argued, not measured |
 | 5 | Runs on the full case set, both systems, fixed seeds | Full ledger, no cherry-picking | Measured Improvement | ❌ not started — no runner. The published pair is scored with `--all` against the whole corpus, which is not cherry-picking but is also not the 15-case ledger this line asks for |
 | 6 | Reproduction guide + submission README | A clean environment reproduces one run | Reproducibility 15 | ⚠️ half done — [`REPRODUCTION.md`](REPRODUCTION.md) is written and its no-API-key path is verified; the root `README.md` (deliverable 01) is **not written** |
-| 7 | Video under 5 minutes | Understandable without narration | required deliverable | ⚠️ scripted locally, not recorded, shot list not in the repository |
+| 7 | Video under 5 minutes | Understandable without narration | required deliverable | ⚠️ scripted — `VIDEO-SCRIPT.md`, 7 segments ≈ 4:50, not recorded |
 | 8 | Hot take, main failure mode | Written from what the runs showed | 5 | ✅ done — failure mode measured and written in [`06`](06-baseline-and-changelog.md) §4, hot take in `06` §5: the bottleneck was synthesis, not exploration |
 
 **Line 4 is done, and it is what the submission is built on.** The named failure mode was measured rather than guessed

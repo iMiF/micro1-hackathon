@@ -161,6 +161,7 @@ C AAE, ~$0.22).
 | `config/` | Run configuration and the shared task prompt |
 | `results/runs/<run-id>/` | Trajectories, evidence, submissions and scores — deliverable 04 |
 | `docs/` | Project documentation, 14 files, indexed in [`docs/README.md`](docs/README.md) |
+| `VIDEO-SCRIPT.md` | The script for deliverable 03 |
 
 `agents/baseline/` and `agents/aae/` are separate trees that never import each other, and neither
 `docs/` nor `miniCRM/benchmark/` is ever reachable from an evaluated agent's context — the agent
@@ -354,7 +355,7 @@ Stated here rather than left for a judge to find. Longer list in
 | --- | --- | --- |
 | 01 | Complete solution code + Improvement Changelog | this repository · this README §6 · [`docs/06`](docs/06-baseline-and-changelog.md) |
 | 02 | Reproduction guide | [`docs/REPRODUCTION.md`](docs/REPRODUCTION.md) |
-| 03 | Solution video (≤ 5 min) | to be recorded — the shot list is local working material, not in this repository |
+| 03 | Solution video (≤ 5 min) | [`VIDEO-SCRIPT.md`](VIDEO-SCRIPT.md) |
 | 04 | Agent trajectories | `results/runs/<run-id>/` — `trajectory.jsonl`, `evidence/`, `meta.json`, `summary.json`; AAE additionally `claims.jsonl`, `gaps.jsonl`, `pages.jsonl`, `assemble-log.json`, `prompts/` |
 
 Rules-to-implementation matrix, including all ten ground rules:
