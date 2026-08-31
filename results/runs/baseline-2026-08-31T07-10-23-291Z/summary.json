@@ -1,0 +1,35 @@
+{
+  "steps": 121,
+  "evidence": 170,
+  "byKind": {
+    "policy_decision": 50,
+    "ui_action": 50,
+    "network_event": 70
+  },
+  "finished": true,
+  "observedOperations": [
+    "GET /api/auth/session",
+    "GET /api/countries",
+    "GET /api/customers",
+    "GET /api/customers/suggest",
+    "GET /api/customers/{}",
+    "GET /api/customers/{}/addresses",
+    "GET /api/dashboard/summary",
+    "GET /api/orders",
+    "GET /api/orders/{}",
+    "GET /api/orders/{}/activity",
+    "GET /api/products",
+    "GET /api/products/suggest",
+    "GET /api/products/{}",
+    "GET /api/regions",
+    "PATCH /api/customers/{}",
+    "PATCH /api/orders/{}/status",
+    "POST /api/auth/login",
+    "POST /api/customers",
+    "POST /api/customers/{}/addresses",
+    "POST /api/order-quotes",
+    "POST /api/orders",
+    "POST /api/orders/{}/notes",
+    "POST /api/shipping/options"
+  ]
+}

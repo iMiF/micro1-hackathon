@@ -1,0 +1,4313 @@
+{
+  "schema_version": "1.0.0",
+  "operations": [
+    {
+      "method": "DELETE",
+      "path": "/api/customers/{}",
+      "parameters": [
+        {
+          "name": "id",
+          "location": "path",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "ui_action",
+          "page": "/customers/208",
+          "ui_text": "Delete",
+          "note": "Blocked destructive intent; no HTTP request was sent."
+        }
+      ],
+      "id": "op-1"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/orders/{}",
+      "parameters": [
+        {
+          "name": "id",
+          "location": "path",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "ui_control",
+          "page": "/orders/2007",
+          "ui_text": "Delete draft"
+        },
+        {
+          "kind": "ui_action",
+          "page": "/orders/2007",
+          "ui_text": "Delete draft",
+          "note": "Destructive intent was observed in the UI; no HTTP request was sent."
+        }
+      ],
+      "id": "op-2"
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/session",
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "csrfToken": {
+            "type": "string"
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string"
+              },
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "success_status": 200,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/auth/session",
+          "status": 200,
+          "json_paths": [
+            "$.csrfToken",
+            "$.user"
+          ]
+        }
+      ],
+      "id": "op-3"
+    },
+    {
+      "method": "GET",
+      "path": "/api/countries",
+      "response_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "success_status": 200,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/countries",
+          "status": 200,
+          "json_paths": [
+            "$"
+          ]
+        }
+      ],
+      "id": "op-4"
+    },
+    {
+      "method": "GET",
+      "path": "/api/customers",
+      "parameters": [
+        {
+          "name": "archived",
+          "location": "query",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "page",
+          "location": "query",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "pageSize",
+          "location": "query",
+          "type": "integer",
+          "required": false
+        }
+      ],
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "archived": {
+                  "type": "boolean"
+                },
+                "createdAt": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                },
+                "firstName": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "integer"
+                },
+                "lastName": {
+                  "type": "string"
+                },
+                "phone": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "updatedAt": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "page": {
+            "type": "integer"
+          },
+          "pageSize": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        }
+      },
+      "success_status": 200,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/customers"
+        },
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/customers",
+          "status": 200,
+          "json_paths": [
+            "$.items",
+            "$.page",
+            "$.pageSize",
+            "$.total"
+          ]
+        }
+      ],
+      "id": "op-5"
+    },
+    {
+      "method": "GET",
+      "path": "/api/customers/{}",
+      "parameters": [
+        {
+          "name": "id",
+          "location": "path",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "archived": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
+      "success_status": 200,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/customers/207",
+          "status": 200,
+          "json_paths": [
+            "$"
+          ]
+        }
+      ],
+      "id": "op-6"
+    },
+    {
+      "method": "GET",
+      "path": "/api/customers/{}/addresses",
+      "parameters": [
+        {
+          "name": "id",
+          "location": "path",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "response_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "city": {
+              "type": "string"
+            },
+            "countryCode": {
+              "type": "string"
+            },
+            "countryName": {
+              "type": "string"
+            },
+            "createdAt": {
+              "type": "string"
+            },
+            "customerId": {
+              "type": "integer"
+            },
+            "id": {
+              "type": "integer"
+            },
+            "label": {
+              "type": "string"
+            },
+            "line1": {
+              "type": "string"
+            },
+            "line2": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "postalCode": {
+              "type": "string"
+            },
+            "regionCode": {
+              "type": "string"
+            },
+            "regionId": {
+              "type": "integer"
+            },
+            "regionName": {
+              "type": "string"
+            },
+            "updatedAt": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "success_status": 200,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/customers/207/addresses",
+          "status": 200,
+          "json_paths": [
+            "$"
+          ]
+        }
+      ],
+      "id": "op-7"
+    },
+    {
+      "method": "GET",
+      "path": "/api/customers/suggest",
+      "parameters": [
+        {
+          "name": "q",
+          "location": "query",
+          "type": "string",
+          "required": false
+        }
+      ],
+      "response_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "string"
+            },
+            "id": {
+              "type": "integer"
+            },
+            "name": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "success_status": 200,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/customers/suggest"
+        },
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/customers/suggest",
+          "status": 200,
+          "json_paths": [
+            "$"
+          ]
+        }
+      ],
+      "id": "op-8"
+    },
+    {
+      "method": "GET",
+      "path": "/api/dashboard/summary",
+      "parameters": [
+        {
+          "name": "period",
+          "location": "query",
+          "type": "string",
+          "required": false
+        }
+      ],
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "customerCount": {
+            "type": "integer"
+          },
+          "orderCount": {
+            "type": "integer"
+          },
+          "ordersByStatus": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "statusId": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "revenueCents": {
+            "type": "integer"
+          }
+        }
+      },
+      "success_status": 200,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/dashboard/summary",
+          "status": 200,
+          "json_paths": [
+            "$"
+          ]
+        }
+      ],
+      "id": "op-9"
+    },
+    {
+      "method": "GET",
+      "path": "/api/orders",
+      "parameters": [
+        {
+          "name": "page",
+          "location": "query",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "pageSize",
+          "location": "query",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "status",
+          "location": "query",
+          "type": "integer",
+          "required": false
+        }
+      ],
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "createdAt": {
+                  "type": "string"
+                },
+                "customerEmailSnapshot": {
+                  "type": "string"
+                },
+                "customerId": {
+                  "type": "integer"
+                },
+                "customerNameSnapshot": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "integer"
+                },
+                "orderNumber": {
+                  "type": "string"
+                },
+                "paymentStatus": {
+                  "type": "string"
+                },
+                "statusId": {
+                  "type": "integer"
+                },
+                "totalCents": {
+                  "type": "integer"
+                },
+                "updatedAt": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "page": {
+            "type": "integer"
+          },
+          "pageSize": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        }
+      },
+      "success_status": 200,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/orders"
+        },
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/orders",
+          "status": 200,
+          "json_paths": [
+            "$.items",
+            "$.page",
+            "$.pageSize",
+            "$.total"
+          ]
+        }
+      ],
+      "id": "op-10"
+    },
+    {
+      "method": "GET",
+      "path": "/api/orders/{}",
+      "parameters": [
+        {
+          "name": "id",
+          "location": "path",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "addressSnapshot": {
+            "type": "object"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "customerEmailSnapshot": {
+            "type": "string"
+          },
+          "customerId": {
+            "type": "integer"
+          },
+          "customerNameSnapshot": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "nameSnapshot": {
+                  "type": "string"
+                },
+                "productId": {
+                  "type": "integer"
+                },
+                "quantity": {
+                  "type": "integer"
+                },
+                "skuSnapshot": {
+                  "type": "string"
+                },
+                "unitPriceCents": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "orderNumber": {
+            "type": "string"
+          },
+          "paymentStatus": {
+            "type": "string"
+          },
+          "shippingCents": {
+            "type": "integer"
+          },
+          "shippingMethodId": {
+            "type": "integer"
+          },
+          "statusId": {
+            "type": "integer"
+          },
+          "subtotalCents": {
+            "type": "integer"
+          },
+          "taxCents": {
+            "type": "integer"
+          },
+          "totalCents": {
+            "type": "integer"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
+      "success_status": 200,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/orders/2007",
+          "status": 200,
+          "json_paths": [
+            "$"
+          ]
+        }
+      ],
+      "id": "op-11"
+    },
+    {
+      "method": "GET",
+      "path": "/api/orders/{}/activity",
+      "parameters": [
+        {
+          "name": "id",
+          "location": "path",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "response_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "createdAt": {
+              "type": "string"
+            },
+            "createdBy": {
+              "type": "integer"
+            },
+            "createdByName": {
+              "type": "string"
+            },
+            "data": {
+              "type": "object"
+            },
+            "eventType": {
+              "type": "string"
+            },
+            "id": {
+              "type": "integer"
+            },
+            "orderId": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "success_status": 200,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/orders/2007/activity",
+          "status": 200,
+          "json_paths": [
+            "$"
+          ]
+        }
+      ],
+      "id": "op-12"
+    },
+    {
+      "method": "GET",
+      "path": "/api/products",
+      "parameters": [
+        {
+          "name": "page",
+          "location": "query",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "pageSize",
+          "location": "query",
+          "type": "integer",
+          "required": false
+        }
+      ],
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "active": {
+                  "type": "boolean"
+                },
+                "createdAt": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "priceCents": {
+                  "type": "integer"
+                },
+                "sku": {
+                  "type": "string"
+                },
+                "stockQty": {
+                  "type": "integer"
+                },
+                "updatedAt": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "page": {
+            "type": "integer"
+          },
+          "pageSize": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        }
+      },
+      "success_status": 200,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/products",
+          "status": 200,
+          "json_paths": [
+            "$.items",
+            "$.page",
+            "$.pageSize",
+            "$.total"
+          ]
+        }
+      ],
+      "id": "op-13"
+    },
+    {
+      "method": "GET",
+      "path": "/api/products/{}",
+      "parameters": [
+        {
+          "name": "id",
+          "location": "path",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "priceCents": {
+            "type": "integer"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "stockQty": {
+            "type": "integer"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
+      "success_status": 200,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/products/210",
+          "status": 200,
+          "json_paths": [
+            "$"
+          ]
+        }
+      ],
+      "id": "op-14"
+    },
+    {
+      "method": "GET",
+      "path": "/api/products/suggest",
+      "parameters": [
+        {
+          "name": "q",
+          "location": "query",
+          "type": "string",
+          "required": false
+        }
+      ],
+      "response_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "name": {
+              "type": "string"
+            },
+            "priceCents": {
+              "type": "integer"
+            },
+            "sku": {
+              "type": "string"
+            },
+            "stockQty": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "success_status": 200,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/products/suggest",
+          "status": 200,
+          "json_paths": [
+            "$"
+          ]
+        }
+      ],
+      "id": "op-15"
+    },
+    {
+      "method": "GET",
+      "path": "/api/regions",
+      "parameters": [
+        {
+          "name": "country",
+          "location": "query",
+          "type": "string",
+          "required": false
+        }
+      ],
+      "response_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "countryCode": {
+              "type": "string"
+            },
+            "id": {
+              "type": "integer"
+            },
+            "name": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "success_status": 200,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/regions",
+          "status": 200,
+          "json_paths": [
+            "$"
+          ]
+        }
+      ],
+      "id": "op-16"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/customers/{}",
+      "parameters": [
+        {
+          "name": "id",
+          "location": "path",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "archived": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "archived": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
+      "success_status": 200,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "PATCH",
+          "path": "/api/customers/208",
+          "status": 200,
+          "json_paths": [
+            "$.archived",
+            "$.version"
+          ]
+        },
+        {
+          "kind": "network_response",
+          "method": "PATCH",
+          "path": "/api/customers/208",
+          "status": 200,
+          "json_paths": [
+            "$"
+          ]
+        }
+      ],
+      "id": "op-17"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/orders/{}/status",
+      "parameters": [
+        {
+          "name": "id",
+          "location": "path",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "statusId": {
+            "type": "integer"
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "addressSnapshot": {
+            "type": "object"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "customerEmailSnapshot": {
+            "type": "string"
+          },
+          "customerId": {
+            "type": "integer"
+          },
+          "customerNameSnapshot": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "items": {
+            "type": "array"
+          },
+          "orderNumber": {
+            "type": "string"
+          },
+          "paymentStatus": {
+            "type": "string"
+          },
+          "shippingCents": {
+            "type": "integer"
+          },
+          "shippingMethodId": {
+            "type": "integer"
+          },
+          "statusId": {
+            "type": "integer"
+          },
+          "subtotalCents": {
+            "type": "integer"
+          },
+          "taxCents": {
+            "type": "integer"
+          },
+          "totalCents": {
+            "type": "integer"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
+      "success_status": 200,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "PATCH",
+          "path": "/api/orders/2010/status",
+          "status": 200,
+          "json_paths": [
+            "$.statusId",
+            "$.version"
+          ]
+        },
+        {
+          "kind": "network_response",
+          "method": "PATCH",
+          "path": "/api/orders/2010/status",
+          "status": 200,
+          "json_paths": [
+            "$"
+          ]
+        }
+      ],
+      "id": "op-18"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "csrfToken": {
+            "type": "string"
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string"
+              },
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "success_status": 200,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/auth/login",
+          "status": 200,
+          "json_paths": [
+            "$.email",
+            "$.password"
+          ]
+        },
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/auth/login",
+          "status": 200,
+          "json_paths": [
+            "$"
+          ]
+        }
+      ],
+      "id": "op-19"
+    },
+    {
+      "method": "POST",
+      "path": "/api/customers",
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          }
+        }
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "archived": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
+      "success_status": 201,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/customers",
+          "status": 201,
+          "json_paths": [
+            "$"
+          ]
+        },
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/customers",
+          "status": 201,
+          "json_paths": [
+            "$"
+          ]
+        }
+      ],
+      "id": "op-20"
+    },
+    {
+      "method": "POST",
+      "path": "/api/customers/{}/addresses",
+      "parameters": [
+        {
+          "name": "id",
+          "location": "path",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string"
+          },
+          "countryCode": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "line1": {
+            "type": "string"
+          },
+          "line2": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "postalCode": {
+            "type": "string"
+          },
+          "regionId": {
+            "type": "integer"
+          }
+        }
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string"
+          },
+          "countryCode": {
+            "type": "string"
+          },
+          "countryName": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "customerId": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "label": {
+            "type": "string"
+          },
+          "line1": {
+            "type": "string"
+          },
+          "line2": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "postalCode": {
+            "type": "string"
+          },
+          "regionCode": {
+            "type": "string"
+          },
+          "regionId": {
+            "type": "integer"
+          },
+          "regionName": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        }
+      },
+      "success_status": 201,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/customers/208/addresses",
+          "status": 201,
+          "json_paths": [
+            "$"
+          ]
+        },
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/customers/208/addresses",
+          "status": 201,
+          "json_paths": [
+            "$"
+          ]
+        }
+      ],
+      "id": "op-21"
+    },
+    {
+      "method": "POST",
+      "path": "/api/order-quotes",
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "addressId": {
+            "type": "integer"
+          },
+          "customerId": {
+            "type": "integer"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productId": {
+                  "type": "integer"
+                },
+                "quantity": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "shippingMethodId": {
+            "type": "integer"
+          }
+        }
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "expiresAt": {
+            "type": "string"
+          },
+          "quoteId": {
+            "type": "string"
+          },
+          "shippingCents": {
+            "type": "integer"
+          },
+          "subtotalCents": {
+            "type": "integer"
+          },
+          "taxCents": {
+            "type": "integer"
+          },
+          "totalCents": {
+            "type": "integer"
+          }
+        }
+      },
+      "success_status": 201,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/order-quotes",
+          "status": 201,
+          "json_paths": [
+            "$"
+          ]
+        },
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/order-quotes",
+          "status": 201,
+          "json_paths": [
+            "$"
+          ]
+        }
+      ],
+      "id": "op-22"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders",
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "quoteId": {
+            "type": "string"
+          }
+        }
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "addressSnapshot": {
+            "type": "object"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "customerEmailSnapshot": {
+            "type": "string"
+          },
+          "customerId": {
+            "type": "integer"
+          },
+          "customerNameSnapshot": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "items": {
+            "type": "array"
+          },
+          "orderNumber": {
+            "type": "string"
+          },
+          "paymentStatus": {
+            "type": "string"
+          },
+          "shippingCents": {
+            "type": "integer"
+          },
+          "shippingMethodId": {
+            "type": "integer"
+          },
+          "statusId": {
+            "type": "integer"
+          },
+          "subtotalCents": {
+            "type": "integer"
+          },
+          "taxCents": {
+            "type": "integer"
+          },
+          "totalCents": {
+            "type": "integer"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
+      "success_status": 201,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/orders",
+          "status": 201,
+          "json_paths": [
+            "$.quoteId"
+          ]
+        },
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/orders",
+          "status": 201,
+          "json_paths": [
+            "$"
+          ]
+        }
+      ],
+      "id": "op-23"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders/{}/notes",
+      "parameters": [
+        {
+          "name": "id",
+          "location": "path",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string"
+          }
+        }
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "createdBy": {
+            "type": "integer"
+          },
+          "createdByName": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "orderId": {
+            "type": "integer"
+          }
+        }
+      },
+      "success_status": 201,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/orders/2010/notes",
+          "status": 201,
+          "json_paths": [
+            "$.body"
+          ]
+        },
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/orders/2010/notes",
+          "status": 201,
+          "json_paths": [
+            "$"
+          ]
+        }
+      ],
+      "id": "op-24"
+    },
+    {
+      "method": "POST",
+      "path": "/api/shipping/options",
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "addressId": {
+            "type": "integer"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productId": {
+                  "type": "integer"
+                },
+                "quantity": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "estimatedDays": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                "methodId": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "priceCents": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "success_status": 200,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/shipping/options",
+          "status": 200,
+          "json_paths": [
+            "$"
+          ]
+        },
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/shipping/options",
+          "status": 200,
+          "json_paths": [
+            "$"
+          ]
+        }
+      ],
+      "id": "op-25"
+    }
+  ],
+  "semantic_facts": [
+    {
+      "subject": "header:X-CSRF-Token",
+      "value": "X-CSRF-Token",
+      "meaning": "The CSRF token is sent using the X-CSRF-Token header.",
+      "kind": "auth",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/auth/login",
+          "status": 200,
+          "json_paths": [
+            "$.csrfToken"
+          ],
+          "note": "The login response contains a csrfToken field."
+        }
+      ],
+      "id": "fact-1"
+    },
+    {
+      "subject": "POST /api/auth/login",
+      "value": {
+        "csrf": false
+      },
+      "meaning": "The login route does not require a CSRF header.",
+      "kind": "auth",
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/auth/login",
+          "status": 200,
+          "note": "The login request was observed without a CSRF header."
+        }
+      ],
+      "id": "fact-2"
+    },
+    {
+      "subject": "dashboard.customerCount",
+      "value": {
+        "base": [
+          "customers"
+        ],
+        "filter": {
+          "archived": false
+        },
+        "unit": "count"
+      },
+      "meaning": "Dashboard customer count counts active customers.",
+      "kind": "derived_value",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/dashboard/summary?period=30d",
+          "status": 200,
+          "json_paths": [
+            "$.customerCount"
+          ]
+        },
+        {
+          "kind": "ui_label",
+          "page": "/",
+          "ui_text": "Active customers"
+        }
+      ],
+      "id": "fact-3"
+    },
+    {
+      "subject": "dashboard.customerCount",
+      "value": {
+        "base": [
+          "customers"
+        ],
+        "filter": {
+          "archived": false
+        },
+        "unit": "customers"
+      },
+      "meaning": "The dashboard customer count is the count of active customers.",
+      "kind": "derived_value",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/dashboard/summary",
+          "status": 200,
+          "json_paths": [
+            "$.customerCount"
+          ]
+        },
+        {
+          "kind": "ui_label",
+          "page": "/",
+          "ui_text": "Active customers 11"
+        }
+      ],
+      "id": "fact-4"
+    },
+    {
+      "subject": "dashboard.ordersByStatus",
+      "value": {
+        "base": [
+          "orders"
+        ],
+        "filter": {
+          "period": "30d"
+        },
+        "groupBy": "statusId",
+        "unit": "count"
+      },
+      "meaning": "Dashboard order counts are grouped by status id for the selected period.",
+      "kind": "derived_value",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/dashboard/summary?period=30d",
+          "status": 200,
+          "json_paths": [
+            "$.ordersByStatus"
+          ]
+        },
+        {
+          "kind": "ui_label",
+          "page": "/",
+          "ui_text": "Orders by status Status Count"
+        }
+      ],
+      "id": "fact-5"
+    },
+    {
+      "subject": "dashboard.ordersByStatus",
+      "value": {
+        "base": [
+          "orders"
+        ],
+        "groupBy": "statusId",
+        "unit": "orders"
+      },
+      "meaning": "The dashboard groups order counts by status id.",
+      "kind": "derived_value",
+      "confidence": 0.98,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/dashboard/summary",
+          "status": 200,
+          "json_paths": [
+            "$.ordersByStatus"
+          ]
+        },
+        {
+          "kind": "ui_label",
+          "page": "/",
+          "ui_text": "Orders by status Status Count"
+        }
+      ],
+      "id": "fact-6"
+    },
+    {
+      "subject": "dashboard.revenueCents",
+      "value": {
+        "base": [
+          "orders.totalCents"
+        ],
+        "filter": {
+          "period": "30d",
+          "paymentStatus": "paid"
+        },
+        "unit": "cents"
+      },
+      "meaning": "Dashboard revenue is the total cents of paid orders in the selected period.",
+      "kind": "derived_value",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/dashboard/summary?period=30d",
+          "status": 200,
+          "json_paths": [
+            "$.revenueCents"
+          ]
+        },
+        {
+          "kind": "ui_label",
+          "page": "/",
+          "ui_text": "Revenue (30 days)"
+        }
+      ],
+      "id": "fact-7"
+    },
+    {
+      "subject": "dashboard.revenueCents",
+      "value": {
+        "base": [
+          "orders.totalCents"
+        ],
+        "filter": {
+          "period": "30d"
+        },
+        "paymentStatus": "paid",
+        "unit": "cents"
+      },
+      "meaning": "The dashboard reports revenue in cents for the 30-day period and paid orders.",
+      "kind": "derived_value",
+      "confidence": 0.84,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/dashboard/summary",
+          "status": 200,
+          "json_paths": [
+            "$.revenueCents"
+          ]
+        },
+        {
+          "kind": "ui_label",
+          "page": "/",
+          "ui_text": "Revenue (30 days) $4,170.90"
+        }
+      ],
+      "id": "fact-8"
+    },
+    {
+      "subject": "order.taxCents",
+      "value": {
+        "base": [
+          "subtotalCents"
+        ],
+        "factor": "rate",
+        "rounding": "round",
+        "unit": "cents",
+        "country": "CA",
+        "region": "ON",
+        "rate": 0.143
+      },
+      "meaning": "For the observed Canada/Ontario order, tax is 14.3% of subtotal, rounded to cents.",
+      "kind": "derived_value",
+      "confidence": 0.96,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/orders/2007",
+          "status": 200,
+          "json_paths": [
+            "$.addressSnapshot.countryCode",
+            "$.addressSnapshot.regionCode",
+            "$.subtotalCents",
+            "$.taxCents"
+          ]
+        }
+      ],
+      "id": "fact-9"
+    },
+    {
+      "subject": "order.taxCents",
+      "value": {
+        "base": [
+          "subtotalCents"
+        ],
+        "country": "CA",
+        "region": "ON",
+        "rate": 0.143,
+        "rounding": "round",
+        "unit": "cents"
+      },
+      "meaning": "For a Canadian Ontario order, tax is calculated from the subtotal at a 14.3% rate and rounded to cents.",
+      "kind": "derived_value",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/orders/2007",
+          "status": 200,
+          "json_paths": [
+            "$.addressSnapshot.countryCode",
+            "$.addressSnapshot.regionCode",
+            "$.subtotalCents",
+            "$.taxCents"
+          ]
+        }
+      ],
+      "id": "fact-10"
+    },
+    {
+      "subject": "order.taxCents",
+      "value": {
+        "base": [
+          "subtotalCents"
+        ],
+        "factor": "rate",
+        "rounding": "round",
+        "unit": "cents",
+        "country": "US",
+        "region": "WA",
+        "rate": 0
+      },
+      "meaning": "For the observed United States/Washington order, tax is zero.",
+      "kind": "derived_value",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "PATCH",
+          "path": "/api/orders/2010/status",
+          "status": 200,
+          "json_paths": [
+            "$.addressSnapshot.countryCode",
+            "$.addressSnapshot.regionCode",
+            "$.subtotalCents",
+            "$.taxCents"
+          ]
+        }
+      ],
+      "id": "fact-11"
+    },
+    {
+      "subject": "order.taxCents",
+      "value": {
+        "base": [
+          "subtotalCents"
+        ],
+        "country": "US",
+        "rate": 0,
+        "rounding": "none",
+        "unit": "cents"
+      },
+      "meaning": "The observed United States order has zero tax.",
+      "kind": "derived_value",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "PATCH",
+          "path": "/api/orders/2010/status",
+          "status": 200,
+          "json_paths": [
+            "$.addressSnapshot.countryCode",
+            "$.subtotalCents",
+            "$.taxCents"
+          ]
+        }
+      ],
+      "id": "fact-12"
+    },
+    {
+      "subject": "order.paymentStatus",
+      "value": "unpaid",
+      "meaning": "Unpaid",
+      "kind": "enum_mapping",
+      "evidence": [
+        {
+          "kind": "ui_label",
+          "page": "/orders/2010",
+          "ui_text": "Payment unpaid"
+        },
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/orders/{}",
+          "status": 200,
+          "json_paths": [
+            "$.paymentStatus"
+          ]
+        }
+      ],
+      "id": "fact-13"
+    },
+    {
+      "subject": "order.statusId",
+      "value": 10,
+      "meaning": "Draft",
+      "kind": "enum_mapping",
+      "evidence": [
+        {
+          "kind": "ui_control",
+          "page": "/orders",
+          "ui_text": "Status options include 10|Draft"
+        },
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/orders",
+          "status": 200,
+          "json_paths": [
+            "$.items[*].statusId"
+          ]
+        }
+      ],
+      "id": "fact-14"
+    },
+    {
+      "subject": "order.statusId",
+      "value": 20,
+      "meaning": "Confirmed",
+      "kind": "enum_mapping",
+      "evidence": [
+        {
+          "kind": "ui_control",
+          "page": "/orders",
+          "ui_text": "Status options include 20|Confirmed"
+        },
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/orders",
+          "status": 200,
+          "json_paths": [
+            "$.items[*].statusId"
+          ]
+        }
+      ],
+      "id": "fact-15"
+    },
+    {
+      "subject": "order.statusId",
+      "value": 30,
+      "meaning": "Processing",
+      "kind": "enum_mapping",
+      "evidence": [
+        {
+          "kind": "ui_control",
+          "page": "/orders",
+          "ui_text": "Status options include 30|Processing"
+        },
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/dashboard/summary",
+          "status": 200,
+          "json_paths": [
+            "$.ordersByStatus[*].statusId"
+          ]
+        }
+      ],
+      "id": "fact-16"
+    },
+    {
+      "subject": "order.statusId",
+      "value": 40,
+      "meaning": "Shipped",
+      "kind": "enum_mapping",
+      "evidence": [
+        {
+          "kind": "ui_control",
+          "page": "/orders",
+          "ui_text": "Status options include 40|Shipped"
+        },
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/orders",
+          "status": 200,
+          "json_paths": [
+            "$.items[*].statusId"
+          ]
+        }
+      ],
+      "id": "fact-17"
+    },
+    {
+      "subject": "order.statusId",
+      "value": 50,
+      "meaning": "Cancelled",
+      "kind": "enum_mapping",
+      "evidence": [
+        {
+          "kind": "ui_control",
+          "page": "/orders",
+          "ui_text": "Status options include 50|Cancelled"
+        },
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/orders",
+          "status": 200,
+          "json_paths": [
+            "$.items[*].statusId"
+          ]
+        }
+      ],
+      "id": "fact-18"
+    },
+    {
+      "subject": "shipping.methodId",
+      "value": 3,
+      "meaning": "Ground",
+      "kind": "enum_mapping",
+      "evidence": [
+        {
+          "kind": "ui_control",
+          "page": "/orders/new",
+          "ui_text": "Ground · $8.99 · 5–7 days"
+        },
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/shipping/options",
+          "status": 200,
+          "json_paths": [
+            "$.options[*].methodId"
+          ]
+        }
+      ],
+      "id": "fact-19"
+    },
+    {
+      "subject": "shipping.methodId",
+      "value": 4,
+      "meaning": "Express",
+      "kind": "enum_mapping",
+      "evidence": [
+        {
+          "kind": "ui_control",
+          "page": "/orders/new",
+          "ui_text": "Express · $18.99 · 2–3 days"
+        },
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/shipping/options",
+          "status": 200,
+          "json_paths": [
+            "$.options[*].methodId"
+          ]
+        }
+      ],
+      "id": "fact-20"
+    },
+    {
+      "subject": "order.orderNumber",
+      "value": {
+        "prefix": "ORD-2026-"
+      },
+      "meaning": "Order numbers use the literal prefix ORD-2026-",
+      "kind": "identifier_meaning",
+      "evidence": [
+        {
+          "kind": "ui_label",
+          "page": "/orders",
+          "ui_text": "ORD-2026-2001"
+        },
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/orders",
+          "status": 200,
+          "json_paths": [
+            "$.items[*].orderNumber"
+          ]
+        }
+      ],
+      "id": "fact-21"
+    },
+    {
+      "subject": "product.sku",
+      "value": {
+        "prefix": "SKU-"
+      },
+      "meaning": "Product SKUs use the literal prefix SKU-",
+      "kind": "identifier_meaning",
+      "evidence": [
+        {
+          "kind": "ui_label",
+          "page": "/products",
+          "ui_text": "SKU-201"
+        },
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/products",
+          "status": 200,
+          "json_paths": [
+            "$.items[*].sku"
+          ]
+        }
+      ],
+      "id": "fact-22"
+    },
+    {
+      "subject": "GET /api/customers?archived",
+      "value": {
+        "accepts": [
+          false,
+          true,
+          null
+        ]
+      },
+      "meaning": "The archived filter accepts active, archived, or omitted/all values.",
+      "kind": "query_semantics",
+      "evidence": [
+        {
+          "kind": "ui_control",
+          "page": "/customers",
+          "ui_text": "Status Active Archived All"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/customers?archived=false",
+          "status": 200
+        }
+      ],
+      "id": "fact-23"
+    },
+    {
+      "subject": "GET /api/orders?status",
+      "value": {
+        "accepts": [
+          10,
+          20,
+          30,
+          40,
+          50,
+          null
+        ]
+      },
+      "meaning": "The order status filter accepts the displayed status ids or omitted/all values.",
+      "kind": "query_semantics",
+      "evidence": [
+        {
+          "kind": "ui_control",
+          "page": "/orders",
+          "ui_text": "Status All statuses Draft Confirmed Processing Shipped Cancelled"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/orders?status=50",
+          "status": 200
+        }
+      ],
+      "id": "fact-24"
+    },
+    {
+      "subject": "GET /api/products?active",
+      "value": {
+        "accepts": [
+          false,
+          true,
+          null
+        ]
+      },
+      "meaning": "The product availability filter accepts false, true, or omission for all products.",
+      "kind": "query_semantics",
+      "confidence": 0.98,
+      "evidence": [
+        {
+          "kind": "ui_control",
+          "page": "/products",
+          "ui_text": "Availability All Active Inactive"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/products",
+          "note": "Observed active=false and active=true query values."
+        }
+      ],
+      "id": "fact-25"
+    },
+    {
+      "subject": "GET /api/regions?country",
+      "value": {
+        "requires": [
+          "country"
+        ]
+      },
+      "meaning": "A country is required to retrieve regions.",
+      "kind": "query_semantics",
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/regions?country=US",
+          "status": 200
+        },
+        {
+          "kind": "ui_action",
+          "page": "/customers/208",
+          "ui_text": "Country"
+        }
+      ],
+      "id": "fact-26"
+    },
+    {
+      "subject": "order.statusId",
+      "value": {
+        "from": 10,
+        "to": [
+          50
+        ]
+      },
+      "meaning": "Order status 10 transitioned to status 50.",
+      "kind": "state_transition",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/orders",
+          "status": 201,
+          "json_paths": [
+            "$.statusId"
+          ],
+          "note": "Order 2010 was created with statusId 10.",
+          "ui_text": "ORD-2026-2010 Status Draft"
+        },
+        {
+          "kind": "network_request",
+          "method": "PATCH",
+          "path": "/api/orders/2010/status",
+          "status": 200,
+          "json_paths": [
+            "$.statusId"
+          ],
+          "note": "Cancel order request supplied statusId 50.",
+          "ui_text": "Cancel order"
+        }
+      ],
+      "id": "fact-27"
+    },
+    {
+      "subject": "order.statusId",
+      "value": {
+        "from": 20,
+        "to": [
+          50
+        ]
+      },
+      "meaning": "Order status 20 transitioned to status 50.",
+      "kind": "state_transition",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/orders",
+          "status": 200,
+          "json_paths": [
+            "$.items[?(@.id==2008)].statusId"
+          ],
+          "note": "Order 2008 was observed with statusId 20."
+        },
+        {
+          "kind": "network_request",
+          "method": "PATCH",
+          "path": "/api/orders/2008/status",
+          "status": 200,
+          "json_paths": [
+            "$.statusId"
+          ],
+          "note": "Cancel order request supplied statusId 50.",
+          "ui_text": "Cancel order"
+        }
+      ],
+      "id": "fact-28"
+    }
+  ],
+  "dependencies": [
+    {
+      "source_operation": "GET /api/auth/session",
+      "source_field": "$.csrfToken",
+      "target_operation": "*",
+      "target_field": "header:x-csrf-token",
+      "kind": "auth",
+      "description": "The CSRF token returned by the session endpoint is sent in the X-CSRF-Token header on subsequent matching requests.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/auth/session",
+          "status": 200,
+          "json_paths": [
+            "$.csrfToken"
+          ]
+        }
+      ],
+      "id": "dep-1"
+    },
+    {
+      "source_operation": "GET /api/countries",
+      "source_field": "$[].code",
+      "target_operation": "GET /api/regions",
+      "target_field": "query.country",
+      "kind": "lookup",
+      "description": "A country code from the countries response is used as the regions query parameter.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/countries",
+          "status": 200,
+          "json_paths": [
+            "$[].code"
+          ]
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/regions",
+          "status": 200
+        }
+      ],
+      "id": "dep-2"
+    },
+    {
+      "source_operation": "GET /api/customers/{}/addresses",
+      "source_field": "$[].id",
+      "target_operation": "POST /api/order-quotes",
+      "target_field": "$.addressId",
+      "kind": "payload",
+      "description": "The selected customer address id is included in the order-quote request.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/customers/207/addresses",
+          "status": 200,
+          "json_paths": [
+            "$[].id"
+          ],
+          "note": "ev_048"
+        },
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/order-quotes",
+          "status": 201,
+          "json_paths": [
+            "$.addressId"
+          ],
+          "note": "ev_123"
+        }
+      ],
+      "id": "dep-3"
+    },
+    {
+      "source_operation": "GET /api/customers/{}/addresses",
+      "source_field": "$[].id",
+      "target_operation": "POST /api/shipping/options",
+      "target_field": "$.addressId",
+      "kind": "payload",
+      "description": "The selected customer address id is included in the shipping-options request.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/customers/207/addresses",
+          "status": 200,
+          "json_paths": [
+            "$[].id"
+          ],
+          "note": "ev_048"
+        },
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/shipping/options",
+          "status": 200,
+          "json_paths": [
+            "$.addressId"
+          ],
+          "note": "ev_120"
+        }
+      ],
+      "id": "dep-4"
+    },
+    {
+      "source_operation": "GET /api/customers/{}",
+      "source_field": "$.id",
+      "target_operation": "GET /api/customers/{}/addresses",
+      "target_field": "{id}",
+      "kind": "lookup",
+      "description": "The customer detail id scopes the address lookup.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/customers/207",
+          "status": 200,
+          "json_paths": [
+            "$.id"
+          ],
+          "note": "ev_047"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/customers/207/addresses",
+          "status": 200,
+          "note": "ev_048"
+        }
+      ],
+      "id": "dep-5"
+    },
+    {
+      "source_operation": "GET /api/customers/{}",
+      "source_field": "$.id",
+      "target_operation": "POST /api/customers/{}/addresses",
+      "target_field": "{id}",
+      "kind": "payload",
+      "description": "The customer id from the customer detail resource scopes address creation.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/customers/208",
+          "status": 200,
+          "json_paths": [
+            "$.id"
+          ]
+        },
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/customers/208/addresses",
+          "status": 201
+        }
+      ],
+      "id": "dep-6"
+    },
+    {
+      "source_operation": "GET /api/customers/suggest",
+      "source_field": "$[].id",
+      "target_operation": "GET /api/customers/{}",
+      "target_field": "{id}",
+      "kind": "lookup",
+      "description": "Selecting a customer suggestion loads the customer detail by the suggestion id.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/customers/suggest",
+          "status": 200,
+          "json_paths": [
+            "$[].id"
+          ],
+          "note": "ev_108, ev_112"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/customers/207",
+          "status": 200,
+          "note": "ev_047"
+        }
+      ],
+      "id": "dep-7"
+    },
+    {
+      "source_operation": "GET /api/customers/suggest",
+      "source_field": "$[].id",
+      "target_operation": "POST /api/order-quotes",
+      "target_field": "$.customerId",
+      "kind": "payload",
+      "description": "The selected customer suggestion id is included in the order-quote request.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/customers/suggest",
+          "status": 200,
+          "json_paths": [
+            "$[].id"
+          ],
+          "note": "ev_108, ev_112"
+        },
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/order-quotes",
+          "status": 201,
+          "json_paths": [
+            "$.customerId"
+          ],
+          "note": "ev_123"
+        }
+      ],
+      "id": "dep-8"
+    },
+    {
+      "source_operation": "GET /api/orders/{}",
+      "source_field": "$.id",
+      "target_operation": "GET /api/orders/{}/activity",
+      "target_field": "{id}",
+      "kind": "lookup",
+      "description": "The order detail id scopes the activity lookup.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/orders/2007",
+          "status": 200,
+          "json_paths": [
+            "$.id"
+          ],
+          "note": "ev_026"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/orders/2007/activity",
+          "status": 200,
+          "note": "ev_027"
+        }
+      ],
+      "id": "dep-9"
+    },
+    {
+      "source_operation": "GET /api/orders/{}",
+      "source_field": "$.version",
+      "target_operation": "PATCH /api/orders/{}/status",
+      "target_field": "$.version",
+      "kind": "concurrency",
+      "description": "The current order version is submitted with the status update.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/orders/2008",
+          "status": 200,
+          "json_paths": [
+            "$.version"
+          ],
+          "note": "ev_316"
+        },
+        {
+          "kind": "network_request",
+          "method": "PATCH",
+          "path": "/api/orders/2008/status",
+          "status": 200,
+          "json_paths": [
+            "$.version"
+          ],
+          "note": "ev_320"
+        }
+      ],
+      "id": "dep-10"
+    },
+    {
+      "source_operation": "GET /api/products/suggest",
+      "source_field": "$[].id",
+      "target_operation": "POST /api/order-quotes",
+      "target_field": "$.items[].productId",
+      "kind": "payload",
+      "description": "The selected product suggestion id is included in the order-quote item payload.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/products/suggest",
+          "status": 200,
+          "json_paths": [
+            "$[].id"
+          ],
+          "note": "ev_115"
+        },
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/order-quotes",
+          "status": 201,
+          "json_paths": [
+            "$.items[].productId"
+          ],
+          "note": "ev_123"
+        }
+      ],
+      "id": "dep-11"
+    },
+    {
+      "source_operation": "GET /api/products/suggest",
+      "source_field": "$[].id",
+      "target_operation": "POST /api/shipping/options",
+      "target_field": "$.items[].productId",
+      "kind": "payload",
+      "description": "The selected product suggestion id is included in the shipping-options item payload.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/products/suggest",
+          "status": 200,
+          "json_paths": [
+            "$[].id"
+          ],
+          "note": "ev_115"
+        },
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/shipping/options",
+          "status": 200,
+          "json_paths": [
+            "$.items[].productId"
+          ],
+          "note": "ev_120"
+        }
+      ],
+      "id": "dep-12"
+    },
+    {
+      "source_operation": "GET /api/regions",
+      "source_field": "$[].id",
+      "target_operation": "POST /api/customers/{}/addresses",
+      "target_field": "$.regionId",
+      "kind": "payload",
+      "description": "A region id from the regions lookup is submitted when creating an address.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/regions",
+          "status": 200,
+          "json_paths": [
+            "$[].id"
+          ]
+        },
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/customers/208/addresses",
+          "status": 201,
+          "json_paths": [
+            "$.regionId"
+          ]
+        }
+      ],
+      "id": "dep-13"
+    },
+    {
+      "source_operation": "PATCH /api/orders/{}/status",
+      "source_field": "$.id",
+      "target_operation": "GET /api/orders/{}/activity",
+      "target_field": "{id}",
+      "kind": "lookup",
+      "description": "The order id from the status update response is used to refresh order activity.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "PATCH",
+          "path": "/api/orders/2010/status",
+          "status": 200,
+          "json_paths": [
+            "$.id"
+          ]
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/orders/2010/activity",
+          "status": 200
+        }
+      ],
+      "id": "dep-14"
+    },
+    {
+      "source_operation": "PATCH /api/orders/{}/status",
+      "source_field": "$.id",
+      "target_operation": "GET /api/orders/{}",
+      "target_field": "{id}",
+      "kind": "lookup",
+      "description": "The order id from the status update response is used to refresh order details.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "PATCH",
+          "path": "/api/orders/2010/status",
+          "status": 200,
+          "json_paths": [
+            "$.id"
+          ]
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/orders/2010",
+          "status": 200
+        }
+      ],
+      "id": "dep-15"
+    },
+    {
+      "source_operation": "POST /api/auth/login",
+      "source_field": "$.csrfToken",
+      "target_operation": "*",
+      "target_field": "header:x-csrf-token",
+      "kind": "auth",
+      "description": "The CSRF token returned by login is sent in the X-CSRF-Token header on subsequent matching requests.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/auth/login",
+          "status": 200,
+          "json_paths": [
+            "$.csrfToken"
+          ]
+        }
+      ],
+      "id": "dep-16"
+    },
+    {
+      "source_operation": "POST /api/customers",
+      "source_field": "$.id",
+      "target_operation": "GET /api/customers/{}/addresses",
+      "target_field": "{id}",
+      "kind": "lookup",
+      "description": "After customer creation, the created customer id is used to load its addresses.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/customers",
+          "status": 201,
+          "json_paths": [
+            "$.id"
+          ],
+          "note": "ev_069"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/customers/208/addresses",
+          "status": 200,
+          "note": "ev_072"
+        }
+      ],
+      "id": "dep-17"
+    },
+    {
+      "source_operation": "POST /api/customers",
+      "source_field": "$.id",
+      "target_operation": "GET /api/customers/{}",
+      "target_field": "{id}",
+      "kind": "lookup",
+      "description": "After customer creation, the created customer id is used to load its detail.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/customers",
+          "status": 201,
+          "json_paths": [
+            "$.id"
+          ],
+          "note": "ev_069"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/customers/208",
+          "status": 200,
+          "note": "ev_071"
+        }
+      ],
+      "id": "dep-18"
+    },
+    {
+      "source_operation": "POST /api/customers",
+      "source_field": "$.version",
+      "target_operation": "PATCH /api/customers/{}",
+      "target_field": "$.version",
+      "kind": "concurrency",
+      "description": "The customer version returned on creation is submitted with the archive update.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/customers",
+          "status": 201,
+          "json_paths": [
+            "$.version"
+          ],
+          "note": "ev_069"
+        },
+        {
+          "kind": "network_request",
+          "method": "PATCH",
+          "path": "/api/customers/208",
+          "status": 200,
+          "json_paths": [
+            "$.version"
+          ],
+          "note": "ev_076"
+        }
+      ],
+      "id": "dep-19"
+    },
+    {
+      "source_operation": "POST /api/order-quotes",
+      "source_field": "$.quoteId",
+      "target_operation": "POST /api/orders",
+      "target_field": "$.quoteId",
+      "kind": "payload",
+      "description": "The quote id is submitted when creating the order.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/order-quotes",
+          "status": 201,
+          "json_paths": [
+            "$.quoteId"
+          ],
+          "note": "ev_123"
+        },
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/orders",
+          "status": 201,
+          "json_paths": [
+            "$.quoteId"
+          ],
+          "note": "ev_126"
+        }
+      ],
+      "id": "dep-20"
+    },
+    {
+      "source_operation": "POST /api/orders/{}/notes",
+      "source_field": "{id}",
+      "target_operation": "GET /api/orders/{}/activity",
+      "target_field": "{id}",
+      "kind": "lookup",
+      "description": "After adding an order note, activity for the same order is requested.",
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/orders/2010/notes",
+          "status": 201,
+          "note": "ev_139"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/orders/2010/activity",
+          "status": 200,
+          "note": "ev_140"
+        }
+      ],
+      "id": "dep-21"
+    },
+    {
+      "source_operation": "POST /api/orders",
+      "source_field": "$.id",
+      "target_operation": "GET /api/orders/{}/activity",
+      "target_field": "{id}",
+      "kind": "lookup",
+      "description": "The created order id is used to load order activity.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/orders",
+          "status": 201,
+          "json_paths": [
+            "$.id"
+          ]
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/orders/2010/activity",
+          "status": 200
+        }
+      ],
+      "id": "dep-22"
+    },
+    {
+      "source_operation": "POST /api/orders",
+      "source_field": "$.id",
+      "target_operation": "GET /api/orders/{}",
+      "target_field": "{id}",
+      "kind": "lookup",
+      "description": "The created order id is used to load the order detail.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/orders",
+          "status": 201,
+          "json_paths": [
+            "$.id"
+          ],
+          "note": "ev_126"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/orders/2010",
+          "status": 200,
+          "note": "ev_128"
+        }
+      ],
+      "id": "dep-23"
+    },
+    {
+      "source_operation": "POST /api/orders",
+      "source_field": "$.id",
+      "target_operation": "PATCH /api/orders/{}/status",
+      "target_field": "{id}",
+      "kind": "payload",
+      "description": "The created order id is used in the order-status update path.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/orders",
+          "status": 201,
+          "json_paths": [
+            "$.id"
+          ],
+          "note": "ev_126"
+        },
+        {
+          "kind": "network_request",
+          "method": "PATCH",
+          "path": "/api/orders/2010/status",
+          "status": 200,
+          "note": "ev_132"
+        }
+      ],
+      "id": "dep-24"
+    },
+    {
+      "source_operation": "POST /api/orders",
+      "source_field": "$.version",
+      "target_operation": "PATCH /api/orders/{}/status",
+      "target_field": "$.version",
+      "kind": "concurrency",
+      "description": "The order version returned on creation is submitted with the status update.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/orders",
+          "status": 201,
+          "json_paths": [
+            "$.version"
+          ],
+          "note": "ev_126"
+        },
+        {
+          "kind": "network_request",
+          "method": "PATCH",
+          "path": "/api/orders/2010/status",
+          "status": 200,
+          "json_paths": [
+            "$.version"
+          ],
+          "note": "ev_132"
+        }
+      ],
+      "id": "dep-25"
+    },
+    {
+      "source_operation": "POST /api/shipping/options",
+      "source_field": "$.options[].methodId",
+      "target_operation": "POST /api/order-quotes",
+      "target_field": "$.shippingMethodId",
+      "kind": "payload",
+      "description": "The selected shipping option method id is included in the order-quote request.",
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/shipping/options",
+          "status": 200,
+          "json_paths": [
+            "$.options[].methodId"
+          ],
+          "note": "ev_120"
+        },
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/order-quotes",
+          "status": 201,
+          "json_paths": [
+            "$.shippingMethodId"
+          ],
+          "note": "ev_123"
+        }
+      ],
+      "id": "dep-26"
+    }
+  ],
+  "workflows": [
+    {
+      "user_goal": "delete a customer",
+      "steps": [
+        {
+          "operation": "DELETE /api/customers/{}",
+          "role": "required_business"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "ui_action",
+          "ui_text": "Delete",
+          "note": "click blocked by risk policy: DESTRUCTIVE, verdict block"
+        }
+      ],
+      "id": "wf-1"
+    },
+    {
+      "user_goal": "delete a draft order",
+      "steps": [
+        {
+          "operation": "DELETE /api/orders/{}",
+          "role": "required_business"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "ui_action",
+          "ui_text": "Delete draft",
+          "note": "click blocked by risk policy: DESTRUCTIVE, verdict block"
+        }
+      ],
+      "id": "wf-2"
+    },
+    {
+      "user_goal": "View the customers list",
+      "steps": [
+        {
+          "operation": "GET /api/customers",
+          "role": "required_business"
+        }
+      ],
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "ui_action",
+          "page": "/",
+          "ui_text": "Customers"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/customers",
+          "status": 200
+        }
+      ],
+      "id": "wf-3"
+    },
+    {
+      "user_goal": "Archive a customer",
+      "steps": [
+        {
+          "operation": "GET /api/customers/{}",
+          "role": "auxiliary_lookup"
+        },
+        {
+          "operation": "PATCH /api/customers/{}",
+          "role": "required_business"
+        }
+      ],
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "ui_action",
+          "page": "/customers/208",
+          "ui_text": "Archive"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/customers/208",
+          "status": 200
+        },
+        {
+          "kind": "network_request",
+          "method": "PATCH",
+          "path": "/api/customers/208",
+          "status": 200
+        }
+      ],
+      "id": "wf-4"
+    },
+    {
+      "user_goal": "View a customer",
+      "steps": [
+        {
+          "operation": "GET /api/customers/{}",
+          "role": "required_business"
+        },
+        {
+          "operation": "GET /api/customers/{}/addresses",
+          "role": "auxiliary_lookup"
+        },
+        {
+          "operation": "GET /api/countries",
+          "role": "auxiliary_lookup"
+        }
+      ],
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "ui_action",
+          "page": "/customers",
+          "ui_text": "Temp NoOrder"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/customers/207",
+          "status": 200
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/customers/207/addresses",
+          "status": 200
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/countries",
+          "status": 200
+        }
+      ],
+      "id": "wf-5"
+    },
+    {
+      "user_goal": "Create an order",
+      "steps": [
+        {
+          "operation": "GET /api/customers/suggest",
+          "role": "auxiliary_lookup"
+        },
+        {
+          "operation": "GET /api/customers/{}/addresses",
+          "role": "auxiliary_lookup"
+        },
+        {
+          "operation": "GET /api/products/suggest",
+          "role": "auxiliary_lookup"
+        },
+        {
+          "operation": "POST /api/shipping/options",
+          "role": "auxiliary_lookup"
+        },
+        {
+          "operation": "POST /api/order-quotes",
+          "role": "required_business"
+        },
+        {
+          "operation": "POST /api/orders",
+          "role": "required_business"
+        }
+      ],
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "ui_action",
+          "page": "/orders/new",
+          "ui_text": "Create order"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/customers/suggest",
+          "status": 200
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/customers/207/addresses",
+          "status": 200
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/products/suggest",
+          "status": 200
+        },
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/shipping/options",
+          "status": 200
+        },
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/order-quotes",
+          "status": 201
+        },
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/orders",
+          "status": 201
+        }
+      ],
+      "id": "wf-6"
+    },
+    {
+      "user_goal": "View the dashboard",
+      "steps": [
+        {
+          "operation": "GET /api/dashboard/summary",
+          "role": "required_business"
+        },
+        {
+          "operation": "GET /api/orders",
+          "role": "auxiliary_lookup"
+        }
+      ],
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "kind": "ui_action",
+          "page": "/login",
+          "ui_text": "Sign in"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/dashboard/summary",
+          "status": 200
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/orders",
+          "status": 200
+        }
+      ],
+      "id": "wf-7"
+    },
+    {
+      "user_goal": "View the orders list",
+      "steps": [
+        {
+          "operation": "GET /api/orders",
+          "role": "required_business"
+        }
+      ],
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "ui_action",
+          "page": "/products/210",
+          "ui_text": "Orders"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/orders",
+          "status": 200
+        }
+      ],
+      "id": "wf-8"
+    },
+    {
+      "user_goal": "Cancel an order",
+      "steps": [
+        {
+          "operation": "GET /api/orders/{}",
+          "role": "auxiliary_lookup"
+        },
+        {
+          "operation": "PATCH /api/orders/{}/status",
+          "role": "required_business"
+        }
+      ],
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "ui_action",
+          "page": "/orders/2010",
+          "ui_text": "Cancel order"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/orders/2010",
+          "status": 200
+        },
+        {
+          "kind": "network_request",
+          "method": "PATCH",
+          "path": "/api/orders/2010/status",
+          "status": 200
+        }
+      ],
+      "id": "wf-9"
+    },
+    {
+      "user_goal": "View an order",
+      "steps": [
+        {
+          "operation": "GET /api/orders/{}",
+          "role": "required_business"
+        },
+        {
+          "operation": "GET /api/orders/{}/activity",
+          "role": "auxiliary_lookup"
+        }
+      ],
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "ui_action",
+          "page": "/orders",
+          "ui_text": "ORD-2026-2007"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/orders/2007",
+          "status": 200
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/orders/2007/activity",
+          "status": 200
+        }
+      ],
+      "id": "wf-10"
+    },
+    {
+      "user_goal": "View the products list",
+      "steps": [
+        {
+          "operation": "GET /api/products",
+          "role": "required_business"
+        }
+      ],
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "ui_action",
+          "page": "/customers",
+          "ui_text": "Products"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/products",
+          "status": 200
+        }
+      ],
+      "id": "wf-11"
+    },
+    {
+      "user_goal": "View a product",
+      "steps": [
+        {
+          "operation": "GET /api/products/{}",
+          "role": "required_business"
+        }
+      ],
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "ui_action",
+          "page": "/products",
+          "ui_text": "SKU-210"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/products/210",
+          "status": 200
+        }
+      ],
+      "id": "wf-12"
+    },
+    {
+      "user_goal": "Add an address to a customer",
+      "steps": [
+        {
+          "operation": "GET /api/regions",
+          "role": "auxiliary_lookup"
+        },
+        {
+          "operation": "POST /api/customers/{}/addresses",
+          "role": "required_business"
+        }
+      ],
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "ui_action",
+          "page": "/customers/208",
+          "ui_text": "Add address"
+        },
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/regions",
+          "status": 200
+        },
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/customers/208/addresses",
+          "status": 201
+        }
+      ],
+      "id": "wf-13"
+    },
+    {
+      "user_goal": "Sign in",
+      "steps": [
+        {
+          "operation": "POST /api/auth/login",
+          "role": "required_business"
+        }
+      ],
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "ui_action",
+          "page": "/login",
+          "ui_text": "Sign in"
+        },
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/auth/login",
+          "status": 200
+        }
+      ],
+      "id": "wf-14"
+    },
+    {
+      "user_goal": "Create a customer",
+      "steps": [
+        {
+          "operation": "POST /api/customers",
+          "role": "required_business"
+        }
+      ],
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "ui_action",
+          "page": "/customers/new",
+          "ui_text": "Create customer"
+        },
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/customers",
+          "status": 201
+        }
+      ],
+      "id": "wf-15"
+    },
+    {
+      "user_goal": "Add an address to a customer",
+      "steps": [
+        {
+          "operation": "POST /api/customers/{}/addresses",
+          "role": "required_business"
+        }
+      ],
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "ui_action",
+          "page": "/customers/208",
+          "ui_text": "Add address"
+        },
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/customers/{}/addresses",
+          "status": 201
+        }
+      ],
+      "id": "wf-16"
+    },
+    {
+      "user_goal": "Add a note to an order",
+      "steps": [
+        {
+          "operation": "POST /api/orders/{}/notes",
+          "role": "required_business"
+        }
+      ],
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "ui_action",
+          "page": "/orders/2010",
+          "ui_text": "Add note"
+        },
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/orders/2010/notes",
+          "status": 201
+        }
+      ],
+      "id": "wf-17"
+    }
+  ],
+  "claims": [
+    {
+      "statement": "Archiving a customer sends a PATCH request with archived=true and the current version.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "PATCH",
+          "path": "/api/customers/208",
+          "note": "Observed request body archived=true and version=1."
+        },
+        {
+          "kind": "ui_action",
+          "page": "/customers/208",
+          "ui_text": "Archive"
+        }
+      ],
+      "id": "claim-1"
+    },
+    {
+      "statement": "Changing an order status sends the target statusId together with the current version.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "PATCH",
+          "path": "/api/orders/2010/status",
+          "note": "Observed request body statusId=50 and version=1."
+        },
+        {
+          "kind": "network_response",
+          "method": "PATCH",
+          "path": "/api/orders/2010/status",
+          "status": 200,
+          "json_paths": [
+            "$.statusId",
+            "$.version"
+          ]
+        }
+      ],
+      "id": "claim-2"
+    },
+    {
+      "statement": "Customer addresses are scoped to a customer resource.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/customers/207/addresses",
+          "status": 200,
+          "json_paths": [
+            "$[0].customerId"
+          ]
+        }
+      ],
+      "id": "claim-3"
+    },
+    {
+      "statement": "Customer addresses were accessed through a customer-scoped /api/customers/{id}/addresses route.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/customers/207/addresses",
+          "status": 200,
+          "json_paths": [
+            "$[0].customerId"
+          ]
+        }
+      ],
+      "id": "claim-4"
+    },
+    {
+      "statement": "GET /api/auth/session returned a CSRF token and the authenticated Demo Admin user.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/auth/session",
+          "status": 200,
+          "json_paths": [
+            "$.csrfToken",
+            "$.user"
+          ]
+        }
+      ],
+      "id": "claim-5"
+    },
+    {
+      "statement": "GET /api/customers accepted archived, page, and pageSize query parameters.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/customers",
+          "status": 200,
+          "note": "Observed query parameters: archived=false, archived=true, page=1, and pageSize=20."
+        }
+      ],
+      "id": "claim-6"
+    },
+    {
+      "statement": "GET /api/customers returned paginated results with items, page, pageSize, and total fields.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/customers",
+          "status": 200,
+          "json_paths": [
+            "$.items",
+            "$.page",
+            "$.pageSize",
+            "$.total"
+          ]
+        }
+      ],
+      "id": "claim-7"
+    },
+    {
+      "statement": "GET /api/dashboard/summary accepted period=30d and returned customerCount, orderCount, ordersByStatus, and revenueCents.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/dashboard/summary",
+          "status": 200,
+          "note": "Observed query parameter: period=30d."
+        },
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/dashboard/summary",
+          "status": 200,
+          "json_paths": [
+            "$.customerCount",
+            "$.orderCount",
+            "$.ordersByStatus",
+            "$.revenueCents"
+          ]
+        }
+      ],
+      "id": "claim-8"
+    },
+    {
+      "statement": "GET /api/orders returned paginated order results and accepted page, pageSize, q, and status query parameters.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/orders",
+          "status": 200,
+          "note": "Observed query parameters included page, pageSize, q, and status."
+        },
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/orders",
+          "status": 200,
+          "json_paths": [
+            "$.items",
+            "$.page",
+            "$.pageSize",
+            "$.total"
+          ]
+        }
+      ],
+      "id": "claim-9"
+    },
+    {
+      "statement": "GET /api/regions accepted a country query parameter and returned US regions including California, Florida, New York, and Washington.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/regions",
+          "status": 200,
+          "note": "Observed query parameter: country=US."
+        },
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/regions",
+          "status": 200,
+          "json_paths": [
+            "$[0].name",
+            "$[1].name",
+            "$[2].name",
+            "$[3].name"
+          ]
+        }
+      ],
+      "id": "claim-10"
+    },
+    {
+      "statement": "Internal order notes are created by posting a body to the order notes endpoint.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/orders/2010/notes",
+          "note": "Observed request body body='Cancelled during exploration'."
+        },
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/orders/2010/notes",
+          "status": 201,
+          "json_paths": [
+            "$.body",
+            "$.orderId"
+          ]
+        }
+      ],
+      "id": "claim-11"
+    },
+    {
+      "statement": "Order activity includes an ORDER_CREATED event with the creating user and order data.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/orders/2007/activity",
+          "status": 200,
+          "json_paths": [
+            "$[0].eventType",
+            "$[0].createdBy",
+            "$[0].data"
+          ]
+        }
+      ],
+      "id": "claim-12"
+    },
+    {
+      "statement": "Order creation uses a quoteId returned by the order quote endpoint.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/order-quotes",
+          "status": 201,
+          "json_paths": [
+            "$.quoteId"
+          ]
+        },
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/orders",
+          "note": "Observed request body containing quoteId."
+        }
+      ],
+      "id": "claim-13"
+    },
+    {
+      "statement": "Order status values shown in the UI are Draft, Confirmed, Processing, Shipped, and Cancelled.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "ui_control",
+          "page": "/orders",
+          "ui_text": "Status: Draft, Confirmed, Processing, Shipped, Cancelled"
+        }
+      ],
+      "id": "claim-14"
+    },
+    {
+      "statement": "PATCH /api/customers/{id} accepted archived and version fields and returned the customer with archived true and version 2.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "PATCH",
+          "path": "/api/customers/208",
+          "status": 200,
+          "json_paths": [
+            "$.archived",
+            "$.version"
+          ]
+        },
+        {
+          "kind": "network_response",
+          "method": "PATCH",
+          "path": "/api/customers/208",
+          "status": 200,
+          "json_paths": [
+            "$.archived",
+            "$.version"
+          ]
+        }
+      ],
+      "id": "claim-15"
+    },
+    {
+      "statement": "PATCH /api/orders/{id}/status accepted statusId and version fields and returned the updated order.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "PATCH",
+          "path": "/api/orders/2008/status",
+          "status": 200,
+          "json_paths": [
+            "$.statusId",
+            "$.version"
+          ]
+        },
+        {
+          "kind": "network_response",
+          "method": "PATCH",
+          "path": "/api/orders/2008/status",
+          "status": 200,
+          "json_paths": [
+            "$.statusId",
+            "$.version"
+          ]
+        }
+      ],
+      "id": "claim-16"
+    },
+    {
+      "statement": "POST /api/auth/login accepted the observed admin email and a redacted password and returned status 200.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/auth/login",
+          "status": 200,
+          "json_paths": [
+            "$.email",
+            "$.password"
+          ]
+        }
+      ],
+      "id": "claim-17"
+    },
+    {
+      "statement": "POST /api/customers created a customer and returned status 201 with archived false and version 1.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/customers",
+          "status": 201,
+          "json_paths": [
+            "$.email",
+            "$.firstName",
+            "$.lastName",
+            "$.phone"
+          ]
+        },
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/customers",
+          "status": 201,
+          "json_paths": [
+            "$.archived",
+            "$.version"
+          ]
+        }
+      ],
+      "id": "claim-18"
+    },
+    {
+      "statement": "POST /api/customers/{id}/addresses accepted address fields including city, countryCode, label, line1, postalCode, and regionId.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/customers/208/addresses",
+          "status": 201,
+          "json_paths": [
+            "$.city",
+            "$.countryCode",
+            "$.label",
+            "$.line1",
+            "$.postalCode",
+            "$.regionId"
+          ]
+        }
+      ],
+      "id": "claim-19"
+    },
+    {
+      "statement": "POST /api/order-quotes returned quoteId, expiresAt, subtotalCents, shippingCents, taxCents, and totalCents.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/order-quotes",
+          "status": 201,
+          "json_paths": [
+            "$.quoteId",
+            "$.expiresAt",
+            "$.subtotalCents",
+            "$.shippingCents",
+            "$.taxCents",
+            "$.totalCents"
+          ]
+        }
+      ],
+      "id": "claim-20"
+    },
+    {
+      "statement": "POST /api/orders was observed with a quoteId request field and returned status 201.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/orders",
+          "status": 201,
+          "json_paths": [
+            "$.quoteId"
+          ]
+        }
+      ],
+      "id": "claim-21"
+    },
+    {
+      "statement": "POST /api/orders/{id}/notes accepted a body field and returned the created note with orderId and createdBy fields.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "POST",
+          "path": "/api/orders/2010/notes",
+          "status": 201,
+          "json_paths": [
+            "$.body"
+          ]
+        },
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/orders/2010/notes",
+          "status": 201,
+          "json_paths": [
+            "$.body",
+            "$.orderId",
+            "$.createdBy"
+          ]
+        }
+      ],
+      "id": "claim-22"
+    },
+    {
+      "statement": "POST /api/shipping/options returned Ground and Express shipping options with method IDs, prices, and estimated day ranges.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/shipping/options",
+          "status": 200,
+          "json_paths": [
+            "$.options[0]",
+            "$.options[1]"
+          ]
+        },
+        {
+          "kind": "ui_control",
+          "page": "/orders/new",
+          "ui_text": "Ground · $8.99 · 5–7 days; Express · $18.99 · 2–3 days"
+        }
+      ],
+      "id": "claim-23"
+    },
+    {
+      "statement": "Product search suggestions include product name, SKU, price in cents, and stock quantity.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/products/suggest",
+          "status": 200,
+          "json_paths": [
+            "$[0].name",
+            "$[0].sku",
+            "$[0].priceCents",
+            "$[0].stockQty"
+          ]
+        }
+      ],
+      "id": "claim-24"
+    },
+    {
+      "statement": "Shipping options include Ground and Express methods with prices and estimated day ranges.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/shipping/options",
+          "status": 200,
+          "json_paths": [
+            "$.options[0]",
+            "$.options[1]"
+          ]
+        },
+        {
+          "kind": "ui_control",
+          "page": "/orders/new",
+          "ui_text": "Ground · $8.99 · 5–7 days; Express · $18.99 · 2–3 days"
+        }
+      ],
+      "id": "claim-25"
+    },
+    {
+      "statement": "Successful staff login returns a session user and a CSRF token.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "POST",
+          "path": "/api/auth/login",
+          "status": 200,
+          "json_paths": [
+            "$.csrfToken",
+            "$.user"
+          ]
+        }
+      ],
+      "id": "claim-26"
+    },
+    {
+      "statement": "The customer list supports archived, page, and pageSize query parameters.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/customers",
+          "note": "Observed query parameters archived=false, page=1, and pageSize=20."
+        }
+      ],
+      "id": "claim-27"
+    },
+    {
+      "statement": "The customer list UI provides Active, Archived, and All status filters.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "ui_control",
+          "page": "/customers",
+          "ui_text": "Status: Active, Archived, All"
+        }
+      ],
+      "id": "claim-28"
+    },
+    {
+      "statement": "The dashboard summary reports customer count, order count, orders grouped by status, and revenue in cents.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_response",
+          "method": "GET",
+          "path": "/api/dashboard/summary",
+          "status": 200,
+          "json_paths": [
+            "$.customerCount",
+            "$.orderCount",
+            "$.ordersByStatus",
+            "$.revenueCents"
+          ]
+        }
+      ],
+      "id": "claim-29"
+    },
+    {
+      "statement": "The order interface displayed status labels Draft, Confirmed, Processing, Shipped, and Cancelled for status IDs 10, 20, 30, 40, and 50.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "ui_control",
+          "page": "/orders",
+          "ui_text": "Status options: 10|Draft, 20|Confirmed, 30|Processing, 40|Shipped, 50|Cancelled."
+        }
+      ],
+      "id": "claim-30"
+    },
+    {
+      "statement": "The regions endpoint accepts a country query parameter.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "kind": "network_request",
+          "method": "GET",
+          "path": "/api/regions",
+          "note": "Observed query parameter country=US."
+        }
+      ],
+      "id": "claim-31"
+    }
+  ]
+}

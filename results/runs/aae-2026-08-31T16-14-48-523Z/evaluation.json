@@ -1,0 +1,77 @@
+{
+  "scope": "all",
+  "unknown_ground_truth_ids": [],
+  "validity": {
+    "valid": true,
+    "errors": []
+  },
+  "categories": {
+    "operations": {
+      "tp": 25,
+      "fp": 0,
+      "fn": 1,
+      "invalid": 0,
+      "precision": 1,
+      "recall": 0.9615384615384616,
+      "f1": 0.9803921568627451,
+      "ground_truth_count": 26
+    },
+    "parameters": {
+      "tp": 21,
+      "fp": 2,
+      "fn": 9,
+      "invalid": 0,
+      "precision": 0.9130434782608695,
+      "recall": 0.7,
+      "f1": 0.7924528301886793,
+      "ground_truth_count": 30
+    },
+    "semantic_facts": {
+      "tp": 13,
+      "fp": 15,
+      "fn": 58,
+      "invalid": 0,
+      "precision": 0.4642857142857143,
+      "recall": 0.18309859154929578,
+      "f1": 0.26262626262626265,
+      "ground_truth_count": 71
+    },
+    "dependencies": {
+      "tp": 16,
+      "fp": 10,
+      "fn": 6,
+      "invalid": 0,
+      "precision": 0.6153846153846154,
+      "recall": 0.7272727272727273,
+      "f1": 0.6666666666666667,
+      "ground_truth_count": 22
+    },
+    "workflows": {
+      "tp": 15,
+      "fp": 2,
+      "fn": 2,
+      "invalid": 0,
+      "precision": 0.8823529411764706,
+      "recall": 0.8823529411764706,
+      "f1": 0.8823529411764706,
+      "ground_truth_count": 17
+    }
+  },
+  "VARS": 62.353221449,
+  "VARS_by_weights": {
+    "frozen": 62.353221449,
+    "rejected_balanced": 70.159811209,
+    "rejected_flat": 71.68981715
+  },
+  "active_weights": "frozen",
+  "secondary_metrics": {
+    "hallucination_rate": 0.24369747899159663,
+    "evidence_support_rate": 1,
+    "coverage": 1,
+    "valid_submission": true,
+    "wall_time_ms": 810624,
+    "cost": 0.30945016000000003,
+    "tool_actions": 216,
+    "note": "wall_time_ms/cost/tool_actions are run-level facts the evaluator cannot observe from reconstruction.json alone; supply them via --meta to have them echoed here. valid_submission_rate (docs/05 §4) is an aggregate across many runs and is a runner-level metric, not computed here."
+  }
+}

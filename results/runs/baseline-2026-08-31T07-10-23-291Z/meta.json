@@ -1,0 +1,29 @@
+{
+  "baseUrl": "http://localhost:5173",
+  "role": "staff",
+  "maxSteps": 300,
+  "wallClockMs": 900000,
+  "maxCostUsd": 10,
+  "policyProfile": "sandbox",
+  "model": "openai/gpt-5.6-sol",
+  "temperature": 0,
+  "maxTokens": 32000,
+  "isolationDeny": [
+    "miniCRM/benchmark/ground-truth",
+    "miniCRM/benchmark/cases.json",
+    "miniCRM/benchmark/examples/perfect-reconstruction.json",
+    "miniCRM/apps",
+    "miniCRM/db",
+    "docs/"
+  ],
+  "system": "baseline",
+  "wall_time_ms": 272828,
+  "cost": 0.9794415000000001,
+  "tool_actions": 121,
+  "input_tokens": 285,
+  "output_tokens": 11984,
+  "cache_creation_input_tokens": 69005,
+  "cache_read_input_tokens": 3432595,
+  "validation_retries_used": 0,
+  "cost_note": "USD estimated from OpenRouter GET /api/v1/models list prices (prompt + completion per token, plus cache read/write rates when the catalog publishes them -- see pricesFromOpenRouterModel) applied to native token counts from the run."
+}

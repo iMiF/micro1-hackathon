@@ -1,0 +1,77 @@
+{
+  "scope": "all",
+  "unknown_ground_truth_ids": [],
+  "validity": {
+    "valid": true,
+    "errors": []
+  },
+  "categories": {
+    "operations": {
+      "tp": 24,
+      "fp": 0,
+      "fn": 2,
+      "invalid": 0,
+      "precision": 1,
+      "recall": 0.9230769230769231,
+      "f1": 0.9600000000000001,
+      "ground_truth_count": 26
+    },
+    "parameters": {
+      "tp": 19,
+      "fp": 2,
+      "fn": 11,
+      "invalid": 0,
+      "precision": 0.9047619047619048,
+      "recall": 0.6333333333333333,
+      "f1": 0.7450980392156863,
+      "ground_truth_count": 30
+    },
+    "semantic_facts": {
+      "tp": 14,
+      "fp": 11,
+      "fn": 57,
+      "invalid": 0,
+      "precision": 0.56,
+      "recall": 0.19718309859154928,
+      "f1": 0.29166666666666663,
+      "ground_truth_count": 71
+    },
+    "dependencies": {
+      "tp": 19,
+      "fp": 6,
+      "fn": 3,
+      "invalid": 0,
+      "precision": 0.76,
+      "recall": 0.8636363636363636,
+      "f1": 0.8085106382978724,
+      "ground_truth_count": 22
+    },
+    "workflows": {
+      "tp": 11,
+      "fp": 8,
+      "fn": 6,
+      "invalid": 0,
+      "precision": 0.5789473684210527,
+      "recall": 0.6470588235294118,
+      "f1": 0.6111111111111113,
+      "ground_truth_count": 17
+    }
+  },
+  "VARS": 61.121683354,
+  "VARS_by_weights": {
+    "frozen": 61.121683354,
+    "rejected_balanced": 67.487953692,
+    "rejected_flat": 68.327729106
+  },
+  "active_weights": "frozen",
+  "secondary_metrics": {
+    "hallucination_rate": 0.23684210526315788,
+    "evidence_support_rate": 1,
+    "coverage": 1,
+    "valid_submission": true,
+    "wall_time_ms": 565440,
+    "cost": 0.22011930999999998,
+    "tool_actions": 137,
+    "note": "wall_time_ms/cost/tool_actions are run-level facts the evaluator cannot observe from reconstruction.json alone; supply them via --meta to have them echoed here. valid_submission_rate (docs/05 §4) is an aggregate across many runs and is a runner-level metric, not computed here."
+  }
+}

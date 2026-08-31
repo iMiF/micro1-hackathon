@@ -1,7 +1,7 @@
 # 08. Evidence, provenance, and trajectories
 
-> **Status:** active — collection is implemented and both published runs carry the full set; the
-> submission packaging below (`INDEX.md`, per-run `report.md`) is not built
+> **Status:** active — collection is implemented and the shipped runs carry the full set;
+> `results/runs/INDEX.md` lists them. Per-run `report.md` is not built
 > **Updated:** 2026-08-31
 > **Source of truth:** brief deliverable 04, ground rule 09
 > **Maps to:** deliverable 04 (Agent trajectories), ground rule 09
@@ -164,10 +164,10 @@ Full trajectories of every run are too large. We submit:
 
 | # | Status |
 | --- | --- |
-| 1 | ✅ `results/runs/baseline-2026-08-31T16-00-44-545Z/` and `results/runs/aae-2026-08-31T16-04-43-124Z/` — shipped default `openai/gpt-5.6-luna`, same budget, same task prompt, scored the same way. Both carry `trajectory.jsonl`, `evidence/evidence.jsonl`, `meta.json`, `summary.json`, `reconstruction.json`, `evaluation.json`, `diff.json`. Sol replication dirs `…T14-45-38-777Z` / `…T14-51-18-382Z` are kept as model-independence evidence (ADR-22), not as the submitted pair |
+| 1 | ✅ Path A pair: `results/runs/baseline-2026-08-31T14-45-38-777Z/` and `results/runs/aae-2026-08-31T14-51-18-382Z/` — `openai/gpt-5.6-sol`, same budget, same task prompt, scored the same way. Both carry `trajectory.jsonl`, `evidence/evidence.jsonl`, `meta.json`, `summary.json`, `reconstruction.json`, `evaluation.json`, `diff.json`. Luna default-config dirs `…T16-00-44-545Z` / `…T16-04-43-124Z` (and repeats) are also shipped; see `results/runs/INDEX.md` |
 | 2 | ⚠️ no per-case runs exist (no runner), so there is no hard-case trajectory as such — the AAE run above covers the full corpus including that case's surface |
 | 3 | ✅ per role, inside the AAE run directory: Explorer in `trajectory.jsonl`, Extractors in `prompts/` and `claims.jsonl`, Inquisitor in `gaps.jsonl`, Assembler in `assemble-log.json`, plus `pages.jsonl` and `digest.json` |
-| 4 | ❌ no `INDEX.md`, and `results/runs` is gitignored — the two directories above must be force-added before submission |
+| 4 | ✅ `results/runs/INDEX.md` lists every shipped run; those directories are tracked via `.gitignore` exceptions |
 
 The "for every agent" requirement is interpreted as "for every distinct instructed role," not "for
 every run."

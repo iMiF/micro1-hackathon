@@ -1,0 +1,77 @@
+{
+  "scope": "all",
+  "unknown_ground_truth_ids": [],
+  "validity": {
+    "valid": true,
+    "errors": []
+  },
+  "categories": {
+    "operations": {
+      "tp": 23,
+      "fp": 0,
+      "fn": 3,
+      "invalid": 0,
+      "precision": 1,
+      "recall": 0.8846153846153846,
+      "f1": 0.9387755102040816,
+      "ground_truth_count": 26
+    },
+    "parameters": {
+      "tp": 24,
+      "fp": 0,
+      "fn": 6,
+      "invalid": 0,
+      "precision": 1,
+      "recall": 0.8,
+      "f1": 0.888888888888889,
+      "ground_truth_count": 30
+    },
+    "semantic_facts": {
+      "tp": 11,
+      "fp": 8,
+      "fn": 60,
+      "invalid": 0,
+      "precision": 0.5789473684210527,
+      "recall": 0.15492957746478872,
+      "f1": 0.24444444444444444,
+      "ground_truth_count": 71
+    },
+    "dependencies": {
+      "tp": 10,
+      "fp": 0,
+      "fn": 12,
+      "invalid": 0,
+      "precision": 1,
+      "recall": 0.45454545454545453,
+      "f1": 0.625,
+      "ground_truth_count": 22
+    },
+    "workflows": {
+      "tp": 2,
+      "fp": 3,
+      "fn": 15,
+      "invalid": 0,
+      "precision": 0.4,
+      "recall": 0.11764705882352941,
+      "f1": 0.1818181818181818,
+      "ground_truth_count": 17
+    }
+  },
+  "VARS": 51.197794269,
+  "VARS_by_weights": {
+    "frozen": 51.197794269,
+    "rejected_balanced": 59.460549371,
+    "rejected_flat": 57.578540507
+  },
+  "active_weights": "frozen",
+  "secondary_metrics": {
+    "hallucination_rate": 0.13580246913580246,
+    "evidence_support_rate": 1,
+    "coverage": 1,
+    "valid_submission": true,
+    "wall_time_ms": 335052,
+    "cost": 1.0463432,
+    "tool_actions": 133,
+    "note": "wall_time_ms/cost/tool_actions are run-level facts the evaluator cannot observe from reconstruction.json alone; supply them via --meta to have them echoed here. valid_submission_rate (docs/05 §4) is an aggregate across many runs and is a runner-level metric, not computed here."
+  }
+}

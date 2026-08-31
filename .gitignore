@@ -13,5 +13,24 @@ miniCRM/benchmark/examples/evaluation.json
 node_modules
 node_modules/
 playwright-report/
-results/runs
+# Scratch / failed runs stay local. The scored dirs listed in results/runs/INDEX.md
+# are un-ignored below so Path A of docs/REPRODUCTION.md is not empty on a clean clone.
+results/runs/*
+!results/runs/INDEX.md
+!results/runs/baseline-2026-08-31T14-45-38-777Z/
+!results/runs/baseline-2026-08-31T14-45-38-777Z/**
+!results/runs/aae-2026-08-31T14-51-18-382Z/
+!results/runs/aae-2026-08-31T14-51-18-382Z/**
+!results/runs/baseline-2026-08-31T05-43-17-477Z/
+!results/runs/baseline-2026-08-31T05-43-17-477Z/**
+!results/runs/baseline-2026-08-31T07-10-23-291Z/
+!results/runs/baseline-2026-08-31T07-10-23-291Z/**
+!results/runs/aae-2026-08-31T13-48-48-550Z/
+!results/runs/aae-2026-08-31T13-48-48-550Z/**
+!results/runs/baseline-2026-08-31T16-00-44-545Z/
+!results/runs/baseline-2026-08-31T16-00-44-545Z/**
+!results/runs/aae-2026-08-31T16-04-43-124Z/
+!results/runs/aae-2026-08-31T16-04-43-124Z/**
+!results/runs/aae-2026-08-31T16-14-48-523Z/
+!results/runs/aae-2026-08-31T16-14-48-523Z/**
 test-results/

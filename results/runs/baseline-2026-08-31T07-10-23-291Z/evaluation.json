@@ -1,0 +1,77 @@
+{
+  "scope": "all",
+  "unknown_ground_truth_ids": [],
+  "validity": {
+    "valid": true,
+    "errors": []
+  },
+  "categories": {
+    "operations": {
+      "tp": 23,
+      "fp": 0,
+      "fn": 3,
+      "invalid": 0,
+      "precision": 1,
+      "recall": 0.8846153846153846,
+      "f1": 0.9387755102040816,
+      "ground_truth_count": 26
+    },
+    "parameters": {
+      "tp": 17,
+      "fp": 0,
+      "fn": 13,
+      "invalid": 0,
+      "precision": 1,
+      "recall": 0.5666666666666667,
+      "f1": 0.7234042553191489,
+      "ground_truth_count": 30
+    },
+    "semantic_facts": {
+      "tp": 8,
+      "fp": 7,
+      "fn": 63,
+      "invalid": 0,
+      "precision": 0.5333333333333333,
+      "recall": 0.11267605633802817,
+      "f1": 0.18604651162790697,
+      "ground_truth_count": 71
+    },
+    "dependencies": {
+      "tp": 9,
+      "fp": 0,
+      "fn": 13,
+      "invalid": 0,
+      "precision": 1,
+      "recall": 0.4090909090909091,
+      "f1": 0.5806451612903226,
+      "ground_truth_count": 22
+    },
+    "workflows": {
+      "tp": 5,
+      "fp": 1,
+      "fn": 12,
+      "invalid": 0,
+      "precision": 0.8333333333333334,
+      "recall": 0.29411764705882354,
+      "f1": 0.4347826086956522,
+      "ground_truth_count": 17
+    }
+  },
+  "VARS": 49.578966746,
+  "VARS_by_weights": {
+    "frozen": 49.578966746,
+    "rejected_balanced": 57.820052202,
+    "rejected_flat": 57.273080943
+  },
+  "active_weights": "frozen",
+  "secondary_metrics": {
+    "hallucination_rate": 0.11428571428571428,
+    "evidence_support_rate": 1,
+    "coverage": 1,
+    "valid_submission": true,
+    "wall_time_ms": 272828,
+    "cost": 0.9794415000000001,
+    "tool_actions": 121,
+    "note": "wall_time_ms/cost/tool_actions are run-level facts the evaluator cannot observe from reconstruction.json alone; supply them via --meta to have them echoed here. valid_submission_rate (docs/05 §4) is an aggregate across many runs and is a runner-level metric, not computed here."
+  }
+}
