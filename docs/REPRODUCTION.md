@@ -82,7 +82,7 @@ The harness drives Chromium headless (`tooling/browser/driver.ts`). Set `HEADED=
 ```bash
 cd miniCRM
 npm install
-docker compose up -d            # PostgreSQL 17
+docker compose up -d --wait     # PostgreSQL 17 on 127.0.0.1:15432 (not 5432)
 npm run db:reset                # drops app data, migrates, restores the deterministic seed
 npm run dev                     # web on :5173, API on :3000
 ```
@@ -309,7 +309,7 @@ These are mechanical, not promises:
 | Step | Time | Cost |
 | --- | --- | --- |
 | `npm install` (root, miniCRM, evaluator) | 2–4 min | — |
-| `docker compose up -d` (first pull of PostgreSQL 17) | 1–3 min | — |
+| `docker compose up -d --wait` (first pull of PostgreSQL 17) | 1–3 min | — |
 | `npx playwright install chromium` | ~1 min | — |
 | `npm run db:reset` | seconds | — |
 | Path A: re-score both runs + evaluator test suite | < 2 min | $0 |
@@ -331,6 +331,8 @@ it if you want a cheaper look; the run will stop early rather than overspend.
 | `OPENROUTER_API_KEY is not set` | `cp .env.example .env` and fill it in, or export the key. Not needed for Path A or the selftests. |
 | Agent starts but every page is blank | The target is not up. `npm run dev` inside `miniCRM/`, then open `http://localhost:5173`. |
 | API errors right after a reset | The API process outlived the reset. Stop it, `npm run db:reset`, start it again (ADR-4). |
+| `password authentication failed` / `Database authentication failed on 127.0.0.1:15432` | Node is talking to a Postgres that is not the MiniCRM container. The API defaults to `127.0.0.1:15432` (see `miniCRM/docker-compose.yml`), not 5432. Check `docker compose ps` and that nothing else owns 15432; do not point `DATABASE_URL` at a local Homebrew/Postgres.app instance. |
+| `Bind for 127.0.0.1:15432 failed: port is already allocated` | Something else is on 15432. Stop it, or set `DATABASE_URL` and the compose host port to a free port together. |
 | `estimateCostUsd` throws after a run finished | The model id in `config/run.local.json` is not in OpenRouter's price list. The run artifacts are already written; score them as normal. |
 | Playwright cannot find a browser | `npx playwright install chromium` at the repo root. |
 | Scores differ from §3 when re-scoring our runs | They should not — that path is deterministic. Check you passed `--all` (not `--case`) and that `evaluator/config/weights.json` is unmodified. |

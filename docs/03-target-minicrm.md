@@ -53,13 +53,14 @@ separate API host to see.
 ```bash
 cd miniCRM        # all target commands run from its directory
 npm install
-docker compose up -d
+docker compose up -d --wait
 npm run db:reset
 npm run dev
 ```
 
 - Frontend: `http://localhost:5173`
 - API: `http://localhost:3000`
+- PostgreSQL: `127.0.0.1:15432` (Compose publishes this host port, not 5432)
 - Demo login: `admin@minicrm.local` / `demo123`
 
 **Reset:**

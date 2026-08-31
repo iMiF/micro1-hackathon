@@ -6,7 +6,8 @@ services:
       POSTGRES_PASSWORD: minicrm
       POSTGRES_DB: minicrm
     ports:
-      - "5432:5432"
+      # Host 15432, not 5432: Homebrew/Postgres.app commonly already own 5432.
+      - "127.0.0.1:15432:5432"
     volumes:
       - minicrm_pgdata:/var/lib/postgresql/data
     healthcheck:

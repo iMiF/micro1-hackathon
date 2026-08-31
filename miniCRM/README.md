@@ -18,13 +18,14 @@ Requires Node.js 22 and Docker.
 
 ```bash
 npm install
-docker compose up -d
+docker compose up -d --wait
 npm run db:reset
 npm run dev
 ```
 
 - Frontend: http://localhost:5173
 - API: http://localhost:3000 (the Vite dev server proxies `/api` to Fastify)
+- PostgreSQL: `127.0.0.1:15432` (published from Compose; not 5432, to avoid colliding with a local Postgres)
 
 Demo login:
 
