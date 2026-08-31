@@ -33,6 +33,17 @@
     "maxTokens": 32000
   },
 
+  "aae": {
+    "$comment": "AAE-internal architecture, not benchmark input (ADR-11). It subdivides the budget granted in `budgets` and can never raise it. Recorded into every run's meta.json so a run is reproducible from its ledger. The baseline never reads this block.",
+    "rounds": { "max": 2, "stopWhenNewClaimsBelow": 5, "stepBudgetSplit": [0.65, 0.35] },
+    "miner": { "enabled": true },
+    "sweeper": { "enabled": true },
+    "inquisitor": { "enabled": true, "maxExperimentsPerRound": 12 },
+    "extractors": { "enabled": true, "concurrency": 3 },
+    "verifier": { "enabled": false },
+    "reasoning": { "enabled": false, "budgetTokens": 4000, "roles": ["inquisitor", "verifier"] }
+  },
+
   "isolation": {
     "$comment": "docs/04 §1 mechanical safeguard. Paths that must never appear in the assembled agent context. The public schema under miniCRM/benchmark/schemas/ is not listed: it is benchmark input. Checked by tooling/isolation/context.ts, not by discipline.",
     "deny": [

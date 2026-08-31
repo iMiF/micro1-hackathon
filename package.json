@@ -8,7 +8,9 @@
     "harness:selftest": "tsx harness/selftest.ts",
     "harness:smoke": "tsx harness/smoke.ts",
     "baseline:selftest": "tsx agents/baseline/selftest.ts",
-    "baseline:run": "tsx agents/baseline/run.ts"
+    "baseline:run": "tsx agents/baseline/run.ts",
+    "aae:selftest": "tsx agents/aae/selftest.ts",
+    "aae:run": "tsx agents/aae/run.ts"
   },
   "devDependencies": {
     "@types/node": "22.10.5",

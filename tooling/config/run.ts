@@ -13,6 +13,16 @@ import { join } from 'node:path'
  * nothing.
  */
 
+export interface AaeConfig {
+  rounds: { max: number; stopWhenNewClaimsBelow: number; stepBudgetSplit: number[] }
+  miner: { enabled: boolean }
+  sweeper: { enabled: boolean }
+  inquisitor: { enabled: boolean; maxExperimentsPerRound: number }
+  extractors: { enabled: boolean; concurrency: number }
+  verifier: { enabled: boolean }
+  reasoning: { enabled: boolean; budgetTokens: number; roles: string[] }
+}
+
 export interface RunConfig {
   target: { baseUrl: string }
   credentials: { email: string; password: string; role: string }
@@ -28,6 +38,12 @@ export interface RunConfig {
   policy: { profile: 'strict' | 'sandbox'; allowlist: string[] }
   model: { id: string; temperature: number; maxTokens?: number }
   isolation: { deny: string[] }
+  /**
+   * AAE-internal architecture (ADR-11, ADR-21). Optional so the baseline and
+   * harness/selftest keep working when they build a config without it. Subdivides
+   * `budgets`; it must never raise them.
+   */
+  aae?: AaeConfig
 }
 
 const DEFAULT_PATH = 'config/run.default.json'
@@ -52,6 +68,7 @@ export function loadRunConfig(root = process.cwd()): RunConfig {
   if (password) merged.credentials.password = password
 
   assertComplete(merged)
+  if (merged.aae) validateAaeConfig(merged.aae)
   return merged
 }
 
@@ -100,6 +117,35 @@ export function ledgerEntry(config: RunConfig): Record<string, unknown> {
     temperature: config.model.temperature,
     maxTokens: config.model.maxTokens,
     isolationDeny: config.isolation.deny,
+    ...(config.aae ? { aae: config.aae } : {}),
+  }
+}
+
+/**
+ * Fail at load, not at round three. `stepBudgetSplit` must have `rounds.max`
+ * entries summing to ≤ 1.0; extractor concurrency must be ≥ 1.
+ */
+export function validateAaeConfig(aae: AaeConfig): void {
+  if (!Number.isInteger(aae.rounds?.max) || aae.rounds.max < 1) {
+    throw new Error('aae.rounds.max must be an integer ≥ 1')
+  }
+  const split = aae.rounds.stepBudgetSplit
+  if (!Array.isArray(split) || split.length !== aae.rounds.max) {
+    throw new Error(
+      `aae.rounds.stepBudgetSplit must have aae.rounds.max (${aae.rounds.max}) entries, got ${split?.length ?? 0}`,
+    )
+  }
+  for (const part of split) {
+    if (typeof part !== 'number' || !Number.isFinite(part) || part < 0) {
+      throw new Error('aae.rounds.stepBudgetSplit entries must be finite numbers ≥ 0')
+    }
+  }
+  const sum = split.reduce((a, b) => a + b, 0)
+  if (sum > 1.0 + Number.EPSILON) {
+    throw new Error(`aae.rounds.stepBudgetSplit sums to ${sum}, which exceeds 1.0 (ADR-21: AAE may only subdivide the granted budget)`)
+  }
+  if (!Number.isInteger(aae.extractors?.concurrency) || aae.extractors.concurrency < 1) {
+    throw new Error('aae.extractors.concurrency must be an integer ≥ 1')
   }
 }
 

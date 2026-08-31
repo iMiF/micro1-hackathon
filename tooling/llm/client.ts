@@ -251,7 +251,7 @@ export async function chat(request: ChatRequest): Promise<ChatResponse> {
       temperature: request.temperature,
       max_tokens: maxTokens,
       system,
-      tools: request.tools,
+      ...(request.tools.length > 0 ? { tools: request.tools } : {}),
       messages,
     },
     request.sessionId ? { headers: { 'x-session-id': request.sessionId } } : undefined,
