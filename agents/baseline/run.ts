@@ -26,6 +26,9 @@ async function main(): Promise<void> {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-')
   const runDir = join(root, 'results', 'runs', `baseline-${stamp}`)
   mkdirSync(runDir, { recursive: true })
+  // Same name as the run directory: one OpenRouter dashboard trace per run,
+  // trivially cross-referenced against results/runs/<sessionId>/.
+  const sessionId = `baseline-${stamp}`
 
   const harness = new Harness({
     baseUrl: config.target.baseUrl,
@@ -51,7 +54,7 @@ async function main(): Promise<void> {
 
   try {
     await harness.start('/')
-    const result = await runBaseline({ harness, config, root })
+    const result = await runBaseline({ harness, config, root, sessionId })
     usage = result.usage
     validationRetriesUsed = result.validationRetriesUsed
   } finally {

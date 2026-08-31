@@ -78,6 +78,14 @@ export interface ChatRequest {
    * not itself know which models support it (ADR-10: mechanics, not strategy).
    */
   enableCaching?: boolean
+  /**
+   * Groups every call of one run under one trace in the OpenRouter dashboard
+   * (their `x-session-id` header, up to 128 chars) -- unlike `enableCaching`
+   * this is not model-specific: it is read by OpenRouter's own gateway, not
+   * forwarded into the per-model request body, so it is safe to send for any
+   * model behind OpenRouter without a support check.
+   */
+  sessionId?: string
 }
 
 export interface TokenUsage {
@@ -237,14 +245,17 @@ export async function chat(request: ChatRequest): Promise<ChatResponse> {
       )
     : request.messages
 
-  const response = await client.messages.create({
-    model: request.model,
-    temperature: request.temperature,
-    max_tokens: maxTokens,
-    system,
-    tools: request.tools,
-    messages,
-  })
+  const response = await client.messages.create(
+    {
+      model: request.model,
+      temperature: request.temperature,
+      max_tokens: maxTokens,
+      system,
+      tools: request.tools,
+      messages,
+    },
+    request.sessionId ? { headers: { 'x-session-id': request.sessionId } } : undefined,
+  )
   return {
     content: response.content,
     usage: {

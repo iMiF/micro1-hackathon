@@ -44,10 +44,12 @@ export async function runBaseline(input: {
   config: RunConfig
   root?: string
   log?: (line: string) => void
+  /** Groups every LLM call this run makes under one OpenRouter dashboard trace. */
+  sessionId?: string
 }): Promise<BaselineRun> {
   const root = input.root ?? process.cwd()
   const log = input.log ?? console.log
-  const { harness, config } = input
+  const { harness, config, sessionId } = input
 
   const taskPrompt = renderTaskPrompt(config, root)
   const ctx: AssembledContext = assembleAgentContext({
@@ -98,6 +100,7 @@ export async function runBaseline(input: {
       messages,
       maxTokens: config.model.maxTokens,
       enableCaching,
+      sessionId,
     })
     usage.input_tokens += response.usage.input_tokens
     usage.output_tokens += response.usage.output_tokens
