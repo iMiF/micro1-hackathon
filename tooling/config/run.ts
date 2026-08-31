@@ -16,7 +16,15 @@ import { join } from 'node:path'
 export interface RunConfig {
   target: { baseUrl: string }
   credentials: { email: string; password: string; role: string }
-  budgets: { maxSteps: number; wallClockMs: number }
+  budgets: {
+    maxSteps: number
+    wallClockMs: number
+    /** Optional hard USD cap on one run's estimated LLM cost (agents/baseline/agent.ts checks it
+     *  before every call, same stop-don't-continue semantics as maxSteps/wallClockMs). Undefined
+     *  means no cap -- kept optional so it is not yet another required field for every caller
+     *  that builds a minimal RunConfig (e.g. harness/selftest.ts). */
+    maxCostUsd?: number
+  }
   policy: { profile: 'strict' | 'sandbox'; allowlist: string[] }
   model: { id: string; temperature: number; maxTokens?: number }
   isolation: { deny: string[] }
@@ -86,6 +94,7 @@ export function ledgerEntry(config: RunConfig): Record<string, unknown> {
     role: config.credentials.role,
     maxSteps: config.budgets.maxSteps,
     wallClockMs: config.budgets.wallClockMs,
+    maxCostUsd: config.budgets.maxCostUsd,
     policyProfile: config.policy.profile,
     model: config.model.id,
     temperature: config.model.temperature,

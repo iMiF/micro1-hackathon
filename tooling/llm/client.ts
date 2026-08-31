@@ -34,6 +34,20 @@ export function nonstreamingTimeoutMs(maxTokens: number): number {
   return Math.max(TEN_MINUTES_MS, Math.ceil((60 * 60 * 1000 * maxTokens) / 128_000))
 }
 
+/**
+ * Prompt caching (`cache_control`) is Anthropic-native. OpenRouter's
+ * Anthropic-compatible endpoint ("Anthropic Skin") passes it straight through
+ * when the underlying model is a Claude model served by Anthropic, Bedrock, or
+ * Vertex; a non-Anthropic model on the same endpoint (deepseek and friends —
+ * used for cheap smoke tests via config/run.local.json) has no such mechanism,
+ * and nothing here assumes OpenRouter strips an unsupported field gracefully.
+ * Mechanical string check on the model id, not a strategy decision (ADR-10):
+ * it decides transport capability, not agent behavior.
+ */
+export function supportsPromptCaching(modelId: string): boolean {
+  return modelId.startsWith('anthropic/')
+}
+
 export interface ChatTool {
   name: string
   description: string
@@ -53,11 +67,26 @@ export interface ChatRequest {
   messages: Anthropic.MessageParam[]
   /** Per-call output ceiling. Comes from the shared run configuration (ADR-17). */
   maxTokens?: number
+  /**
+   * Marks one cache breakpoint at the end of `system` (which, by Anthropic's
+   * tools→system→messages cache ordering, also covers `tools` before it — both
+   * are byte-identical for the whole run) and one rolling breakpoint on the
+   * last message's last content block, so the growing-but-mostly-unchanged
+   * conversation prefix is billed as a cache read on every later turn instead
+   * of a fresh full-price read. Two breakpoints total, under Anthropic's cap of
+   * four. Caller decides via `supportsPromptCaching(model)` — this flag does
+   * not itself know which models support it (ADR-10: mechanics, not strategy).
+   */
+  enableCaching?: boolean
 }
 
 export interface TokenUsage {
   input_tokens: number
   output_tokens: number
+  /** Tokens written to a new cache entry this call (billed ~1.25x prompt price for the 5m TTL used here). 0 when caching is off. */
+  cache_creation_input_tokens?: number
+  /** Tokens served from an existing cache entry this call (billed ~0.1x prompt price). 0 when caching is off. */
+  cache_read_input_tokens?: number
 }
 
 export interface ChatResponse {
@@ -66,26 +95,120 @@ export interface ChatResponse {
   stop_reason: string | null
 }
 
-/**
- * OpenRouter list prices for the slugs in config/run.default.json and
- * config/run.local.json (standard / uncached). Source: openrouter.ai/models.
- * Legacy Anthropic-native ids are kept so an unmigrated overlay still estimates.
- */
-export const MODEL_PRICES_USD_PER_MTOK: Record<string, { input: number; output: number }> = {
-  'anthropic/claude-opus-4.6': { input: 5, output: 25 },
-  'claude-opus-4-6': { input: 5, output: 25 },
-  // Cheap models for local smoke tests only (config/run.local.json), never the scored config.
-  'anthropic/claude-haiku-4.5': { input: 1, output: 5 },
-  'claude-haiku-4-5': { input: 1, output: 5 },
-  'deepseek/deepseek-chat-v3.1': { input: 0.25, output: 0.95 },
+/** OpenRouter list prices are USD per token, as strings on GET /api/v1/models. */
+export interface TokenPrices {
+  prompt: number
+  completion: number
+  /** USD/token for a cache read. Falls back to 0.1x `prompt` (Anthropic's published multiplier) if the catalog entry does not carry it. */
+  cacheRead?: number
+  /** USD/token for a cache write at the 5-minute TTL (the only TTL this codebase requests). Falls back to 1.25x `prompt`. */
+  cacheWrite?: number
 }
 
-export function estimateCostUsd(model: string, usage: TokenUsage): number {
-  const prices = MODEL_PRICES_USD_PER_MTOK[model]
-  if (!prices) {
-    throw new Error(`no published price recorded for model ${model}; add it to MODEL_PRICES_USD_PER_MTOK`)
+const OPENROUTER_MODELS_URL = 'https://openrouter.ai/api/v1/models'
+const MODELS_FETCH_TIMEOUT_MS = 15_000
+
+let catalogCache: Map<string, unknown> | undefined
+
+export function costFromTokenPrices(prices: TokenPrices, usage: TokenUsage): number {
+  const cacheRead = prices.cacheRead ?? prices.prompt * 0.1
+  const cacheWrite = prices.cacheWrite ?? prices.prompt * 1.25
+  return (
+    usage.input_tokens * prices.prompt +
+    usage.output_tokens * prices.completion +
+    (usage.cache_read_input_tokens ?? 0) * cacheRead +
+    (usage.cache_creation_input_tokens ?? 0) * cacheWrite
+  )
+}
+
+export function pricesFromOpenRouterModel(model: unknown): TokenPrices {
+  if (!model || typeof model !== 'object') {
+    throw new Error('OpenRouter model entry is not an object')
   }
-  return (usage.input_tokens * prices.input + usage.output_tokens * prices.output) / 1_000_000
+  const pricing = (model as { pricing?: unknown }).pricing
+  if (!pricing || typeof pricing !== 'object') {
+    throw new Error('OpenRouter model entry has no pricing')
+  }
+  const p = pricing as Record<string, unknown>
+  const prompt = Number(p.prompt)
+  const completion = Number(p.completion)
+  if (!Number.isFinite(prompt) || !Number.isFinite(completion)) {
+    throw new Error('OpenRouter model pricing is not numeric')
+  }
+  // Cache prices are not published for every catalog entry. `input_cache_read`
+  // / `input_cache_write` are the field names OpenRouter has been observed to
+  // use when they are present — not confirmed against a written spec, so treat
+  // this as best-effort and cross-check against a real run's OpenRouter
+  // dashboard "Cache" column if a cost number here ever looks off. Missing or
+  // non-numeric falls back to Anthropic's published multipliers in
+  // costFromTokenPrices rather than throwing, since most catalog entries won't
+  // carry these fields at all.
+  const cacheReadRaw = Number(p.input_cache_read)
+  const cacheWriteRaw = Number(p.input_cache_write)
+  return {
+    prompt,
+    completion,
+    cacheRead: Number.isFinite(cacheReadRaw) ? cacheReadRaw : undefined,
+    cacheWrite: Number.isFinite(cacheWriteRaw) ? cacheWriteRaw : undefined,
+  }
+}
+
+export function lookupOpenRouterPrices(catalog: Map<string, unknown>, modelId: string): TokenPrices {
+  const entry = catalog.get(modelId)
+  if (!entry) {
+    throw new Error(`OpenRouter models catalog has no prices for ${modelId}`)
+  }
+  return pricesFromOpenRouterModel(entry)
+}
+
+async function fetchOpenRouterCatalog(): Promise<Map<string, unknown>> {
+  if (catalogCache) return catalogCache
+  const headers: Record<string, string> = { Accept: 'application/json' }
+  const apiKey = process.env.OPENROUTER_API_KEY
+  if (apiKey) headers.Authorization = `Bearer ${apiKey}`
+  const response = await fetch(OPENROUTER_MODELS_URL, {
+    headers,
+    signal: AbortSignal.timeout(MODELS_FETCH_TIMEOUT_MS),
+  })
+  if (!response.ok) {
+    throw new Error(`OpenRouter models catalog returned ${response.status} ${response.statusText}`)
+  }
+  const body = (await response.json()) as { data?: unknown }
+  if (!Array.isArray(body.data)) {
+    throw new Error('OpenRouter models catalog is missing data[]')
+  }
+  const catalog = new Map<string, unknown>()
+  for (const entry of body.data) {
+    if (!entry || typeof entry !== 'object') continue
+    const id = (entry as { id?: unknown }).id
+    if (typeof id === 'string') catalog.set(id, entry)
+  }
+  catalogCache = catalog
+  return catalog
+}
+
+/**
+ * List-price estimate from OpenRouter's live catalog (GET /api/v1/models).
+ * Standard / uncached rates; not the billed generation record.
+ */
+export async function estimateCostUsd(model: string, usage: TokenUsage): Promise<number> {
+  return costFromTokenPrices(lookupOpenRouterPrices(await fetchOpenRouterCatalog(), model), usage)
+}
+
+const EPHEMERAL_CACHE = { type: 'ephemeral' as const }
+
+/** Adds a cache breakpoint at the end of a message's content (or wraps a bare string so it can carry one). */
+function withCacheBreakpoint(content: Anthropic.MessageParam['content']): Anthropic.MessageParam['content'] {
+  if (typeof content === 'string') {
+    return content.length === 0 ? content : [{ type: 'text', text: content, cache_control: EPHEMERAL_CACHE }]
+  }
+  if (content.length === 0) return content
+  const blocks = content.slice()
+  const lastIndex = blocks.length - 1
+  const last = blocks[lastIndex]
+  if (last === undefined) return blocks
+  blocks[lastIndex] = { ...last, cache_control: EPHEMERAL_CACHE } as typeof last
+  return blocks
 }
 
 export async function chat(request: ChatRequest): Promise<ChatResponse> {
@@ -101,19 +224,34 @@ export async function chat(request: ChatRequest): Promise<ChatResponse> {
     baseURL: OPENROUTER_BASE_URL,
     timeout: nonstreamingTimeoutMs(maxTokens),
   })
+
+  const system = request.enableCaching
+    ? [{ type: 'text' as const, text: request.system, cache_control: EPHEMERAL_CACHE }]
+    : request.system
+
+  const messages = request.enableCaching
+    ? request.messages.map((message, index) =>
+        index === request.messages.length - 1
+          ? { ...message, content: withCacheBreakpoint(message.content) }
+          : message,
+      )
+    : request.messages
+
   const response = await client.messages.create({
     model: request.model,
     temperature: request.temperature,
     max_tokens: maxTokens,
-    system: request.system,
+    system,
     tools: request.tools,
-    messages: request.messages,
+    messages,
   })
   return {
     content: response.content,
     usage: {
       input_tokens: response.usage.input_tokens,
       output_tokens: response.usage.output_tokens,
+      cache_creation_input_tokens: response.usage.cache_creation_input_tokens ?? 0,
+      cache_read_input_tokens: response.usage.cache_read_input_tokens ?? 0,
     },
     stop_reason: response.stop_reason,
   }

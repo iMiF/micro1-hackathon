@@ -14,9 +14,10 @@
   },
 
   "budgets": {
-    "$comment": "Identical for both systems (ADR-11). maxSteps is enforced by the harness, not by the prompt.",
-    "maxSteps": 120,
-    "wallClockMs": 900000
+    "$comment": "Identical for both systems (ADR-11). maxSteps is enforced by the harness, not by the prompt. maxCostUsd is a per-run safety cap checked by the agent loop (agents/baseline/agent.ts) before every LLM call -- it is a spend guard, not itself part of the frozen fairness contract the way maxSteps/wallClockMs are; edit the number freely.",
+    "maxSteps": 200,
+    "wallClockMs": 900000,
+    "maxCostUsd": 5
   },
 
   "policy": {

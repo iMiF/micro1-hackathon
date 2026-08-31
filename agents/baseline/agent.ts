@@ -12,7 +12,7 @@ import {
   loadPublicVocabulary,
   type AssembledContext,
 } from '../../tooling/isolation/context.js'
-import { chat, type TokenUsage } from '../../tooling/llm/client.js'
+import { chat, estimateCostUsd, supportsPromptCaching, type TokenUsage } from '../../tooling/llm/client.js'
 import {
   asRecord,
   describeSubmitPayload,
@@ -61,14 +61,32 @@ export async function runBaseline(input: {
   const validator = new SubmissionValidator(
     join(root, 'miniCRM/benchmark/schemas/reconstruction-output.schema.json'),
   )
-  const usage: TokenUsage = { input_tokens: 0, output_tokens: 0 }
+  const usage: TokenUsage = {
+    input_tokens: 0,
+    output_tokens: 0,
+    cache_creation_input_tokens: 0,
+    cache_read_input_tokens: 0,
+  }
   let validationRetriesLeft = VALIDATION_RETRIES
   let validationRetriesUsed = 0
   let lastAttempt: unknown
   /** Raw material of the most recent submit call, kept whether or not it parsed. */
   let lastRaw: { input: unknown; text: string } | undefined
 
-  while (!harness.isFinished()) {
+  // Anthropic-only (ADR-10 mechanics, not strategy): the smoke-test overlay in
+  // config/run.local.json can point model.id at a non-Anthropic model, which
+  // does not implement cache_control.
+  const enableCaching = supportsPromptCaching(config.model.id)
+  // Optional safety cap (config/run.default.json budgets.maxCostUsd). Checked
+  // before each call, same as the step/wall-clock budgets in the harness:
+  // "hit the limit -> stop, don't continue" rather than stop mid-call.
+  const maxCostUsd = config.budgets.maxCostUsd
+  let costSoFar = 0
+  let stoppedOnCostBudget = false
+  const nearBudgetLimit = () =>
+    harness.budgetLeft() <= 3 || (maxCostUsd != null && costSoFar >= maxCostUsd * 0.85)
+
+  while (!harness.isFinished() && !(maxCostUsd != null && costSoFar >= maxCostUsd)) {
     ctx.conversation = messages
     assertIsolated(ctx, config.isolation.deny, root)
 
@@ -79,17 +97,29 @@ export async function runBaseline(input: {
       tools: TOOL_DEFINITIONS,
       messages,
       maxTokens: config.model.maxTokens,
+      enableCaching,
     })
     usage.input_tokens += response.usage.input_tokens
     usage.output_tokens += response.usage.output_tokens
+    usage.cache_creation_input_tokens =
+      (usage.cache_creation_input_tokens ?? 0) + (response.usage.cache_creation_input_tokens ?? 0)
+    usage.cache_read_input_tokens =
+      (usage.cache_read_input_tokens ?? 0) + (response.usage.cache_read_input_tokens ?? 0)
+
+    if (maxCostUsd != null) {
+      costSoFar = await estimateCostUsd(config.model.id, usage)
+      if (costSoFar >= maxCostUsd) {
+        log(`cost budget exceeded: $${costSoFar.toFixed(4)} >= $${maxCostUsd} -- stopping before another call`)
+        stoppedOnCostBudget = true
+      }
+    }
 
     const toolUses = response.content.filter((block) => block.type === 'tool_use')
     if (toolUses.length === 0) {
       messages.push({ role: 'assistant', content: response.content })
-      const nudge =
-        harness.budgetLeft() <= 3
-          ? 'The tool-call budget is nearly exhausted. Call submit_reconstruction with the reconstruction you have.'
-          : 'Continue by calling a tool. If you are ready to finish, call submit_reconstruction.'
+      const nudge = nearBudgetLimit()
+        ? 'The tool-call or cost budget is nearly exhausted. Call submit_reconstruction with the reconstruction you have.'
+        : 'Continue by calling a tool. If you are ready to finish, call submit_reconstruction.'
       messages.push({ role: 'user', content: nudge })
       continue
     }
@@ -139,6 +169,23 @@ export async function runBaseline(input: {
     }
 
     messages.push({ role: 'user', content: toolResults })
+
+    // Delivered every turn regardless of whether the model called a tool this
+    // step. Before this fix the only budget nudge lived in the toolUses.length
+    // === 0 branch above, which a model that always acts (never pausing on a
+    // text-only turn) will never reach -- it ran out of budget having never
+    // once been told, and never got a chance to submit_reconstruction.
+    if (!harness.isFinished() && nearBudgetLimit()) {
+      messages.push({
+        role: 'user',
+        content:
+          'The tool-call or cost budget is nearly exhausted. Call submit_reconstruction with the reconstruction you have now.',
+      })
+    }
+  }
+
+  if (stoppedOnCostBudget) {
+    log('loop ended: cost budget exceeded')
   }
 
   if (harness.getSubmission() == null) {

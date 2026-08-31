@@ -15,7 +15,13 @@ import {
   repairTruncatedJson,
   salvageSubmission,
 } from '../../tooling/reconstruction/recover.js'
-import { nonstreamingTimeoutMs } from '../../tooling/llm/client.js'
+import {
+  costFromTokenPrices,
+  lookupOpenRouterPrices,
+  nonstreamingTimeoutMs,
+  pricesFromOpenRouterModel,
+  supportsPromptCaching,
+} from '../../tooling/llm/client.js'
 import { VALIDATION_RETRIES } from '../../tooling/reconstruction/validate.js'
 import { loadSystemPrompt, taskPromptFor } from './agent.js'
 
@@ -130,6 +136,50 @@ test('the request timeout is derived from the shared output ceiling, not guessed
   assert.equal(nonstreamingTimeoutMs(32_000), 900_000)
   assert.equal(nonstreamingTimeoutMs(16_384), 600_000, 'small ceilings keep the ten-minute floor')
   assert.ok(nonstreamingTimeoutMs(loadRunConfig(ROOT).model.maxTokens ?? 0) >= 600_000)
+})
+
+test('run cost is list price from the OpenRouter catalog, not a hardcoded table', () => {
+  const entry = { id: 'deepseek/deepseek-v4-pro', pricing: { prompt: '0.00000105', completion: '0.0000042' } }
+  assert.deepEqual(pricesFromOpenRouterModel(entry), {
+    prompt: 0.00000105,
+    completion: 0.0000042,
+    cacheRead: undefined,
+    cacheWrite: undefined,
+  })
+  assert.equal(costFromTokenPrices({ prompt: 1, completion: 2 }, { input_tokens: 3, output_tokens: 4 }), 11)
+  const catalog = new Map<string, unknown>([[entry.id, entry]])
+  assert.deepEqual(lookupOpenRouterPrices(catalog, entry.id), pricesFromOpenRouterModel(entry))
+  assert.throws(() => lookupOpenRouterPrices(catalog, 'missing/model'), /no prices for missing\/model/)
+})
+
+test('cache tokens are priced from the catalog when published, else Anthropic\'s multipliers', () => {
+  const withCachePricing = {
+    id: 'anthropic/claude-sonnet-5',
+    pricing: { prompt: '0.000003', completion: '0.000015', input_cache_read: '0.0000003', input_cache_write: '0.00000375' },
+  }
+  const pricesFromCatalog = pricesFromOpenRouterModel(withCachePricing)
+  assert.deepEqual(pricesFromCatalog, {
+    prompt: 0.000003,
+    completion: 0.000015,
+    cacheRead: 0.0000003,
+    cacheWrite: 0.00000375,
+  })
+  const usage = { input_tokens: 100, output_tokens: 10, cache_read_input_tokens: 1000, cache_creation_input_tokens: 200 }
+  // Catalog rates: 100*0.000003 + 10*0.000015 + 1000*0.0000003 + 200*0.00000375 = 0.0015
+  assert.ok(Math.abs(costFromTokenPrices(pricesFromCatalog, usage) - 0.0015) < 1e-12)
+
+  // No published cache rates: falls back to 0.1x prompt (read) / 1.25x prompt (write), never throws.
+  const noCachePricing = pricesFromOpenRouterModel({ id: 'x', pricing: { prompt: '0.000003', completion: '0.000015' } })
+  const fallbackCost = costFromTokenPrices(noCachePricing, usage)
+  const expectedFallback = 100 * 0.000003 + 10 * 0.000015 + 1000 * 0.0000003 + 200 * 0.00000375
+  assert.ok(Math.abs(fallbackCost - expectedFallback) < 1e-12, 'fallback multipliers match Anthropic\'s published 0.1x/1.25x')
+})
+
+test('prompt caching is offered only to Anthropic models (ADR-10: mechanics, not strategy)', () => {
+  assert.equal(supportsPromptCaching('anthropic/claude-opus-4.6'), true)
+  assert.equal(supportsPromptCaching('anthropic/claude-sonnet-5'), true)
+  assert.equal(supportsPromptCaching('deepseek/deepseek-v4-pro'), false)
+  assert.equal(supportsPromptCaching('deepseek/deepseek-chat-v3.1'), false)
 })
 
 test('submit unwraps a reconstruction that was not nested under reconstruction', () => {
