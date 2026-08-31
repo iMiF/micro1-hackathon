@@ -127,14 +127,15 @@ the shipped artifacts without running an agent, starting a database or contactin
 npm install
 cd evaluator && npm install && cd ..
 
-node evaluator/bin/evaluate.mjs --run baseline-2026-08-31T14-45-38-777Z --all   # → VARS 49.85
-node evaluator/bin/evaluate.mjs --run aae-2026-08-31T14-51-18-382Z --all        # → VARS 71.21
+npm run evaluate -- --run baseline-2026-08-31T14-45-38-777Z --all   # → VARS 49.85
+npm run evaluate -- --run aae-2026-08-31T14-51-18-382Z --all        # → VARS 71.21
 ```
 
 Requires Node ≥ 22 (the repo reads `.env` with the built-in `process.loadEnvFile`, so there is no
-`dotenv` dependency). The same reconstructions also render to a draft spec (`openapi.json`, `API.md`);
-Path A of [`docs/REPRODUCTION.md`](docs/REPRODUCTION.md) has `artifacts:generate` and the optional
-Swagger preview.
+`dotenv` dependency). `npm run evaluate` is `node evaluator/bin/evaluate.mjs`; `--run <id>` fills
+submission, meta and out from `results/runs/<id>/`. The same reconstructions also render to a draft
+spec (`openapi.json`, `API.md`); Path A of [`docs/REPRODUCTION.md`](docs/REPRODUCTION.md) has
+`artifacts:generate` and the optional Swagger preview (`npm run artifacts:preview`).
 
 Running the agents yourself — target setup, credentials, browser, the exact commands, expected
 output, measured time and cost, and the guide's own known limits — is
@@ -295,7 +296,8 @@ Fastify, Vue 3, Vite, TypeScript, PostgreSQL, Playwright, docker compose and the
 
 **Added during the competition:** everything else — the MiniCRM target, the case set, the ground
 truth, the output schema, the harness and tooling, the baseline agent, the AAE ensemble, the
-deterministic evaluator, this documentation, and the runs.
+deterministic evaluator, the artifact generator (OpenAPI 3.1 + `API.md` + Swagger preview), this
+documentation, and the runs.
 
 ---
 
@@ -329,7 +331,7 @@ Stated here rather than left for a judge to find. Longer list in
   against the full ground-truth corpus rather than as 15 per-case scores. Both systems are scored
   identically, so the comparison stands; what is lost is per-case resolution, not fairness. The
   15 cases exist (`miniCRM/benchmark/cases.json`) and per-case scoring works
-  (`evaluate.mjs --case <id>`).
+  (`npm run evaluate -- --run <id> --case <id>`).
 - **No scored ablation.** `AAE_ABLATE` switches are implemented and self-tested, but no ablation
   run was scored — each component's individual contribution is argued from design, not measured.
 - **No B1 control point.** "The gain is architectural, not prompt engineering" is an argument
@@ -341,7 +343,7 @@ Stated here rather than left for a judge to find. Longer list in
   `maxSteps` 300. It scores higher than `gpt-5.6-luna` on both systems (49.85 vs 33.56 baseline;
   71.21 vs 61.12 AAE) and ~15× more for the pair. The published pair is a run of that default; the
   luna pair is a cheaper replication, documented in [`docs/06`](docs/06-baseline-and-changelog.md) §3.
-- **Not built:** the standalone Verifier role (`verifier.enabled` is `false`). The artifact generator is shipped: Path A drafts live in each run's `artifacts/` (`openapi.json`, `API.md`).
+- **Not built:** the standalone Verifier role (`verifier.enabled` is `false`). The artifact generator is shipped: Path A drafts live in each run's `artifacts/` (`openapi.json`, `API.md`); `npm run artifacts:preview` pages through them in Swagger UI.
 
 ---
 

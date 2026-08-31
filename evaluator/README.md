@@ -36,6 +36,7 @@ npm install                 # once, installs ajv (JSON Schema draft-07 validatio
 npm test                    # the golden-test suite, see below
 
 # score a real run against one case (the real per-run scoring mode -- docs/04 §6)
+# from the repo root: npm run evaluate -- --run <run-id> --case case-09-create-order-workflow
 node bin/evaluate.mjs --run <run-id> --case case-09-create-order-workflow
 
 # score a scored run against the full corpus (Path A)

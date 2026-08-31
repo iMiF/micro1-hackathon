@@ -53,6 +53,16 @@ cd evaluator && npm install     # the evaluator is standalone: ajv only
 cd ..
 ```
 
+From the repo root, the commands this guide uses are:
+
+```bash
+npm run evaluate -- --run <id> --all     # score a run directory (Path A)
+npm run artifacts:generate -- <id>       # reconstruction.json → OpenAPI + API.md
+npm run artifacts:preview                # Swagger UI over those drafts
+npm run baseline:run                     # Path B
+npm run aae:run                          # Path C
+```
+
 ### 2.2 Credentials
 
 ```bash
@@ -101,16 +111,19 @@ starting an agent. **Path A does not need this step either.**
 
 Scoring is a deterministic program: no LLM, no embeddings, no fuzzy matching, no network anywhere in
 `evaluator/` (`docs/05` §7). The same submission always yields the same score, on any machine. The
-comparison itself can be re-derived from the shipped artifacts. `--run <id>` fills `--submission`,
-`--meta` and `--out` from `results/runs/<id>/`:
+comparison itself can be re-derived from the shipped artifacts:
 
 ```bash
 # baseline
-node evaluator/bin/evaluate.mjs --run baseline-2026-08-31T14-45-38-777Z --all
+npm run evaluate -- --run baseline-2026-08-31T14-45-38-777Z --all
 
 # AAE
-node evaluator/bin/evaluate.mjs --run aae-2026-08-31T14-51-18-382Z --all
+npm run evaluate -- --run aae-2026-08-31T14-51-18-382Z --all
 ```
+
+`npm run evaluate` is `node evaluator/bin/evaluate.mjs`. `--run <id>` fills `--submission`,
+`--meta` and `--out` from `results/runs/<id>/`. `--submission <path>` still works for files that
+are not a scored run (the perfect-reconstruction fixture below).
 
 Expected — identical to the `evaluation.json` already committed inside each run directory:
 
@@ -177,8 +190,7 @@ The strongest single check is the perfect-reconstruction fixture: the reference 
 hand from ground truth must score exactly 100 under all three vectors.
 
 ```bash
-node evaluator/bin/evaluate.mjs \
-  --submission miniCRM/benchmark/examples/perfect-reconstruction.json --all
+npm run evaluate -- --submission miniCRM/benchmark/examples/perfect-reconstruction.json --all
 # VARS 100 under frozen, rejected_balanced and rejected_flat
 ```
 
@@ -239,12 +251,13 @@ Same contract, same budgets, same seven tools, same output schema; the run direc
 `claims.jsonl`, `gaps.jsonl`, `pages.jsonl`, `digest.json`, `assemble-log.json`, `prompts/`. Score it
 exactly as in Path B.
 
-Two environment switches exist for inspection and ablation; neither is used in a scored run:
+Two environment switches exist for inspection and ablation; none of them is used in a scored run:
 
 | Variable | Effect |
 | --- | --- |
 | `AAE_ABLATE=miner,sweeper,...` | Disable named components; the disabled list is recorded in `meta.json` as `ablated` |
-| `AAE_FROM_EVIDENCE=<dir>` | Re-run extraction and assembly over an already recorded evidence directory, without touching the target |
+| `AAE_FROM_EVIDENCE=<dir>` | Re-run miner / sweeper / extractors / assembler over a recorded `evidence/evidence.jsonl`, without touching the target |
+| `AAE_REASSEMBLE_CLAIMS=<dir>` | Skip extractors too and rebuild `reconstruction.json` from that run's `claims.jsonl` (no API key) |
 
 ---
 
@@ -391,3 +404,4 @@ them:
 - [`07-safety.md`](07-safety.md) — risk policy, human control, data handling
 - [`08-evidence-and-trajectories.md`](08-evidence-and-trajectories.md) — what a run must record
 - [`03-target-minicrm.md`](03-target-minicrm.md) — the target application and its real API surface
+- [`../artifacts/README.md`](../artifacts/README.md) — OpenAPI renderer and Swagger preview

@@ -1,228 +1,214 @@
 # Solution video — script (deliverable 03, ≤ 5:00)
 
-English narration, screen + live voice, 7 segments, ~715 words ≈ 4:40.
-Short sentences on purpose: easy to read out loud, no clause you can trip on.
+Первое лицо, дружелюбно, как экскурсия по проекту. Английская озвучка, экран + живой голос.
+7 сегментов, **782 слова ≈ 5:00** при бодром темпе (155 слов/мин). Прогони с таймером: если
+выходит медленнее — сразу сними два блока из списка «если не влезает» в конце файла.
+Короткие фразы, простые слова: читается с листа без спотыканий.
 
-Brief's required beats, all present: problem → simple baseline → one full run → final comparison →
-changelog → biggest contribution → one removed experiment.
+Линия рассказа: **что я делаю → почему → как устроена работа по шагам → вот результат, открой
+его в Swagger → вот числа → вот что дало прирост → повтори сам за две минуты.**
+Все обязательные пункты брифа внутри: проблема, простой baseline, один полный прогон, сравнение,
+changelog, главный вклад, один выброшенный эксперимент.
 
-## The numbers (same model `openai/gpt-5.6-sol`, same budgets, 2026-08-31)
+## Числа (пара Path A, модель `openai/gpt-5.6-sol`, одинаковые бюджеты)
 
 | | Baseline `baseline-…T14-45-38-777Z` | AAE `aae-…T14-51-18-382Z` |
 | --- | ---: | ---: |
-| **VARS (frozen weights)** | **49.85** | **71.21** |
-| VARS (rejected_balanced) | 59.70 | 78.18 |
-| VARS (rejected_flat) | 59.14 | 79.00 |
-| operations F1 | 0.94 | 1.00 |
-| parameters F1 | 0.91 | 0.93 |
-| semantic_facts F1 | 0.14 (recall 0.08) | 0.43 (recall 0.30) |
-| dependencies F1 | 0.53 | 0.68 |
-| workflows F1 | 0.43 | 0.91 |
-| evidence support / coverage | 1.00 / 1.00 | 1.00 / 1.00 |
-| tool actions · time · cost | 127 · 5m26s · $0.92 | 264 · 18m12s · $3.32 |
+| **VARS (frozen)** | **49.85** | **71.21** |
+| под rejected_balanced / rejected_flat | 59.70 / 59.14 | 78.18 / 79.00 |
+| operations · parameters | 0.94 · 0.91 | 1.00 · 0.93 |
+| semantic_facts | 0.14 (recall 0.08) | 0.43 (recall 0.30) |
+| dependencies · workflows | 0.53 · 0.43 | 0.68 · 0.91 |
+| evidence support · coverage | 1.00 · 1.00 | 1.00 · 1.00 |
+| действия · время · цена | 127 · 5m26s · $0.92 | 264 · 18m12s · $3.32 |
+
+**Реплика на дешёвой модели** (`openai/gpt-5.6-luna`, тот же контракт, maxSteps 200):
+baseline **33.56** — 69 действий, 3m42s, **$0.05**; AAE **61.12** — 137 действий, 9m25s, **$0.22**.
+Разрыв baseline→AAE держится на обеих моделях: +21.4 на sol, +27.6 на luna.
+Вывод для видео: архитектура не зависит от модели, а роли можно развести по цене.
 
 ---
 
-## 1. Problem (0:00–0:25)
+## 1. Привет и проблема (0:00–0:30)
 
 **Экран:** MiniCRM в браузере, DevTools → Network. Клик «change order status». В кадре
 `PATCH /api/orders/12/status` `{"statusId": 40, "version": 3}`.
 
-> "An internal CRM with no API documentation. An engineer has to integrate with it this week.
-> Here is the request the app just sent. You see the shape. You do not see the meaning.
-> What is status forty? Why is `version` there?
-> Traffic cannot answer that. A model given a traffic dump will make something up.
-> A wrong spec is worse than a missing one."
+> "Hi! Let me show you what I built, and why.
+> This is an internal CRM with no API documentation, and I have to integrate with it this week.
+> Watch what happens when I change an order status. There's the request. I can see its shape. I
+> cannot see its meaning.
+> What is status forty? Why does it want `version`? Traffic won't tell me, and if I hand this dump
+> to a model, it will happily make something up.
+> A wrong spec is worse than no spec. That's what I went after."
 
 ---
 
-## 2. What we built (0:25–1:10)
+## 2. Что я построил (0:30–1:12)
 
-**Экран:** дерево репозитория одной командой, затем `docs/README.md` — карта из 13 файлов.
+**Экран:** дерево репозитория одной командой, затем `docs/README.md`.
 
 ```bash
-ls -d miniCRM harness agents/baseline agents/aae evaluator runner results docs
-# или: tree -L 1 -d
+ls -d miniCRM harness agents/baseline agents/aae evaluator artifacts docs
 ```
 
-> "The whole project. Six parts.
-> MiniCRM is the target. An app we wrote, with twenty-six operations reachable through the browser.
-> The benchmark sits next to it. Its ground truth is generated from the app's source, so it cannot
-> drift.
-> The harness is the only way an agent touches the browser. Seven tools, one risk gate, everything
-> recorded.
-> Then two agents. A baseline, and our system.
-> Every decision is written down. Thirteen numbered documents, each with its reason.
-> The fastest way into this project: point a model at the `docs` folder and ask it what we built and
-> why. It is all there."
-
-**Титр:** `miniCRM · benchmark · harness · agents · evaluator · docs`
+> "So here's the project. Six pieces, quickly.
+> MiniCRM is my target app. I wrote it, so I know every answer. Twenty-six operations you can reach
+> by clicking.
+> Next to it, the benchmark. Its ground truth is generated from the app's source, so it can't drift.
+> The harness is the only door to the browser: seven tools, one risk gate, everything recorded.
+> Then two agents — a simple baseline and my system — and an evaluator that scores what they submit.
+> Every decision is written down: thirteen numbered documents, each with its reason.
+> Honestly, the fastest way into this project is to point a model at the `docs` folder and ask it
+> what I built and why. It's all in there."
 
 ---
 
-## 3. How we measure, and the baseline (1:10–2:05)
-
-**Экран:** `evaluator/config/weights.json` (`"active": "frozen"`) → `cd evaluator && npm test`
-(20 зелёных) → `evaluation.json` и `diff.json`; на последних фразах — `agents/baseline/system-prompt.md`
-и `config/run.default.json` (`budgets`, `isolationDeny`).
-
-> "One number, VARS. Five categories, scored and added up with weights.
-> The weights are a config file. We froze them before the first run and never touched them again.
-> Thirty-five percent sits on meaning. Routes and parameters are what a traffic capture already
-> gives you.
-> Scoring is deterministic. Exact matching, no model judge, twenty golden tests. A perfect answer
-> scores exactly one hundred.
-> Each run writes two files. `evaluation.json` has the scores. `diff.json` lists what was matched,
-> missed, or invented. Every number in this video comes from those files.
-> The baseline we compare against is one general purpose agent with basic tools, made strong on
-> purpose. Same target, same seven tools, same schema, same model, same budget, same login, same
-> deny list. The app's source and the ground truth are unreachable. Only the inside differs."
-
----
-
-## 4. One full run (2:05–3:00)
+## 3. Как идёт работа (1:12–2:12)
 
 **Экран:** `npm run aae:run` — 10 секунд лога, склейка, дальше артефакты готового прогона:
 `trajectory.jsonl` → `claims.jsonl` (поле `support`) → `gaps.jsonl` → `reconstruction.json`.
 
-> "One full run.
-> The agent starts at a login screen and explores the app. Every call goes through the harness, so
-> every network event becomes evidence. Every risky click hits the gate first: read-only passes,
-> reversible is logged, destructive is blocked.
-> Now the important part. The explorer does not write the document.
-> Code reads the captured traffic. Then extractors run in parallel, one per section: enums,
-> validation, dependencies, workflows.
-> Nothing is written from memory. Every claim points at its evidence and carries one word: observed,
-> varied, or refuted. A claim that was only observed is still a guess. The experiment list is
-> computed from those guesses, not chosen by the model.
-> Then plain code merges everything and submits.
-> Two hundred sixty-four actions. Four hundred nineteen pieces of evidence. Eighteen minutes."
+> "Let me walk you through one full run.
+> Step one: the agent lands on a login screen and starts clicking. Every call goes through the
+> harness, so every network event turns into evidence, and every risky click hits the gate first —
+> read-only passes, reversible gets logged, destructive is blocked.
+> Step two, and this is the part I like: the explorer never writes the document. Plain code reads
+> the captured traffic instead.
+> Step three: extractors run in parallel, one per section — enums, validation, dependencies,
+> workflows. Nothing is written from memory. Every claim points at its evidence and carries one
+> word: observed, varied, or refuted. Only observed means it's still a guess, and the next round of
+> experiments is computed from those guesses.
+> Step four: plain code merges it all and submits. Eighteen minutes."
 
 **Титр:** `explore → mine → extract in parallel → assemble`
 
 ---
 
-## 5. The comparison (3:00–3:45)
+## 4. Результат, который можно открыть (2:12–3:00) ⭐ главный визуальный кусок
 
-**Экран:** слайд с таблицей чисел, затем `diff.json` обоих прогонов рядом.
-
-> "Same task. Same model. Same day.
-> The baseline scores forty-nine point eight. Our system scores seventy-one point two. It costs
-> three and a half times more and takes three times longer, and we say so.
-> The win is not in finding. Both agents reached every operation. The win is in writing it down.
-> Workflows go from zero point four three to zero point nine one. Meaning goes from eight percent
-> recall to thirty. Evidence support stays at one hundred percent for both.
-> We also score both runs under the two weightings we rejected. The order is the same in all three.
-> The result does not depend on our weights."
-
-**Титр:** `49.85 → 71.21 · same order under all 3 weight vectors`
-
----
-
-## 6. What actually made the difference (3:45–4:30)
-
-**Экран:** `docs/06-baseline-and-changelog.md` §3, затем `docs/11` (ADR).
-
-> "The changelog is short.
-> We ran the baseline first and let it tell us what was broken. Our written guess was: confident,
-> wrong meanings. Half right. Precision was bad. But the real problem was recall. Eight percent.
-> The agent looked at everything, then wrote down a third of it.
-> Before blaming the agent we checked the scorer. We normalised every spelling difference it
-> punished and scored the same files again. Under two points. The rest was never written.
-> So the fix follows from the measurement. The bottleneck was writing, not looking. We removed the
-> one place where a single model wrote a single document from a single context window. That is where
-> the twenty-one points came from."
-
-**Титр:** `It explored everything and wrote down a third`
-
----
-
-## 7. What we removed, and how to run it (4:30–4:55)
-
-**Экран:** строка removed experiment в `docs/06` §3, затем терминал с командами.
-
-> "One thing we removed. We planned a coverage planner, to make sure the agent reached every
-> operation. We deleted it before writing it. The baseline already scored a perfect one there. It
-> had nothing left to find.
-> The lesson: a component earns its place by the failure it removes in a measurement, not by how
-> good it looks in a diagram.
-> Five commands from a clean checkout. Every run, all the evidence, and both agents' trajectories
-> are in the repo. Thank you."
-
-**Титр (держать 8 секунд):**
+**Экран:** две команды, затем Swagger UI на `http://127.0.0.1:8090`. Показать дропдаун вверху:
+переключить **baseline → AAE** на одном и том же экране. Раскрыть `POST /api/orders`: параметры,
+описания, зависимости. Нажать `Try it out` на `GET /api/customers` и показать живой ответ.
 
 ```bash
-cp .env.example .env                  # your OpenRouter key
-cd miniCRM && npm run db:reset        # deterministic seed
-npm run dev                           # target on :5173
-npm run baseline:run                  # → results/runs/baseline-<ts>/
-npm run aae:run                       # → results/runs/aae-<ts>/
-npm run evaluate -- --run <id> --all
+npm run artifacts:generate -- aae-2026-08-31T14-51-18-382Z
+npm run artifacts:preview -- --open
+```
+
+> "And here's the part you can actually use. One command turns the agent's output into an OpenAPI
+> spec, one more opens it in Swagger.
+> This isn't a mock-up. It's rendered from the run you just watched, by plain code. No model touches
+> it, so nothing gets invented on the way out. If a field is unknown, it stays unknown.
+> Look at this dropdown. Same screen, same target: this is what the baseline produced, and this is
+> mine. You can see the difference without reading a single metric.
+> And the target runs locally, so I can hit `Try it out` and call the real endpoint straight from
+> the generated spec. Documentation you can click."
+
+**Титр:** `reconstruction.json → OpenAPI 3.1 → Swagger UI`
+
+---
+
+## 5. Числа и стоимость (3:00–3:57)
+
+**Экран:** слайд с таблицей sol, затем вторая строка слайда с luna, затем `results/runs/INDEX.md`.
+
+> "Was it actually better? Let's be strict.
+> My baseline is one general purpose agent with basic tools, and I made it strong on purpose: same
+> target, same seven tools, same schema, same model, same budget. Both run behind the same deny
+> list, so the app's source and the ground truth are unreachable.
+> One number, VARS. Five weighted categories, frozen in a config file before the first run.
+> On the expensive model the baseline gets forty-nine point eight, mine gets seventy-one point two,
+> at about three dollars thirty a run.
+> Then I ran the whole thing again on a cheap model, for twenty-two cents. There the baseline scores
+> thirty-three and mine scores sixty-one — an even bigger gap.
+> So the architecture wins on both. Which points at the next step: keep the expensive model where
+> judgement matters, move the mechanical extraction to the cheap one, pay a fraction."
+
+**Титр:** `49.85 → 71.21 · same order under all three weight vectors`
+
+---
+
+## 6. Что дало прирост, и что я выбросил (3:57–4:38)
+
+**Экран:** `docs/06-baseline-and-changelog.md` §3 и §5 (hot take).
+
+> "The short version of my changelog.
+> I ran the baseline first and let it tell me what was broken. My guess beforehand was: confident
+> wrong meanings. Half right. The real problem was recall — eight percent. It looked at everything,
+> then wrote down a third of it.
+> Before blaming the agent I checked my own scorer and re-scored the same files. Under two points.
+> The rest was simply never written.
+> So the fix came straight out of the measurement. The bottleneck isn't exploring, it's writing
+> down. I removed the one place where a single model wrote a single document.
+> And one thing I deleted: a coverage planner. Killed before I wrote it — the baseline already
+> scored a perfect one on operations. Nothing left for it to find."
+
+**Титр:** `The bottleneck is writing down, not looking`
+
+---
+
+## 7. Повтори сам (4:38–4:57)
+
+**Экран:** терминал, `npm run evaluate` на обоих прогонах, VARS в выводе.
+
+> "You can reproduce all of this. Path A needs no API key and no browser — every run I shipped is
+> in the repo, and you re-score it in under two minutes. Path B and C re-run the agents themselves.
+> It's all in the reproduction guide. Thanks for watching!"
+
+```bash
+npm run evaluate -- --run baseline-2026-08-31T14-45-38-777Z --all   # VARS 49.85
+npm run evaluate -- --run aae-2026-08-31T14-51-18-382Z      --all   # VARS 71.21
+npm run artifacts:preview -- --open                                 # Swagger UI
 ```
 
 ---
 
-## Каждое утверждение → что держать на экране
+## Каждое утверждение → что на экране
 
-| Фраза в озвучке | Файл |
+| Фраза | Что показать |
 | --- | --- |
-| «весь проект, шесть частей» | дерево репозитория |
-| «тринадцать документов» | `docs/README.md` (карта) |
-| «ground truth из кода» | `miniCRM/benchmark/ground-truth/semantics.json` |
-| «веса заморожены» | `evaluator/config/weights.json` → `"active": "frozen"` |
-| «оценка детерминированная» | `cd evaluator && npm test` → 20 passed |
-| «те же семь тулов» | `harness/index.ts`, `TOOL_DEFINITIONS` |
-| «deny list» | `config/run.default.json` → `isolationDeny` |
-| «гейт» | `trajectory.jsonl`, записи `policy_decision` |
-| «каждый клейм с evidence и support» | `claims.jsonl` |
-| «что пропущено / что выдумано» | `diff.json` |
-| все числа | `evaluation.json` |
+| «six pieces» | `ls -d ...` или `tree -L 1 -d` |
+| «thirteen numbered documents» | `docs/README.md` |
+| «ground truth generated from source» | `miniCRM/benchmark/ground-truth/semantics.json` |
+| «every risky click hits the gate» | `trajectory.jsonl`, записи `policy_decision` |
+| «claim points at evidence, carries one word» | `claims.jsonl`, поле `support` |
+| «one command → OpenAPI» | `results/runs/<id>/artifacts/openapi.json` |
+| «baseline vs ours» | дропдаун артефактов в Swagger UI |
+| «weights frozen» | `evaluator/config/weights.json` → `"active": "frozen"` |
+| числа | `evaluation.json`, `diff.json` |
+| «reproduction guide» | `docs/REPRODUCTION.md` §3 |
 
-## Что объяснять, а что нет
+## Подготовка (важно для сегмента 4)
 
-**Объяснять:** структуру проекта (сегмент 2) · как читается VARS и что веса заморожены ·
-что оценщик без LLM · контракт честности (те же тулы/схема/бюджет/deny list) · что Explorer не
-пишет документ и почему · поле `support` · что порядок сохраняется под тремя весами.
-
-**Не объяснять:** внутренности board merge · prompt caching и cost cap · submission recovery ·
-выбор стека · историю ADR-14 → ADR-16 · девять `kind` семантических фактов.
-
-**Не говорить:** «мы решили», «наш подход», «как вы видите». Вместо этого — число или имя файла.
+1. Заранее: `npm run db:reset` → `npm run dev` (мишень на :5173, API на :3000), иначе `Try it out`
+   не ответит.
+2. Заранее: `npm run artifacts:generate` для **обоих** прогонов пары — чтобы дропдаун переключался
+   мгновенно и было видно baseline против AAE.
+3. Заранее открыть `npm run artifacts:preview -- --open` и один раз кликнуть по всему, что будешь
+   показывать: Swagger подгружает CDN-скрипты, первый рендер медленнее.
+4. **Прогон AAE вживую не пишем** — 18 минут. 10 секунд лога, склейка, дальше артефакты.
+5. Терминал 18–20 pt, тёмная тема, `PS1='$ '`. Браузер — чистый профиль, без закладок.
+6. Писать по сегментам, 7 дублей. Do Not Disturb.
 
 ## Инструменты
 
-| Что | Чем | Почему |
-| --- | --- | --- |
-| Запись | **Loom** (экран + микрофон одним проходом) | один проход, сразу ссылка |
-| Запасной вариант | **QuickTime** → New Screen Recording | нулевая настройка |
-| Переключение сцен | **OBS Studio** | горячая клавиша терминал ↔ браузер ↔ редактор |
-| Монтаж | **DaVinci Resolve** или **iMovie** | обрезать и склеить 7 кусков |
-| Склейка без монтажки | `ffmpeg -f concat -i list.txt -c copy out.mp4` | если писали подряд |
-| Слайд с числами | Keynote, 1 слайд, или таблица из этого файла в браузере | рендерить нечего |
-| Хостинг | YouTube unlisted или ссылка Loom | формат брифом не ограничен |
-| Микрофон | внешний / AirPods | вентилятор слышно |
-
-## Подготовка
-
-1. Терминал 18–20 pt, тёмная тема, `PS1='$ '`. Браузер — чистый профиль, без закладок.
-2. Заранее открыть: дерево репо, `docs/README.md`, `weights.json`, `trajectory.jsonl`,
-   `claims.jsonl`, `diff.json`, `docs/06` §3.
-3. **Прогон AAE вживую не пишем** — 18 минут. 10 секунд лога, склейка, дальше артефакты.
-4. Писать по сегментам, 7 дублей. Do Not Disturb.
-
-## Доделать до записи
-
-Сделано: корневой `README.md` (deliverable 01), [`docs/REPRODUCTION.md`](docs/REPRODUCTION.md)
-(deliverable 02), AAE в [`docs/09`](docs/09-status-and-roadmap.md) §2, ADR-18…22 в
-[`docs/11`](docs/11-decisions-and-open-questions.md).
-
-Ещё открыто:
-
-- Видео не записано (этот скрипт — заготовка deliverable 03).
-- Прогоны сделаны в режиме `--all`, не по 15 кейсам. В озвучке говорим «full corpus»,
-  не «fifteen cases». Runner так и не собран.
+| Что | Чем |
+| --- | --- |
+| Запись экрана + голоса | **Loom** одним проходом (или **QuickTime** → New Screen Recording) |
+| Переключение терминал ↔ браузер ↔ редактор | **OBS Studio**, если нужны сцены по горячей клавише |
+| Монтаж 7 кусков | **DaVinci Resolve** или **iMovie** |
+| Склейка без монтажки | `ffmpeg -f concat -i list.txt -c copy out.mp4` |
+| Слайд с числами | Keynote, 1 слайд, или таблица из этого файла в браузере |
+| Хостинг | YouTube unlisted или ссылка Loom |
+| Микрофон | внешний / AirPods — вентилятор слышно |
 
 ## Если не влезает в 5:00
 
-Режем в этом порядке: список экстракторов в сегменте 4 → абзац про проверку оценщика в сегменте 6 →
-абзац про baseline в конце сегмента 3 сжимается до «same tools, same budget, same deny list».
+Режем в этом порядке:
+1. «Before blaming the agent I checked my own scorer…» в сегменте 6 — минус 25 слов.
+2. Перечисление экстракторов в сегменте 3 («enums, validation, dependencies, workflows») — минус 10.
+3. «same target, same seven tools, same schema, same model, same budget» в сегменте 5 сжать до
+   «same tools, same budget, same deny list» — минус 10.
+Этого хватает, чтобы уйти на 4:40.
+**Сегмент 4 (Swagger) не режем** — это End-to-End Quality, 20 баллов рубрики.
