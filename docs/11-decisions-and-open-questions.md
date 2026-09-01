@@ -1,7 +1,7 @@
 # 11. Decision log and open questions
 
 > **Status:** active — updated as the project proceeds
-> **Updated:** 2026-08-31
+> **Updated:** 2026-09-01
 
 Two lists: accepted decisions (ADR) and open questions (OQ). A decision is never deleted or
 rewritten — it gets a `superseded` status and a link to the new one. That way it stays visible why
@@ -15,13 +15,10 @@ the project is built the way it is, and not some other way.
 
 **Date:** 2026-08-29 · **Status:** accepted
 
-**Context.** `Autonomous_API_Explorer_Technical_Documentation_RU.pdf` was written before
-reconciliation with the implementation: it proposes a structure and mechanics rather than
-describing an existing one. A line-by-line reconciliation of its claims against the code is in the
-archive [`10`](10-source-review.md).
+**Context.** An early concept document was written before reconciliation with the
+implementation: it proposed a structure and mechanics rather than describing an existing one.
 
-**Decision.** Hierarchy of sources: brief → code → `miniCRM/benchmark/ground-truth/` → `docs/` →
-concept PDF (historical context only).
+**Decision.** Hierarchy of sources: brief → code → `miniCRM/benchmark/ground-truth/` → `docs/`.
 
 **Consequences.** Every claim about MiniCRM in the documentation is backed by a pointer to a
 symbol in the code. `miniCRM/benchmark/ground-truth/` is regenerated from the code, never

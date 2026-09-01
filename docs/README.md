@@ -1,7 +1,7 @@
 # Autonomous API Explorer — Project Documentation
 
 > **Status:** active
-> **Updated:** 2026-08-31
+> **Updated:** 2026-09-01
 > **Language:** English
 > **Scope:** the whole project's documentation (agent + benchmark + MiniCRM target app)
 > **Location:** project root, next to the target app `miniCRM/`, not inside it
@@ -27,7 +27,6 @@ undocumented web application into verifiable API documentation. The project is s
 | 07 | [`07-safety.md`](07-safety.md) | Risk policy, human control, data handling | deliverable 01, ground rules 04–08 |
 | 08 | [`08-evidence-and-trajectories.md`](08-evidence-and-trajectories.md) | Evidence, provenance, trajectory requirements | deliverable 04 |
 | 09 | [`09-status-and-roadmap.md`](09-status-and-roadmap.md) | What's done, what isn't, plan and quality gates | everyone, weekly |
-| 10 | [`10-source-review.md`](10-source-review.md) | Archive: reconciliation of the original RU document against the code | archive/audit |
 | 11 | [`11-decisions-and-open-questions.md`](11-decisions-and-open-questions.md) | Decision log (ADR) and open questions | everyone |
 | — | [`REPRODUCTION.md`](REPRODUCTION.md) | Reproduction guide: setup, exact commands, expected output, time and cost | judges, deliverable 02 |
 
@@ -35,14 +34,10 @@ undocumented web application into verifiable API documentation. The project is s
 
 ## Relationship to source material
 
-This documentation replaces `Autonomous_API_Explorer_Technical_Documentation_RU.pdf` (v1.0,
-2026-08-29). That PDF is a **concept document**, written before reconciliation with the code: it
-remains historical context and is not a source of truth. A line-by-line reconciliation of its
-claims against the code is preserved in the archive [`10-source-review.md`](10-source-review.md).
-
 The primary source of the rules is `micro1 - First Hackathon97ce7c5.pdf` (the brief, 10 pages,
 including an appendix with three examples on pages 8–10). Verbatim requirements are extracted into
-[`00-hackathon-requirements.md`](00-hackathon-requirements.md).
+[`00-hackathon-requirements.md`](00-hackathon-requirements.md). This documentation is derived from
+that brief and from the source code; it is not a source of truth on its own.
 
 ---
 
@@ -59,7 +54,6 @@ If two sources disagree, the higher one wins:
 3. **`miniCRM/benchmark/ground-truth/*`** — for machine-readable facts. Derived from (2); on
    disagreement it is regenerated, not hand-edited.
 4. **`docs/*`** — this documentation. Derived from (1)–(3).
-5. Concept PDF — historical context only.
 
 ### How to cite facts
 
